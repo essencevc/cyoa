@@ -1,3 +1,4 @@
 hypercorn
 restate-sdk==0.0.1
 pydantic==2.9.2
+anthropic==0.36.0
