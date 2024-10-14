@@ -1,5 +1,7 @@
+.vscode
 .env
 node_modules
 backend/venv
 backend/restate-data
-backend/__pycache__
+restate-config.yaml
+__pycache__

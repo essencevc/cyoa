@@ -10,4 +10,4 @@ COPY . .
 EXPOSE 9080
 
 ENV PYTHONPATH="/usr/src/app/src"
-CMD ["hypercorn", "example:app", "--config", "hypercorn-config.toml"]
+CMD ["hypercorn", "cyoa.cyoa:app", "--config", "hypercorn-config.toml"]

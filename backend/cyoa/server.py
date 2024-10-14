@@ -4,7 +4,7 @@ from werkzeug.exceptions import Unauthorized
 from clerk_backend_api import Clerk
 from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
 
-from .services import StoryInput
+from .workflow import StoryInput
 import requests
 import os
 

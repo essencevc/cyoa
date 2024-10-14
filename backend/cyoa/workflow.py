@@ -62,7 +62,7 @@ async def generate_main_story(ctx: WorkflowSharedContext):
 
     # Parse the response and create a StoryNode structure
     # Note: This is a simplified parsing. You may need to implement more robust parsing logic.
-    story_content = message.
+    story_content = message.messages[0]
     root_node = StoryNode(content=story_content, choices=[])
 
     # Store the generated story in the context
