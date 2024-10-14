@@ -12,6 +12,7 @@ story_workflow = Workflow("StoryWorkflow")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 class StoryInput(BaseModel):
+    user_id: str
     title: str
     content: str
     main_character: str

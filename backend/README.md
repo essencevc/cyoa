@@ -1,6 +1,6 @@
-# Python Hello World
+# Backend for CYOA
 
-To get started, create a venv and install the requirements file:
+## Setup
 
 ```shell
 python3 -m venv .venv
@@ -8,14 +8,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-To run:
+## Run
 
 ```shell
-python -m hypercorn --config hypercorn-config.toml example:app 
-```
-
-To build a docker image:
-
-```shell
-docker build .
+hypercorn --config hypercorn-config.toml example:app 
 ```

@@ -2,3 +2,4 @@
 node_modules
 backend/venv
 backend/restate-data
+backend/__pycache__
