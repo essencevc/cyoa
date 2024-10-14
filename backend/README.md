@@ -11,5 +11,6 @@ pip install -r requirements.txt
 ## Run
 
 ```shell
+npx @restatedev/restate-server
 hypercorn --config hypercorn-config.toml example:app 
 ```

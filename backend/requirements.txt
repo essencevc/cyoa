@@ -1,6 +1,6 @@
 hypercorn
 restate-sdk==0.0.1
-pydantic==2.9.2
+pydantic==2.8.2
 anthropic==0.36.0
 shortuuid==1.0.13
 clerk-backend-api==0.5.0

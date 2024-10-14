@@ -1,8 +1,9 @@
+import restate
+import shortuuid
 from restate.context import Context
 from restate.service import Service
-import restate
-from .workflow import generate_main_story, StoryInput
-import shortuuid
+
+from .workflow import StoryInput, generate_main_story
 
 cyoa = Service("cyoa")
 
