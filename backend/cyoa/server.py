@@ -8,12 +8,12 @@ from clerk_backend_api.jwks_helpers import (
     VerifyTokenOptions,
 )
 
-from cyoa import settings
+from cyoa.settings import env
 import requests
 
 from cyoa.workflow import StoryInput
 
-clerk = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
+clerk = Clerk(bearer_auth=env.CLERK_SECRET_KEY)
 
 app = Flask(__name__)
 
@@ -32,9 +32,9 @@ CORS(
 
 def call_restate(workflow_name, data):
     res = requests.post(
-        f"{settings.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
+        f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
         data=data,
-        headers={"Authorization": f"Bearer {settings.RESTATE_TOKEN}"},
+        headers={"Authorization": f"Bearer {env.RESTATE_TOKEN}"},
     )
     return res.json()
 
@@ -45,7 +45,7 @@ def index():
 
 
 def get_user_from_token():
-    token_options = VerifyTokenOptions(secret_key=settings.CLERK_SECRET_KEY)
+    token_options = VerifyTokenOptions(secret_key=env.CLERK_SECRET_KEY)
     resp = authenticate_request(clerk, request, token_options)
     jwt_obj = verify_token(resp.token, token_options)
     return clerk.users.get(user_id=jwt_obj.get("sub"))
@@ -58,19 +58,14 @@ def create_story():
         data = request.json
         input = StoryInput(**data)
         # Call the Restate workflow
-        workflow_id = call_restate("generate", input.model_dump())
+        # workflow_id = call_restate("generate", input.model_dump())
 
         return jsonify(
-            {"message": "Story generation started", "workflow_id": workflow_id}
+            {"message": "Story generation started", "workflow_id": "123"}
         ), 202
-
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Unauthorized as e:
-        return jsonify({"error": str(e)}), 401
     except Exception as e:
-        app.logger.error(f"Unexpected error: {str(e)}")
-        return jsonify({"error": "An unexpected error occurred"}), 500
+        print(e)
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
