@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  cyoa:
+    build:
+      context: .
+      dockerfile: Dockerfile.cyoa
+    ports:
+      - "9080:9080"
+    environment:
+      - PYTHONPATH=/usr/src/app/src
+    volumes:
+      - ./src:/usr/src/app/src
+    networks:
+      - app-network
+    env_file:
+      - .env
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "9081:9081"
+    environment:
+      - PYTHONPATH=/usr/src/app/src
+    volumes:
+      - ./src:/usr/src/app/src
+    networks:
+      - app-network
+    env_file:
+      - .env
+
+  restate:
+    image: docker.io/restatedev/restate:1.1
+    environment:
+      - PYTHONPATH=/usr/src/app/src
+    volumes:
+      - ./src:/usr/src/app/src
+    networks:
+      - app-network
+    env_file:
+      - .env
+
+networks:
+  app-network:
+    driver: bridge
