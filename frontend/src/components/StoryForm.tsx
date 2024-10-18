@@ -5,6 +5,8 @@ import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "@radix-ui/react-label";
+import { HashLoader } from "react-spinners";
+import { toast } from "sonner";
 
 const Names = [
   "John Doe",
@@ -49,6 +51,38 @@ const StoryForm = () => {
   const [content, setContent] = useState(
     Settings[Math.floor(Math.random() * Settings.length)]
   );
+  const [generatedStory, setGeneratedStory] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { getToken } = useAuth();
+  const { user } = useUser();
+
+  const handleGenerateStory = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const response = await axios.post(
+        "http://127.0.0.1:5000/story",
+        {
+          user_name: user?.fullName,
+          main_character: mainCharacter,
+          title: title,
+          content: content,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setGeneratedStory(response.data);
+      toast.success("Story generated successfully");
+    } catch (error) {
+      console.error("Error generating story:", error);
+      toast.error("Error generating story");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -85,75 +119,21 @@ const StoryForm = () => {
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
-        <Button className="mt-4 py-4">Generate Story</Button>
+        <Button
+          className="mt-4 py-2"
+          disabled={loading}
+          onClick={handleGenerateStory}
+        >
+          {loading ? (
+            <HashLoader color="white" className="py-2" size={20} />
+          ) : (
+            "Generate Story"
+          )}
+        </Button>
+        {JSON.stringify(generatedStory)}
       </div>
     </div>
   );
 };
 
 export default StoryForm;
-
-// function StoryForm() {
-//   const [mainCharacter, setMainCharacter] = useState('');
-//   const [title, setTitle] = useState('');
-//   const [content, setContent] = useState('');
-//   const [generatedStory, setGeneratedStory] = useState('');
-
-//   const { getToken } = useAuth();
-//   const { user } = useUser();
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const token = await getToken()
-//     try {
-//       const response = await axios.post("http://127.0.0.1:5000/story", {
-//         user_name: user.fullName,
-//         main_character: mainCharacter,
-//         title: title,
-//         content: content,
-//       }, {
-//         headers: {
-//           "Authorization": `Bearer ${token}`
-//         }
-//       })
-//     } catch (error) {
-//       console.error('Error generating story:', error);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <form onSubmit={handleSubmit}>
-//         <input
-//           type="text"
-//           value={mainCharacter}
-//           onChange={(e) => setMainCharacter(e.target.value)}
-//           placeholder="Main Character"
-//           required
-//         />
-//         <input
-//           type="text"
-//           value={title}
-//           onChange={(e) => setTitle(e.target.value)}
-//           placeholder="Title"
-//           required
-//         />
-//         <textarea
-//           value={content}
-//           onChange={(e) => setContent(e.target.value)}
-//           placeholder="Content"
-//           required
-//         />
-//         <button type="submit">Generate Story</button>
-//       </form>
-//       {generatedStory && (
-//         <div>
-//           <h2>Generated Story:</h2>
-//           <p>{generatedStory}</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default StoryForm;
