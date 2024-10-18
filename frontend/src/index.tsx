@@ -1,16 +1,19 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { ClerkProvider } from '@clerk/clerk-react';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { ClerkProvider } from "@clerk/clerk-react";
+import App from "./App";
+import "./index.css";
 
-const clerkPubKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!clerkPubKey) {
-  throw new Error('Missing REACT_APP_CLERK_PUBLISHABLE_KEY environment variable');
+  throw new Error(
+    "Missing REACT_APP_CLERK_PUBLISHABLE_KEY environment variable"
+  );
 }
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 
 root.render(
@@ -18,5 +21,6 @@ root.render(
     <ClerkProvider publishableKey={clerkPubKey}>
       <App />
     </ClerkProvider>
+    ,
   </React.StrictMode>
 );
