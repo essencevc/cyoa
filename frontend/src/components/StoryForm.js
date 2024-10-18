@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 function StoryForm() {
   const [mainCharacter, setMainCharacter] = useState('');
@@ -7,15 +8,23 @@ function StoryForm() {
   const [content, setContent] = useState('');
   const [generatedStory, setGeneratedStory] = useState('');
 
+  const { getToken } = useAuth();
+  const { user } = useUser();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = await getToken()
     try {
-      const response = await axios.post('http://localhost:5000/generate_story', {
+      const response = await axios.post("http://127.0.0.1:5000/story", {
+        user_name: user.fullName,
         main_character: mainCharacter,
         title: title,
         content: content,
-      });
-      setGeneratedStory(response.data.generated_story);
+      }, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
     } catch (error) {
       console.error('Error generating story:', error);
     }
