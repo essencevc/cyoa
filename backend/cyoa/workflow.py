@@ -15,6 +15,12 @@ class StoryInput(BaseModel):
     main_character: str
 
 
+class StoryContinuationInput(BaseModel):
+    previous_setting: str
+    previous_choice: str
+    main_character: str
+
+
 class Choice(BaseModel):
     choice_text: str
     is_terminal: bool
@@ -59,3 +65,42 @@ async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
         },
     )
     return story.model_dump_json()
+
+
+@story_workflow.handler()
+async def generate_continuation(ctx: WorkflowSharedContext, story_input: dict):
+    story_input = StoryContinuationInput.model_validate(story_input)
+    client = instructor.from_anthropic(
+        anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
+    )
+    response = client.chat.completions.create(
+        # model="claude-3-5-sonnet-20240620",
+        model="claude-3-haiku-20240307",
+        max_tokens=4096,
+        # model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": """
+                You're an expert dungeon master for a tabletop RPG. You're given a setting and a choice the user made. Generate the next part of the story based on the user's choice.
+
+                <previous_setting>
+                {{ setting }}
+                </previous_setting>
+
+                <previous_choice>
+                {{ choice }}
+                </previous_choice>
+
+                Make sure to generate a new continuation of the story based on the user's choice. This should be a new scene with a new setting.
+                """,
+            }
+        ],
+        # max_tokens=4096,
+        response_model=StoryNode,
+        context={
+            "setting": story_input.previous_setting,
+            "choice": story_input.previous_choice,
+        },
+    )
+    return response.model_dump_json()
