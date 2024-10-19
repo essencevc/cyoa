@@ -1,4 +1,4 @@
-name: Deploy
+name: Build
 
 on:
   push:
@@ -21,6 +21,10 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: frontend
+
+      - name: Type Check
+        run: npm run type-check
+        working-directory: frontend
 
       - name: Build project
         run: npm run build
