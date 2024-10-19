@@ -33,7 +33,7 @@ CORS(
 def call_restate(workflow_name, data):
     res = requests.post(
         f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
-        data=data,
+        json=data,
         headers={"Authorization": f"Bearer {env.RESTATE_TOKEN}"},
     )
     return res.json()
@@ -57,12 +57,11 @@ def create_story():
         user = get_user_from_token()
         data = request.json
         input = StoryInput(**data)
+        print(input)
         # Call the Restate workflow
-        # workflow_id = call_restate("generate", input.model_dump())
+        response = call_restate("generate", input.model_dump())
 
-        return jsonify(
-            {"message": "Story generation started", "workflow_id": "123"}
-        ), 202
+        return jsonify(response), 202
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 400
