@@ -19,9 +19,12 @@ jobs:
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
+        with:
+          working-directory: frontend
 
       - name: Build project
         run: npm run build
+        working-directory: frontend
 
       - name: Check build success
         run: echo "Build completed successfully" # Just check if the build runs without errors
