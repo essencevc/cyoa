@@ -1,82 +1,61 @@
 from __future__ import annotations
 from restate.workflow import Workflow
-from restate.context import WorkflowContext, WorkflowSharedContext
-from pydantic import BaseModel
-from typing import List, Optional
+from restate.context import WorkflowSharedContext
+from pydantic import BaseModel, field_validator
 import anthropic
-import os
+from cyoa.settings import env
+import instructor
 
 story_workflow = Workflow("StoryWorkflow")
 
-# Add this line to securely get the API key
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 class StoryInput(BaseModel):
-    user_name: str
     title: str
     content: str
     main_character: str
 
+
+class Choice(BaseModel):
+    choice_text: str
+    is_terminal: bool
+
+
 class StoryNode(BaseModel):
-    choice_text: Optional[str]
-    content: str
-    image_id: Optional[str]
-    music_id: Optional[str]
-    choices: List[StoryNode]
+    setting: str
+    choices: list[Choice]
+
+    @field_validator("choices")
+    def validate_choices(cls, v):
+        if len(v) < 3:
+            raise ValueError("At least three choices are required")
+        return v
+
 
 @story_workflow.handler()
-async def generate_main_story(ctx: WorkflowSharedContext):
-    json_data = await ctx.get("story_input")
-    story_input = StoryInput.model_validate_json(json_data=json_data, strict=True)
-    
-    # Create Anthropic client
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    
-    # Prepare the prompt for Claude
-    prompt = f"""
-    Generate an interactive story based on the following input:
-    Title: {story_input.title}
-    Main Character: {story_input.main_character}
-    Initial Content: {story_input.content}
-
-    Create a story with multiple choice options. The story should be structured as follows:
-    1. An opening scene
-    2. Two or three choices for the reader
-    3. For each choice, a continuation of the story
-    4. Each continuation should end with two more choices
-
-    Present the story as a nested structure, where each node contains:
-    - content: The story text for that node
-    - choices: A list of options, each leading to another story node
-    - choice_text: The text describing the choice (only for nodes that are choices)
-
-    Do not include image_id or music_id in the response.
-    """
-
-    # Call Claude API
-    message = client.messages.create(
-        model="claude-3-haiku-20240307",
-        prompt=prompt,
-        max_tokens=2048,
+async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
+    story_input = StoryInput.model_validate(story_input)
+    client = instructor.from_anthropic(
+        anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
     )
-
-    # Parse the response and create a StoryNode structure
-    # Note: This is a simplified parsing. You may need to implement more robust parsing logic.
-    story_content = message.messages[0]
-    root_node = StoryNode(content=story_content, choices=[])
-
-    # Store the generated story in the context
-    await ctx.set("generated_story", root_node.model_dump_json())
-
-# Update the main function to return the generated story
-@story_workflow.main()
-async def generate_story(ctx: WorkflowContext, story: StoryInput) -> StoryNode:
-    await ctx.set("story_input", story.model_dump_json())
-    await ctx.run(
-        "generate_main_story",
-        lambda: generate_main_story(ctx)
+    story = client.chat.completions.create(
+        model="claude-3-5-sonnet-20240620",
+        response_model=StoryNode,
+        max_tokens=4096,
+        messages=[
+            {
+                "role": "user",
+                "content": """
+                    Generate an interactive story based on the following input:
+                    Title: {{ title }}
+                    Main Character: {{ main_character }}
+                    Initial Content: {{ content }}
+                    """,
+            }
+        ],
+        context={
+            "title": story_input.title,
+            "main_character": story_input.main_character,
+            "content": story_input.content,
+        },
     )
-
-    # Retrieve and return the generated story
-    generated_story_json = await ctx.get("generated_story")
-    return StoryNode.model_validate_json(generated_story_json)
+    return story.model_dump_json()
