@@ -26,7 +26,8 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "type-check": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": [

@@ -6,7 +6,7 @@ import {
   SignInButton,
 } from "@clerk/clerk-react";
 import StoryForm from "./components/StoryForm";
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
