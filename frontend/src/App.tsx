@@ -1,4 +1,3 @@
-import React from "react";
 import {
   SignedIn,
   SignedOut,
@@ -7,7 +6,7 @@ import {
   SignInButton,
 } from "@clerk/clerk-react";
 import StoryForm from "./components/StoryForm";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 
 function App() {
   return (
