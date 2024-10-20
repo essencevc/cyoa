@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { z } from 'zod';
 import { Clerk } from '@clerk/clerk-js';
 
@@ -11,7 +11,7 @@ export const api: AxiosInstance = axios.create({
   },
 });
 
-const clerk = new Clerk( import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
 export const getClerk = async () => {
     if(!clerk.loaded) {
@@ -22,7 +22,6 @@ export const getClerk = async () => {
 
 export const makePostRequest = async <T extends z.ZodType<any, any>>(url: string, data: any, schema: T) => {
     const clerkObject = await getClerk()
-    const session = clerkObject.user
     const token = await clerkObject.session?.getToken()
     if(!token) {
         throw new Error('No token found')
