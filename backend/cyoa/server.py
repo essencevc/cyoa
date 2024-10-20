@@ -1,19 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from werkzeug.exceptions import Unauthorized
 from clerk_backend_api import Clerk
 from clerk_backend_api.jwks_helpers import (
     verify_token,
     authenticate_request,
     VerifyTokenOptions,
 )
-import traceback
 import logging
 
 from cyoa.settings import env
 import requests
 
-from cyoa.workflow import StoryInput
+from cyoa.workflow import StoryInput, StoryContinuationInput
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -42,18 +40,13 @@ def call_restate(workflow_name, data):
             f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
             json=data,
             headers={"Authorization": f"Bearer {env.RESTATE_TOKEN}"},
-            timeout=30  # Add a timeout of 30 seconds
+            timeout=30,  # Add a timeout of 30 seconds
         )
         res.raise_for_status()  # Raise an exception for non-200 status codes
         return res.json()
     except requests.RequestException as e:
         logger.error(f"Restate call error: {str(e)}", exc_info=True)
         raise Exception(f"Failed to call Restate: {str(e)}")
-
-
-@app.route("/")
-def index():
-    return "Hello World"
 
 
 def get_user_from_token():
@@ -79,6 +72,22 @@ def create_story():
         return jsonify({"error": "Unauthorized"}), 401
     except Exception as e:
         logger.error(f"API request error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/continue", methods=["POST"])
+def generate_continuation():
+    try:
+        user = get_user_from_token()
+        data = request.get_json()
+        input = StoryContinuationInput(**data)
+        print(input)
+        # Call the Restate workflow
+        response = call_restate("continue_story", input.model_dump())
+
+        return jsonify(response), 202
+    except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 400
 
 

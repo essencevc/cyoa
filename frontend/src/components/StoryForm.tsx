@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { z } from "zod";
 import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "@radix-ui/react-label";
 import { HashLoader } from "react-spinners";
 import { toast } from "sonner";
+import { storyResponseSchema } from "@/lib/schemas";
+import { makePostRequest } from "@/lib/server";
+import { cn } from "@/lib/utils";
 
 const Names = [
   "John Doe",
@@ -51,30 +53,26 @@ const StoryForm = () => {
   const [content, setContent] = useState(
     Settings[Math.floor(Math.random() * Settings.length)]
   );
-  const [generatedStory, setGeneratedStory] = useState("");
+  const [userChoice, setUserChoice] = useState("");
+  const [generatedStory, setGeneratedStory] = useState<z.infer<
+    typeof storyResponseSchema
+  > | null>(null);
   const [loading, setLoading] = useState(false);
-  const { getToken } = useAuth();
-  const { user } = useUser();
 
   const handleGenerateStory = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const response = await axios.post(
-        "http://127.0.0.1:5000/story",
+      const response = await makePostRequest(
+        "/story",
         {
-          user_name: user?.fullName,
           main_character: mainCharacter,
           title: title,
           content: content,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        storyResponseSchema
       );
-      setGeneratedStory(response.data);
+      console.log(response);
+      setGeneratedStory(response);
       toast.success("Story generated successfully");
     } catch (error) {
       console.error("Error generating story:", error);
@@ -84,54 +82,115 @@ const StoryForm = () => {
     }
   };
 
+  const handleChoice = async (choice: string) => {
+    setLoading(true);
+    try {
+      toast.success("You chose: " + choice);
+      const response = await makePostRequest(
+        "/continue",
+        {
+          previous_setting: generatedStory?.setting,
+          previous_choice: choice,
+          main_character: mainCharacter,
+        },
+        storyResponseSchema
+      );
+      setGeneratedStory(response);
+      toast.success("Story generated successfully");
+    } catch (error) {
+      console.error("Error generating story:", error);
+      toast.error("Error generating story");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!generatedStory) {
+    return (
+      <div>
+        <div className="grid w-full gap-">
+          <div className="grid gap-2 grid-cols-2">
+            <div>
+              <Label className="text-sm font-medium pl-1 mb-2">
+                Title Of Story
+              </Label>
+              <Input
+                type="text"
+                placeholder="Title Of Story"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium pl-1 mb-2">
+                Main Character Name
+              </Label>
+              <Input
+                type="text"
+                placeholder="Main Character Name"
+                value={mainCharacter}
+                onChange={(e) => setMainCharacter(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <Label className="text-sm font-medium pl-1 mb-2">
+              Story Setting
+            </Label>
+            <Textarea
+              placeholder="Story Setting"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+          <Button
+            className="mt-4 py-2"
+            disabled={loading}
+            onClick={handleGenerateStory}
+          >
+            {loading ? (
+              <HashLoader color="white" className="py-2" size={20} />
+            ) : (
+              "Generate Story"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="grid w-full gap-">
-        <div className="grid gap-2 grid-cols-2">
-          <div>
-            <Label className="text-sm font-medium pl-1 mb-2">
-              Title Of Story
-            </Label>
-            <Input
-              type="text"
-              placeholder="Title Of Story"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label className="text-sm font-medium pl-1 mb-2">
-              Main Character Name
-            </Label>
-            <Input
-              type="text"
-              placeholder="Main Character Name"
-              value={mainCharacter}
-              onChange={(e) => setMainCharacter(e.target.value)}
-            />
-          </div>
-        </div>
-        <div>
-          <Label className="text-sm font-medium pl-1 mb-2">Story Setting</Label>
-          <Textarea
-            placeholder="Story Setting"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        </div>
+      <h1 className="text-lg font-bold">{title}</h1>
+      <p className="py-4">{generatedStory?.setting}</p>
+      {generatedStory?.choices.map((choice) => (
         <Button
-          className="mt-4 py-2"
           disabled={loading}
-          onClick={handleGenerateStory}
-        >
-          {loading ? (
-            <HashLoader color="white" className="py-2" size={20} />
-          ) : (
-            "Generate Story"
+          onClick={() => handleChoice(choice.choice_text)}
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "text-bold w-full my-2 text-wrap h-[80px]"
           )}
+          key={choice.choice_text}
+        >
+          {choice.choice_text}
         </Button>
-        {JSON.stringify(generatedStory)}
-      </div>
+      ))}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setUserChoice("");
+          handleChoice(userChoice);
+        }}
+      >
+        <Input
+          type="text"
+          className="text-center my-2 h-[80px]"
+          placeholder="Stir Things Up - Write your own choice!"
+          value={userChoice}
+          onChange={(e) => setUserChoice(e.target.value)}
+        />
+      </form>
     </div>
   );
 };
