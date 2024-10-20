@@ -66,7 +66,7 @@ const StoryForm = () => {
     setLoading(true);
     try {
       const response = await makePostRequest(
-        "/story",
+        "/stories",
         {
           main_character: mainCharacter,
           title: title,

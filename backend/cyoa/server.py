@@ -73,16 +73,19 @@ def handle_request(handler):
 def get_story(story_id):
     user = get_user_from_token()
     story = db.get_story(story_id)
-    return jsonify({"message": "Story not found"}), 404
+    if not story:
+        return jsonify({"message": "Story not found"}), 404
 
+    return jsonify({"story": story.model_dump()}), 200
 
 @app.route("/stories", methods=["GET"])
 def get_stories():
     user = get_user_from_token()
-    return jsonify({"message": "Not implemented"}), 501
+    stories = db.get_stories_for_user(user.id)
+    return jsonify({"stories": stories}), 200
 
 
-@app.route("/story", methods=["POST"])
+@app.route("/stories", methods=["POST"])
 def create_story():
     def handle(user, data):
         # Call the Restate workflow
