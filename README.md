@@ -1,6 +1,11 @@
 # cyoa
 Choose your own adventure with LLMs
 
+## Prerequisites
+
+- Node.js
+- Docker and Docker compose
+
 ## Quickstart
 
 Start front end with
@@ -9,16 +14,4 @@ Start front end with
 
 Start backend with
 
-### start restate local server
-
-https://docs.restate.dev/develop/local_dev/
-
-% npx @restatedev/restate-server
-
-### start api server
-
-% make run-server
-
-### start restate workflow
-
-# make run-cyoa
+% cd backend && docker compose up

@@ -6,4 +6,4 @@ shortuuid==1.0.13
 clerk-backend-api==0.5.0
 Flask==3.0.3
 Flask-Cors==5.0.0
-pydantic-settings==2.6.0
+pydantic-settings==2.6.0instructor==1.6.2

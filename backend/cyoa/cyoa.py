@@ -1,8 +1,8 @@
 import restate
 import shortuuid
+import logging
 from restate.context import Context
 from restate.service import Service
-from restate.serde import Serde
 from restate.exceptions import TerminalError
 
 from .workflow import (
@@ -12,6 +12,10 @@ from .workflow import (
     StoryContinuationInput,
     generate_continuation,
 )
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 cyoa = Service("cyoa")
 
@@ -25,9 +29,13 @@ async def generate(ctx: Context, content: dict) -> dict:
             key=shortuuid.uuid(),
             arg=story_input.model_dump(),
         )
-        print(response)
+        
+        # Log the workflow_call response
+        logger.info(f"Workflow call response: {response}")
+        
         return response
     except Exception as e:
+        logger.error(f"Error in generate handler: {e}", exc_info=True)
         raise TerminalError(f"{e}")
 
 
