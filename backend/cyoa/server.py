@@ -6,7 +6,6 @@ from clerk_backend_api.jwks_helpers import (
     authenticate_request,
     VerifyTokenOptions,
 )
-import traceback
 import logging
 
 from cyoa.settings import env
@@ -41,7 +40,7 @@ def call_restate(workflow_name, data):
             f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
             json=data,
             headers={"Authorization": f"Bearer {env.RESTATE_TOKEN}"},
-            timeout=30  # Add a timeout of 30 seconds
+            timeout=30,  # Add a timeout of 30 seconds
         )
         res.raise_for_status()  # Raise an exception for non-200 status codes
         return res.json()

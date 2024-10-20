@@ -12,11 +12,18 @@ export const api: AxiosInstance = axios.create({
 });
 
 const clerk = new Clerk( import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
-await clerk.load()
+
+export const getClerk = async () => {
+    if(!clerk.loaded) {
+        await clerk.load()
+    }
+    return clerk
+}
 
 export const makePostRequest = async <T extends z.ZodType<any, any>>(url: string, data: any, schema: T) => {
-    const session = clerk.user
-    const token = await clerk.session?.getToken()
+    const clerkObject = await getClerk()
+    const session = clerkObject.user
+    const token = await clerkObject.session?.getToken()
     if(!token) {
         throw new Error('No token found')
     }
