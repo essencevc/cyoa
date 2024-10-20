@@ -10,6 +10,9 @@ import { storyResponseSchema } from "@/lib/schemas";
 import { makePostRequest } from "@/lib/server";
 import { cn } from "@/lib/utils";
 
+// Add this line to get the backend URL from environment variables
+const BACKEND_URL = import.meta.env.VITE_APP_BACKEND_URL || "http://127.0.0.1:5000";
+
 const Names = [
   "John Doe",
   "Jane Smith",

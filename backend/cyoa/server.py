@@ -1,17 +1,15 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from clerk_backend_api import Clerk
-from clerk_backend_api.jwks_helpers import (
-    verify_token,
-    authenticate_request,
-    VerifyTokenOptions,
-)
 import logging
 
-from cyoa.settings import env
 import requests
-
-from cyoa.workflow import StoryInput, StoryContinuationInput
+from clerk_backend_api import Clerk
+from clerk_backend_api.jwks_helpers import (VerifyTokenOptions,
+                                            authenticate_request, verify_token)
+from cyoa.db import DB
+from cyoa.settings import env
+from cyoa.workflow import StoryContinuationInput, StoryInput
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from werkzeug.exceptions import Unauthorized
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +30,8 @@ CORS(
         }
     },
 )
+
+db = DB(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
 
 
 def call_restate(workflow_name, data):
@@ -55,12 +55,11 @@ def get_user_from_token():
     jwt_obj = verify_token(resp.token, token_options)
     return clerk.users.get(user_id=jwt_obj.get("sub"))
 
-
 def handle_request(handler):
     try:
         user = get_user_from_token()
         data = request.get_json()
-        response = handler()        
+        response = handler(user, data)        
         return jsonify(response), 202
     except Unauthorized as e:
         logger.error(f"Authentication error: {str(e)}", exc_info=True)
@@ -70,10 +69,24 @@ def handle_request(handler):
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/stories/<story_id>", methods=["GET"])
+def get_story(story_id):
+    user = get_user_from_token()
+    story = db.get_story(story_id)
+    return jsonify({"message": "Story not found"}), 404
+
+
+@app.route("/stories", methods=["GET"])
+def get_stories():
+    user = get_user_from_token()
+    return jsonify({"message": "Not implemented"}), 501
+
+
 @app.route("/story", methods=["POST"])
 def create_story():
-    def handle():
+    def handle(user, data):
         # Call the Restate workflow
+        input = StoryInput(**data)
         response = call_restate("generate", input.model_dump())
         logger.info(f"Successfully created story for user {user.id}")
         return response
@@ -83,7 +96,7 @@ def create_story():
 
 @app.route("/continue", methods=["POST"])
 def generate_continuation():
-    def handle():
+    def handle(user, data):
         # Call the Restate workflow
         input = StoryContinuationInput(**data)
         logger.debug(f"Continuation story input", input)

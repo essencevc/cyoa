@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 cyoa = Service("cyoa")
 
-
 @cyoa.handler()
 async def generate(ctx: Context, content: dict) -> dict:
     try:

@@ -1,41 +1,16 @@
 from __future__ import annotations
-from restate.workflow import Workflow
-from restate.context import WorkflowSharedContext
-from pydantic import BaseModel, field_validator
+
 import anthropic
-from cyoa.settings import env
 import instructor
+from cyoa.db import DB
+from cyoa.settings import env
+from cyoa.models import StoryInput, StoryContinuationInput, StoryNode
+from restate.context import WorkflowSharedContext
+from restate.workflow import Workflow
 
 story_workflow = Workflow("StoryWorkflow")
 
-
-class StoryInput(BaseModel):
-    title: str
-    content: str
-    main_character: str
-
-
-class StoryContinuationInput(BaseModel):
-    previous_setting: str
-    previous_choice: str
-    main_character: str
-
-
-class Choice(BaseModel):
-    choice_text: str
-    is_terminal: bool
-
-
-class StoryNode(BaseModel):
-    setting: str
-    choices: list[Choice]
-
-    @field_validator("choices")
-    def validate_choices(cls, v):
-        if len(v) < 3:
-            raise ValueError("At least three choices are required")
-        return v
-
+db = DB(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
 
 @story_workflow.handler()
 async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
@@ -64,7 +39,9 @@ async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
             "content": story_input.content,
         },
     )
-    return story.model_dump_json()
+
+    #db.save_story(story)
+    #return story.model_dump_json()
 
 
 @story_workflow.handler()
@@ -103,4 +80,6 @@ async def generate_continuation(ctx: WorkflowSharedContext, story_input: dict):
             "choice": story_input.previous_choice,
         },
     )
-    return response.model_dump_json()
+
+    #db.save_story(story)
+    #return response.model_dump_json()
