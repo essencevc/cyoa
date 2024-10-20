@@ -74,10 +74,8 @@ async def generate_continuation(ctx: WorkflowSharedContext, story_input: dict):
         anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
     )
     response = client.chat.completions.create(
-        # model="claude-3-5-sonnet-20240620",
-        model="claude-3-haiku-20240307",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=4096,
-        # model="gpt-4o",
         messages=[
             {
                 "role": "user",
@@ -92,7 +90,9 @@ async def generate_continuation(ctx: WorkflowSharedContext, story_input: dict):
                 {{ choice }}
                 </previous_choice>
 
-                Make sure to generate a new continuation of the story based on the user's choice. This should be a new scene with a new setting.
+                Make sure to generate a new continuation of the story based on the user's choice. This should be a new scene with a new setting. The new setting should be descriptive and at least 4 sentences long.
+
+                Generate a continuation that is consistent with the story so far. 
                 """,
             }
         ],
