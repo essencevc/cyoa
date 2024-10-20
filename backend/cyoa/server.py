@@ -56,16 +56,11 @@ def get_user_from_token():
     return clerk.users.get(user_id=jwt_obj.get("sub"))
 
 
-@app.route("/story", methods=["POST"])
-def create_story():
+def handle_request(handler):
     try:
         user = get_user_from_token()
         data = request.get_json()
-        input = StoryInput(**data)
-        # Call the Restate workflow
-        response = call_restate("generate", input.model_dump())
-        logger.info(f"Successfully created story for user {user.id}")
-
+        response = handler()        
         return jsonify(response), 202
     except Unauthorized as e:
         logger.error(f"Authentication error: {str(e)}", exc_info=True)
@@ -75,20 +70,28 @@ def create_story():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/story", methods=["POST"])
+def create_story():
+    def handle():
+        # Call the Restate workflow
+        response = call_restate("generate", input.model_dump())
+        logger.info(f"Successfully created story for user {user.id}")
+        return response
+
+    return handle_request(handle)
+    
+
 @app.route("/continue", methods=["POST"])
 def generate_continuation():
-    try:
-        user = get_user_from_token()
-        data = request.get_json()
+    def handle():
+        # Call the Restate workflow
         input = StoryContinuationInput(**data)
-        print(input)
+        logger.debug(f"Continuation story input", input)
         # Call the Restate workflow
         response = call_restate("continue_story", input.model_dump())
+        return response
 
-        return jsonify(response), 202
-    except Exception as e:
-        print(e)
-        return jsonify({"error": str(e)}), 400
+    return handle_request(handle)
 
 
 if __name__ == "__main__":
