@@ -85,12 +85,12 @@ const StoryForm = () => {
     }
   };
 
-  const handleChoice = async (choice: string) => {
+  const handleChoice = async (story_id: string, choice: string) => {
     setLoading(true);
     try {
       toast.success("You chose: " + choice);
       const response = await makePostRequest(
-        "/continue",
+        `/stories/${story_id}/continue`,
         {
           previous_setting: generatedStory?.setting,
           previous_choice: choice,

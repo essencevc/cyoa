@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import requests
 from clerk_backend_api import Clerk
@@ -7,12 +8,12 @@ from clerk_backend_api.jwks_helpers import (VerifyTokenOptions,
 from cyoa.db import DB
 from cyoa.settings import env
 from cyoa.workflow import StoryContinuationInput, StoryInput
+import shortuuid
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.exceptions import Unauthorized
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 clerk = Clerk(bearer_auth=env.CLERK_SECRET_KEY)
@@ -34,12 +35,23 @@ CORS(
 db = DB(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
 
 
-def call_restate(workflow_name, data):
+def generate_story_id(user_id):
+    return f"{user_id}-{shortuuid.uuid()}"
+
+def generate_story_continuation_id(user_id, story_id):
+    return f"{user_id}-{story_id}-{shortuuid.uuid()}"
+
+def call_restate(workflow_name, workflow_id, data):
+    if env.RESTATE_TOKEN:
+        headers = {"Authorization": f"Bearer {env.RESTATE_TOKEN}"}
+    else:
+        headers = {}
+
     try:
         res = requests.post(
-            f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_name}",
+            f"{env.RESTATE_RUNTIME_ENDPOINT}/cyoa/{workflow_id}/{workflow_name}/send",
             json=data,
-            headers={"Authorization": f"Bearer {env.RESTATE_TOKEN}"},
+            headers=headers,
             timeout=30,  # Add a timeout of 30 seconds
         )
         res.raise_for_status()  # Raise an exception for non-200 status codes
@@ -90,22 +102,24 @@ def create_story():
     def handle(user, data):
         # Call the Restate workflow
         input = StoryInput(**data)
-        response = call_restate("generate", input.model_dump())
+        story_id = generate_story_id(user.id)
+        response = call_restate("generate_story", story_id, input.model_dump())
         logger.info(f"Successfully created story for user {user.id}")
-        return response
+        return {"story_id": story_id, **response}
 
     return handle_request(handle)
     
 
-@app.route("/continue", methods=["POST"])
+@app.route("/stories/<story_id>/continue", methods=["POST"])
 def generate_continuation():
     def handle(user, data):
         # Call the Restate workflow
         input = StoryContinuationInput(**data)
+        continue_id = generate_story_continuation_id(user.id, input.story_id)
         logger.debug(f"Continuation story input", input)
         # Call the Restate workflow
-        response = call_restate("continue_story", input.model_dump())
-        return response
+        response = call_restate("continue_story", continue_id, input.model_dump())
+        return {"story_id": input.story_id, "continue_id": continue_id, **response}
 
     return handle_request(handle)
 

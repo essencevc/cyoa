@@ -7,6 +7,7 @@ class StoryInput(BaseModel):
 
 
 class StoryContinuationInput(BaseModel):
+    story_id: str
     previous_setting: str
     previous_choice: str
     main_character: str
