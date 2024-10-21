@@ -169,7 +169,7 @@ const StoryForm = () => {
       {generatedStory?.choices.map((choice) => (
         <Button
           disabled={loading}
-          onClick={() => handleChoice(choice.choice_text)}
+          onClick={() => handleChoice(generatedStory?.story_id, choice.choice_text)}
           className={cn(
             buttonVariants({ variant: "outline" }),
             "text-bold w-full my-2 text-wrap h-[80px]"
@@ -183,7 +183,7 @@ const StoryForm = () => {
         onSubmit={(e) => {
           e.preventDefault();
           setUserChoice("");
-          handleChoice(userChoice);
+          handleChoice(generatedStory?.story_id, userChoice);
         }}
       >
         <Input
