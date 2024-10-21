@@ -6,11 +6,12 @@ import sys
 import anthropic
 import instructor
 from cyoa.db import DB
-from cyoa.models import StoryContinuationInput, StoryInput, StoryNode, StoryOutput, StoryStatus
+from cyoa.models import (StoryContinuationInput, StoryInput, StoryNode,
+                         StoryOutput, StoryStatus)
 from cyoa.settings import env
 from restate.context import WorkflowSharedContext
-from restate.workflow import Workflow
 from restate.exceptions import TerminalError
+from restate.workflow import Workflow
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
