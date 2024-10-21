@@ -20,14 +20,14 @@ class DB:
             await client.execute("""
                 INSERT OR REPLACE INTO stories (id, user_id, status, updated_at)
                 VALUES (?, ?, ?, date('now'))
-            """, [story_id, user_id, StoryStatus.SUBMITTED])
+            """, [story_id, user_id, StoryStatus.SUBMITTED.value])
 
     async def save_story(self, story: StoryOutput):
         async with self._get_client() as client:
             await client.execute("""
                 INSERT OR REPLACE INTO stories (id, user_id, content, status, updated_at)
                 VALUES (?, ?, ?, ?, date('now'))
-            """, [story.id, story.user_id, story.title, json.dumps(story.content), StoryStatus.COMPLETED])
+            """, [story.id, story.user_id, story.title, json.dumps(story.content), StoryStatus.COMPLETED.value])
 
     async def get_story(self, story_id: str) -> Optional[StoryOutput]:
         async with self._get_client() as client:

@@ -102,14 +102,14 @@ async def get_stories():
 async def create_story():
     async def handle(user, data):
         # Call the Restate workflow
-        input = StoryInput(user_id=user.id, **data)
-        story_id = generate_story_id(user.id)
+        story_id = generate_story_id(user.id)        
+        input = StoryInput(story_id=story_id, user_id=user.id, **data)
         response = call_restate("generate_story", story_id, input.model_dump())
         await db.save_story_submitted(user.id, story_id)
         logger.info(f"Successfully created story for user {user.id}")
         return {"story_id": story_id, **response}
 
-    return handle_request(handle)
+    return await handle_request(handle)
     
 
 @app.route("/stories/<story_id>/continue", methods=["POST"])
@@ -123,7 +123,7 @@ async def generate_continuation():
         response = call_restate("continue_story", continue_id, input.model_dump())
         return {"story_id": input.story_id, "continue_id": continue_id, **response}
 
-    return handle_request(handle)
+    return await handle_request(handle)
 
 
 if __name__ == "__main__":
