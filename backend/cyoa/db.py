@@ -1,7 +1,7 @@
 import json
 from typing import List, Optional
 from libsql_client import create_client
-from cyoa.models import StoryOutput
+from cyoa.models import StoryOutput, StoryStatus
 
 class DB:
     def __init__(self, url: str, auth_token: Optional[str] = None):
@@ -10,13 +10,24 @@ class DB:
 
     def _get_client(self):
         return create_client(url=self.url, auth_token=self.auth_token)
-    
+
+    async def update_story_status(self, story_id: str, status: StoryStatus):
+        async with self._get_client() as client:
+            await client.execute("UPDATE stories SET status = ? WHERE id = ?", [status, story_id])
+
+    async def save_story_submitted(self, user_id: str, story_id: str):
+        async with self._get_client() as client:
+            await client.execute("""
+                INSERT OR REPLACE INTO stories (id, user_id, status, updated_at)
+                VALUES (?, ?, ?, date('now'))
+            """, [story_id, user_id, StoryStatus.SUBMITTED])
+
     async def save_story(self, story: StoryOutput):
         async with self._get_client() as client:
             await client.execute("""
-                INSERT OR REPLACE INTO stories (id, user_id, content, updated_at)
-                VALUES (?, ?, ?, date('now'))
-            """, [story.id, story.user_id, story.title, json.dumps(story.content)])
+                INSERT OR REPLACE INTO stories (id, user_id, content, status, updated_at)
+                VALUES (?, ?, ?, ?, date('now'))
+            """, [story.id, story.user_id, story.title, json.dumps(story.content), StoryStatus.COMPLETED])
 
     async def get_story(self, story_id: str) -> Optional[StoryOutput]:
         async with self._get_client() as client:

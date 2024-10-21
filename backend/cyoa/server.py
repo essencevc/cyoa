@@ -67,11 +67,11 @@ def get_user_from_token():
     jwt_obj = verify_token(resp.token, token_options)
     return clerk.users.get(user_id=jwt_obj.get("sub"))
 
-def handle_request(handler):
+async def handle_request(handler):
     try:
         user = get_user_from_token()
         data = request.get_json()
-        response = handler(user, data)        
+        response = await handler(user, data)        
         return jsonify(response), 202
     except Unauthorized as e:
         logger.error(f"Authentication error: {str(e)}", exc_info=True)
@@ -82,28 +82,30 @@ def handle_request(handler):
 
 
 @app.route("/stories/<story_id>", methods=["GET"])
-def get_story(story_id):
+async def get_story(story_id):
     user = get_user_from_token()
-    story = db.get_story(story_id)
+    story = await db.get_story(story_id)
     if not story:
         return jsonify({"message": "Story not found"}), 404
 
     return jsonify({"story": story.model_dump()}), 200
 
+
 @app.route("/stories", methods=["GET"])
-def get_stories():
+async def get_stories():
     user = get_user_from_token()
-    stories = db.get_stories_for_user(user.id)
+    stories = await db.get_stories_for_user(user.id)
     return jsonify({"stories": stories}), 200
 
 
 @app.route("/stories", methods=["POST"])
-def create_story():
-    def handle(user, data):
+async def create_story():
+    async def handle(user, data):
         # Call the Restate workflow
-        input = StoryInput(**data)
+        input = StoryInput(user_id=user.id, **data)
         story_id = generate_story_id(user.id)
         response = call_restate("generate_story", story_id, input.model_dump())
+        await db.save_story_submitted(user.id, story_id)
         logger.info(f"Successfully created story for user {user.id}")
         return {"story_id": story_id, **response}
 
@@ -111,10 +113,10 @@ def create_story():
     
 
 @app.route("/stories/<story_id>/continue", methods=["POST"])
-def generate_continuation():
-    def handle(user, data):
+async def generate_continuation():
+    async def handle(user, data):
         # Call the Restate workflow
-        input = StoryContinuationInput(**data)
+        input = StoryContinuationInput(user_id=user.id,**data)
         continue_id = generate_story_continuation_id(user.id, input.story_id)
         logger.debug(f"Continuation story input", input)
         # Call the Restate workflow
