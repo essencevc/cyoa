@@ -23,7 +23,7 @@ db = DB(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
 async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
     try:
         story_input = StoryInput.model_validate(story_input)
-        logger.info(f"Generating story with input: {story_input}")
+        logger.info(f"Generating story {story_input.story_id} with input: {story_input}")
         client = instructor.from_anthropic(
             anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
         )
@@ -53,10 +53,11 @@ async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
 
         story_output = StoryOutput(story_id=story_input.story_id, user_id=story_input.user_id, story=[story])
 
-        await db.save_story(story_output, StoryStatus.COMPLETED)
+        await db.save_story(story_output)
     except Exception as e:
-        logger.error(f"Error generating story: {e}")
-        raise TerminalError(f"Error generating story: {e}")
+        await db.update_story_status(story_input.story_id, StoryStatus.FAILED)
+        logger.error(f"Error generating story {story_input.story_id}: {e}")
+        raise TerminalError(f"Error generating story {story_input.story_id}: {e}")
 
     return None
 

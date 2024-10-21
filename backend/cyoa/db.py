@@ -13,7 +13,7 @@ class DB:
 
     async def update_story_status(self, story_id: str, status: StoryStatus):
         async with self._get_client() as client:
-            await client.execute("UPDATE stories SET status = ? WHERE id = ?", [status, story_id])
+            await client.execute("UPDATE stories SET status = ? WHERE id = ?", [status.value, story_id])
 
     async def save_story_submitted(self, user_id: str, story_id: str):
         async with self._get_client() as client:
