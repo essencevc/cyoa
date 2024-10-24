@@ -4,6 +4,8 @@ import {
   UserButton,
   SignInButton,
   useAuth,
+  SignUp,
+  SignIn,
 } from "@clerk/clerk-react";
 import StoryForm from "./components/StoryForm";
 import { Toaster } from "./components/ui/sonner";
@@ -16,6 +18,7 @@ import {
 } from "react-router-dom";
 import RootLayout from "./layouts/rootlayout";
 import Story from "./pages/story";
+import Home from "./pages/home";
 
 const router = createBrowserRouter([
   {
@@ -23,11 +26,23 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <p>Home Page</p>,
+        element: <Home />,
       },
       {
         path: "/sign-in",
-        element: <p>Sign in dude</p>,
+        element: (
+          <div className="flex flex-col items-center justify-center">
+            <SignIn />
+          </div>
+        ),
+      },
+      {
+        path: "/sign-up",
+        element: (
+          <div className="flex flex-col items-center justify-center">
+            <SignUp />
+          </div>
+        ),
       },
       {
         path: "story/:storyId",
@@ -41,7 +56,6 @@ function App() {
   return (
     <>
       <div className="flex flex-col h-screen">
-        <Header />
         <RouterProvider router={router} />
       </div>
       <Toaster />
