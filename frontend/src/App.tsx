@@ -3,33 +3,46 @@ import {
   SignedOut,
   UserButton,
   SignInButton,
+  useAuth,
 } from "@clerk/clerk-react";
 import StoryForm from "./components/StoryForm";
 import { Toaster } from "./components/ui/sonner";
+import Header from "./components/header";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Routes,
+  Route,
+} from "react-router-dom";
+import RootLayout from "./layouts/rootlayout";
+import Story from "./pages/story";
+
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <p>Home Page</p>,
+      },
+      {
+        path: "/sign-in",
+        element: <p>Sign in dude</p>,
+      },
+      {
+        path: "story/:storyId",
+        element: <Story />,
+      },
+    ],
+  },
+]);
 
 function App() {
   return (
     <>
       <div className="flex flex-col h-screen">
-        <div className="flex justify-between items-center h-[200px] max-w-2xl w-full mx-auto">
-          <p className="text-4xl font-bold">Story Generator</p>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </div>
-        <SignedOut>
-          <div className="flex-grow max-w-2xl w-full mx-auto">
-            <p>Please sign in to use the story generator</p>
-          </div>
-        </SignedOut>
-        <SignedIn>
-          <div className="flex-grow max-w-2xl w-full mx-auto">
-            <StoryForm />
-          </div>
-        </SignedIn>
+        <Header />
+        <RouterProvider router={router} />
       </div>
       <Toaster />
     </>

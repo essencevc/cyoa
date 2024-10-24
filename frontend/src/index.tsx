@@ -16,7 +16,11 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={clerkPubKey}>
+    <ClerkProvider
+      signUpUrl="/sign-up"
+      signInUrl="/sign-in"
+      publishableKey={clerkPubKey}
+    >
       <App />
     </ClerkProvider>
     ,
