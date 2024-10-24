@@ -1,5 +1,5 @@
 hypercorn
-restate-sdk==0.0.1
+restate-sdk==0.4.0
 pydantic==2.8.2
 anthropic==0.36.0
 shortuuid==1.0.13

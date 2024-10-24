@@ -9,7 +9,7 @@ from cyoa.db import DB
 from cyoa.models import (StoryContinuationInput, StoryInput, StoryNode,
                          StoryOutput, StoryStatus)
 from cyoa.settings import env
-from restate.context import WorkflowSharedContext
+from restate.context import WorkflowContext, WorkflowSharedContext
 from restate.exceptions import TerminalError
 from restate.workflow import Workflow
 
@@ -21,9 +21,8 @@ story_workflow = Workflow("cyoa")
 db = DB(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
 
 @story_workflow.main()
-async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
+async def generate_story(ctx: WorkflowContext, story_input: StoryInput):
     try:
-        story_input = StoryInput.model_validate(story_input)
         logger.info(f"Generating story {story_input.story_id} with input: {story_input}")
         client = instructor.from_anthropic(
             anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
@@ -63,8 +62,7 @@ async def generate_story(ctx: WorkflowSharedContext, story_input: dict):
     return None
 
 @story_workflow.handler()
-async def generate_continuation(ctx: WorkflowSharedContext, story_input: dict):
-    story_input = StoryContinuationInput.model_validate(story_input)
+async def generate_continuation(ctx: WorkflowSharedContext, story_input: StoryContinuationInput):
     client = instructor.from_anthropic(
         anthropic.Anthropic(api_key=env.ANTHROPIC_API_KEY)
     )
