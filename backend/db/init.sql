@@ -1,4 +1,4 @@
-CREATE TABLE stories (
+CREATE TABLE IF NOT EXISTS stories (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     content JSON,
