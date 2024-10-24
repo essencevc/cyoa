@@ -15,4 +15,8 @@ export const storyResponseSchema = z.object({
     })),
 })
 
-
+export const storyGenerationAcknowledgementSchema = z.object({
+    invocationId: z.string(),
+    status: z.enum(['Accepted']),
+    story_id: z.string(),
+})

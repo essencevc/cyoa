@@ -1,21 +1,6 @@
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  SignInButton,
-  useAuth,
-  SignUp,
-  SignIn,
-} from "@clerk/clerk-react";
-import StoryForm from "./components/StoryForm";
+import { SignUp, SignIn } from "@clerk/clerk-react";
 import { Toaster } from "./components/ui/sonner";
-import Header from "./components/header";
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "./layouts/rootlayout";
 import Story from "./pages/story";
 import Home from "./pages/home";
