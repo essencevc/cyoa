@@ -8,7 +8,7 @@ def init_db():
         client.execute("DROP TABLE IF EXISTS story_node")
 
         client.execute("""
-        CREATE TABLE IF NOT EXISTS stories (
+        CREATE TABLE IF NOT EXISTS story (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
@@ -22,8 +22,9 @@ def init_db():
             node_id INTEGER PRIMARY KEY AUTOINCREMENT,
             story_id INTEGER NOT NULL,
             parent_node_id INTEGER,
-            image_url TEXT NOT NULL,
+            image_url TEXT,
             setting TEXT NOT NULL,
+            choices JSON,
             consumed BOOLEAN NOT NULL DEFAULT FALSE,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (story_id) REFERENCES story(id),

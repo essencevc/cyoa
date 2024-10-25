@@ -33,3 +33,14 @@ class Story(BaseModel):
 class StoryCreateInput(BaseModel):
     title: str
     description: str
+
+
+class RestateStoryInput(BaseModel):
+    story_id: str
+    title: str
+    setting: str
+
+
+class GeneratedStory(BaseModel):
+    setting: str
+    choices: list[str]

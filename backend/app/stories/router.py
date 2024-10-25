@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
 from app.models.stories import StoryCreateInput, StoryStatus
-import json
+from app.restate_service.restate_service import kickoff_story_generation
 
 
 router = APIRouter(
@@ -18,11 +18,12 @@ def create_story(
     story: StoryCreateInput = Body(),
 ):
     result_set = client.execute(
-        "INSERT INTO stories (user_id, title, description, status) VALUES (?, ?, ?, ?)",
+        "INSERT INTO story (user_id, title, description, status) VALUES (?, ?, ?, ?)",
         [user_id, story.title, story.description, StoryStatus.SUBMITTED.value],
     )
     story_id = result_set.last_insert_rowid
-    return {"story_id": story_id}
+    kickoff_story_generation(story_id, story.title, story.description)
+    return {"story_id": story_id, "status": "submitted"}
 
 
 @router.get("/")
@@ -31,7 +32,7 @@ def get_stories(
     user_id: str = Depends(get_user_id_from_token),
 ):
     result_set = client.execute(
-        "SELECT id,title,description,status,updated_at FROM stories WHERE user_id = ?",
+        "SELECT id,title,description,status,updated_at FROM story WHERE user_id = ?",
         [user_id],
     )
 
@@ -54,7 +55,7 @@ def delete_story(
     user_id: str = Depends(get_user_id_from_token),
 ):
     result = client.execute(
-        "DELETE FROM stories WHERE id = ? AND user_id = ?", [story_id, user_id]
+        "DELETE FROM story WHERE id = ? AND user_id = ?", [story_id, user_id]
     )
     if result.rows_affected == 0:
         raise HTTPException(
@@ -70,7 +71,7 @@ def get_story(
     user_id: str = Depends(get_user_id_from_token),
 ):
     result_set = client.execute(
-        "SELECT id,title,description,status,updated_at FROM stories WHERE id = ? AND user_id = ?",
+        "SELECT id,title,description,status,updated_at FROM story WHERE id = ? AND user_id = ?",
         [story_id, user_id],
     )
     if len(result_set.rows) != 1:
