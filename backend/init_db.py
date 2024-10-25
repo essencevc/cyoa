@@ -13,7 +13,6 @@ def init_db():
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             user_id TEXT NOT NULL,
-            content JSON,
             status TEXT CHECK(status IN ('submitted', 'running', 'failed', 'completed')) NOT NULL,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );               
