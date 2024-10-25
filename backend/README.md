@@ -1,16 +1,17 @@
-# Backend for CYOA
+# Introduction
 
-## Setup
+This is a backend service for a story generation app. In this app, users can submit a story prompt and the app will generate a story based on the prompt. The app is built using FastAPI and Restate for workflow orchestration.
 
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Setup
+
+1. Install dependencies
+
+```bash
+pip install -r pyproject.toml
 ```
 
-## Run
+2. Run our fastapi server and restate server
 
-```shell
-npx @restatedev/restate-server
-hypercorn --config hypercorn-config.toml example:app 
+```
+fastapi dev app/main.py
 ```
