@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@restatedev/restate": "^1.1.2",
-    "@restatedev/restate-server": "^1.1.2"
-  }
-}
