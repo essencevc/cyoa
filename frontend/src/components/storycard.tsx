@@ -51,7 +51,7 @@ const StoryCard = ({ story }: StoryCardProps) => {
           className={buttonVariants({ variant: "destructive" })}
         />
         <Button
-          disabled={story.status !== "submitted"}
+          disabled={story.status !== "completed"}
           variant="outline"
           className="text-green-600 hover:bg-green-50 flex items-center space-x-2"
         >
