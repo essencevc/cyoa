@@ -1,19 +1,20 @@
 import restate
 from restate.workflow import Workflow
-from restate import WorkflowSharedContext
+from restate import WorkflowContext
 from app.models.stories import RestateStoryInput, GeneratedStory, StoryStatus
 from app.settings import env
 from restate.exceptions import TerminalError
 from libsql_client import create_client_sync
 import instructor
 import json
+from app.restate_service.story import generate_story_continuation
 from openai import OpenAI
 
 story_workflow = Workflow("cyoa")
 
 
 @story_workflow.main()
-async def run(ctx: WorkflowSharedContext, story_input: RestateStoryInput):
+async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     print(f"Workflow triggered with {story_input}")
     try:
         client = instructor.from_openai(OpenAI())
@@ -27,6 +28,8 @@ async def run(ctx: WorkflowSharedContext, story_input: RestateStoryInput):
                         Generate an interactive story based on the following input:
                         Title: {{ title }}
                         Initial Content: {{ setting }}
+
+                        Make sure to write a descriptive setting for the story that will set up an interesting list of choices for the user. This should be at most 1 paragraph.
                         """,
                 }
             ],
@@ -37,18 +40,24 @@ async def run(ctx: WorkflowSharedContext, story_input: RestateStoryInput):
             response_model=GeneratedStory,
         )
 
-        print(story)
+        ctx.set("generated_story", story.model_dump())
 
         with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as db:
-            db.execute(
-                "INSERT INTO story_node (story_id, setting, choices, consumed) VALUES (?, ?, ?, ?)",
+            result = db.execute(
+                "INSERT INTO story_node (story_id, setting, choices, consumed, starting_choice) VALUES (?, ?, ?, ?, ?)",
                 [
                     story_input.story_id,
                     story.setting,
                     json.dumps(story.choices),
                     False,
+                    story.setting,
                 ],
             )
+            node_id = result.last_insert_rowid
+            for choice in story.choices:
+                generate_story_continuation(
+                    story_input.story_id, node_id, choice, story.setting
+                )
             db.execute(
                 "UPDATE story SET status = ? WHERE id = ?",
                 [StoryStatus.COMPLETED.value, story_input.story_id],

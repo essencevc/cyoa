@@ -83,7 +83,7 @@ def get_story(
     # Fetch all story nodes for the given story_id
     nodes_result_set = client.execute(
         """
-        SELECT node_id, parent_node_id, image_url, setting, choices, consumed
+        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice
         FROM story_node
         WHERE story_id = ?
         ORDER BY updated_at ASC
@@ -99,8 +99,9 @@ def get_story(
             "setting": setting,
             "choices": json.loads(choices) if choices else None,
             "consumed": bool(consumed),
+            "starting_choice": starting_choice,
         }
-        for node_id, parent_node_id, image_url, setting, choices, consumed in nodes_result_set.rows
+        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice in nodes_result_set.rows
     ]
     return {
         "id": id,

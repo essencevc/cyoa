@@ -48,3 +48,9 @@ class RestateStoryInput(BaseModel):
 class GeneratedStory(BaseModel):
     setting: str
     choices: list[str]
+
+
+class GeneratedStoryContinuation(BaseModel):
+    current_story_summary: str
+    setting: str
+    choices: list[str]

@@ -1,5 +1,5 @@
 run-restate-service:
-	hypercorn -c app/restate_service/hypercorn-config.toml app.restate_service.workflow:app
+	hypercorn -c app/restate_service/hypercorn-config.toml app.restate_service.story_workflow:app
 
 update-service:
 	restate deployment register localhost:9080 --force --yes
