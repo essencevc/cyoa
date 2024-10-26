@@ -11,6 +11,7 @@ import {
 import { Badge } from "./ui/badge";
 import useStories from "@/hooks/useStories";
 import ConfirmationButton from "./confirmationbutton";
+import { useNavigate } from "react-router";
 
 interface StoryCardProps {
   story: Story;
@@ -18,6 +19,8 @@ interface StoryCardProps {
 
 const StoryCard = ({ story }: StoryCardProps) => {
   const { deleteStory, isDeletingStory } = useStories();
+
+  const navigate = useNavigate();
   return (
     <Card
       key={story.id}
@@ -51,6 +54,9 @@ const StoryCard = ({ story }: StoryCardProps) => {
           className={buttonVariants({ variant: "destructive" })}
         />
         <Button
+          onClick={() => {
+            navigate(`/story/${story.id}`);
+          }}
           disabled={story.status !== "completed"}
           variant="outline"
           className="text-green-600 hover:bg-green-50 flex items-center space-x-2"

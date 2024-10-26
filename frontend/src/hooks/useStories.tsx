@@ -25,6 +25,7 @@ const useStories = () => {
     refetch: refetchStories,
   } = useQuery({
     queryKey: ["stories"],
+    refetchInterval: 20000,
     queryFn: async () => {
       const token = await getToken();
 
