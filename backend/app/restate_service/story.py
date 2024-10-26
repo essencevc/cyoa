@@ -24,9 +24,14 @@ def generate_story_continuation(
 
                 When faced with this, the user chose: {{user_choice}}
 
-                Generate a continuation of the story based off the setting and the user choice. Make sure to keep the story consistent with the setting and the user choice.
+                Generate a continuation of the story based off the setting and the user choice. 
 
-                Each choice should be a 1-2 sentences at most of a action description.
+                This should include
+                - A new setting that describes what happened as a result of the user choice
+                - A new story summary that describes the current state of the story and takkes into account the user choice
+                - A list of choices that the user can choose from next. Each choice should be a 1-2 sentences at most of a action description.
+
+                
                 """,
             }
         ],
