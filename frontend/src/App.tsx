@@ -1,35 +1,48 @@
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  SignInButton,
-} from "@clerk/clerk-react";
-import StoryForm from "./components/StoryForm";
+import { SignUp, SignIn } from "@clerk/clerk-react";
 import { Toaster } from "./components/ui/sonner";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import RootLayout from "./layouts/rootlayout";
+import Story from "./pages/story";
+import Home from "./pages/home";
+import { env } from "./lib/clientenvschemas";
+
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/sign-in",
+        element: (
+          <div className="flex flex-col items-center justify-center">
+            <SignIn />
+          </div>
+        ),
+      },
+      {
+        path: "/sign-up",
+        element: (
+          <div className="flex flex-col items-center justify-center">
+            <SignUp />
+          </div>
+        ),
+      },
+      {
+        path: "story/:storyId",
+        element: <Story />,
+      },
+    ],
+  },
+]);
 
 function App() {
   return (
     <>
       <div className="flex flex-col h-screen">
-        <div className="flex justify-between items-center h-[200px] max-w-2xl w-full mx-auto">
-          <p className="text-4xl font-bold">Story Generator</p>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </div>
-        <SignedOut>
-          <div className="flex-grow max-w-2xl w-full mx-auto">
-            <p>Please sign in to use the story generator</p>
-          </div>
-        </SignedOut>
-        <SignedIn>
-          <div className="flex-grow max-w-2xl w-full mx-auto">
-            <StoryForm />
-          </div>
-        </SignedIn>
+        <RouterProvider router={router} />
       </div>
       <Toaster />
     </>
