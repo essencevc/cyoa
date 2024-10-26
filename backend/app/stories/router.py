@@ -3,7 +3,7 @@ from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
 from app.models.stories import StoryCreateInput, StoryDeleteInput, StoryStatus
 from app.restate_service.restate_service import kickoff_story_generation
-
+import json
 
 router = APIRouter(
     prefix="/stories",
@@ -79,10 +79,34 @@ def get_story(
         raise HTTPException(status_code=404, detail="Story not found")
 
     id, title, description, status, updated_at = result_set.rows[0]
+
+    # Fetch all story nodes for the given story_id
+    nodes_result_set = client.execute(
+        """
+        SELECT node_id, parent_node_id, image_url, setting, choices, consumed
+        FROM story_node
+        WHERE story_id = ?
+        ORDER BY updated_at ASC
+        """,
+        [story_id],
+    )
+
+    story_nodes = [
+        {
+            "node_id": node_id,
+            "parent_node_id": parent_node_id,
+            "image_url": image_url,
+            "setting": setting,
+            "choices": json.loads(choices) if choices else None,
+            "consumed": bool(consumed),
+        }
+        for node_id, parent_node_id, image_url, setting, choices, consumed in nodes_result_set.rows
+    ]
     return {
         "id": id,
         "title": title,
         "description": description,
         "status": status,
         "updated_at": updated_at,
+        "story_nodes": story_nodes,
     }

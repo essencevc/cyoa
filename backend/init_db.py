@@ -26,7 +26,7 @@ def init_db():
             setting TEXT NOT NULL,
             choices JSON,
             consumed BOOLEAN NOT NULL DEFAULT FALSE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (story_id) REFERENCES story(id) ON DELETE CASCADE,
             FOREIGN KEY (parent_node_id) REFERENCES story_node(node_id) ON DELETE CASCADE
         );             
