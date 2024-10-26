@@ -14,6 +14,7 @@ export const storyNodeSchema = z.object({
     //  TODO Add image_url later on
     image_url: z.string().nullable(),
     setting: z.string(),
+    starting_choice: z.string(),
     choices: z.array(z.string()),
     consumed: z.boolean()
 })
