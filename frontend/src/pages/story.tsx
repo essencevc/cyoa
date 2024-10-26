@@ -1,18 +1,17 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import useStories from "@/hooks/useStories";
 import { createGraph } from "@/lib/graph";
 import { ArrowRightCircle, DiamondPlus, Gamepad } from "lucide-react";
 import Tree from "react-d3-tree";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 const renderForeignObjectNode = ({
   nodeDatum,
@@ -24,6 +23,7 @@ const renderForeignObjectNode = ({
   foreignObjectProps: any;
 }) => {
   const isParentNode = nodeDatum.attributes?.parent_node_id === null;
+
   return (
     <g>
       {isParentNode ? (
@@ -40,7 +40,6 @@ const renderForeignObjectNode = ({
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                {/* <DialogTitle>Continue Story From Here?</DialogTitle> */}
                 <DialogDescription className="py-4">
                   <p className="text-sm">{nodeDatum.attributes?.setting}</p>
                   <p className="text-md mt-4">
@@ -51,19 +50,17 @@ const renderForeignObjectNode = ({
               </DialogHeader>
 
               <DialogFooter>
-                <Button>
+                <Link
+                  className={buttonVariants({ variant: "default" })}
+                  to={`/story/${nodeDatum.attributes?.story_id}/${nodeDatum.attributes?.id}`}
+                >
                   <ArrowRightCircle /> Continue From Here
-                </Button>
+                </Link>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </foreignObject>
       )}
-
-      {/* 
-      <text fill="black" strokeWidth="1" >
-        {nodeDatum.attributes?.parent_node_id && nodeDatum.name}
-      </text> */}
     </g>
   );
 };

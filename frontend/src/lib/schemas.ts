@@ -16,7 +16,8 @@ export const storyNodeSchema = z.object({
     setting: z.string(),
     starting_choice: z.string(),
     choices: z.array(z.string()),
-    consumed: z.boolean()
+    consumed: z.boolean(),
+    story_id: z.number()
 })
 
 export const storyWithNodesSchema = storySchema.extend({

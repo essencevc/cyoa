@@ -6,6 +6,7 @@ type GraphNode = {
         id: number
         setting: string,
         parent_node_id: number | null
+        story_id: number
     }
     children: GraphNode[]
 }
@@ -21,7 +22,8 @@ export const createGraph = (story: StoryWithNodes) => {
             attributes: {
                 id: node.node_id,
                 setting: node.setting,
-                parent_node_id: node.parent_node_id
+                parent_node_id: node.parent_node_id,
+                story_id: node.story_id
             },
             children: []
         }

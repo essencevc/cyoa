@@ -116,6 +116,29 @@ const useStories = () => {
     });
   };
 
+  const getStoryNode = (
+    storyId: string | undefined,
+    nodeId: string | undefined
+  ) => {
+    if (!storyId || !nodeId) {
+      throw new Error("Story ID and Node ID are required");
+    }
+
+    return useQuery({
+      queryKey: ["storyNode", storyId, nodeId],
+      queryFn: async () => {
+        const token = await getToken();
+        const response = await apiClient.get(`/stories/${storyId}/${nodeId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        return response.data;
+      },
+      enabled: !!storyId && !!nodeId,
+    });
+  };
+
   return {
     createStory,
     isCreatingStory,
@@ -125,6 +148,7 @@ const useStories = () => {
     deleteStory,
     isDeletingStory,
     getStory,
+    getStoryNode,
   };
 };
 

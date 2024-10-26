@@ -83,7 +83,7 @@ def get_story(
     # Fetch all story nodes for the given story_id
     nodes_result_set = client.execute(
         """
-        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice
+        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id
         FROM story_node
         WHERE story_id = ?
         ORDER BY updated_at ASC
@@ -100,8 +100,9 @@ def get_story(
             "choices": json.loads(choices) if choices else None,
             "consumed": bool(consumed),
             "starting_choice": starting_choice,
+            "story_id": story_id,
         }
-        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice in nodes_result_set.rows
+        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id in nodes_result_set.rows
     ]
     return {
         "id": id,
@@ -110,4 +111,39 @@ def get_story(
         "status": status,
         "updated_at": updated_at,
         "story_nodes": story_nodes,
+    }
+
+
+@router.get("/{story_id}/{node_id}")
+def get_story_node(
+    story_id: int,
+    node_id: int,
+    client: ClientSync = Depends(get_db),
+    user_id: str = Depends(get_user_id_from_token),
+):
+    results = client.execute(
+        "SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id FROM story_node WHERE story_id = ? AND node_id = ?",
+        [story_id, node_id],
+    )
+    if len(results.rows) != 1:
+        raise HTTPException(status_code=404, detail="Story node not found")
+
+    (
+        node_id,
+        parent_node_id,
+        image_url,
+        setting,
+        choices,
+        consumed,
+        starting_choice,
+        story_id,
+    ) = results.rows[0]
+    return {
+        "node_id": node_id,
+        "parent_node_id": parent_node_id,
+        "image_url": image_url,
+        "setting": setting,
+        "choices": choices,
+        "consumed": consumed,
+        "starting_choice": starting_choice,
     }
