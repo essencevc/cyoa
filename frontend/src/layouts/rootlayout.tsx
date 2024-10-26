@@ -25,7 +25,6 @@ const RootLayout = () => {
       <div>
         <Header />
         <div className="flex flex-col items-center gap-4">
-          <p className="text-md font-semibold">loading...</p>
           <PacmanLoader />
         </div>
       </div>

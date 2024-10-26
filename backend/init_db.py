@@ -4,8 +4,8 @@ from libsql_client import create_client_sync
 
 def init_db():
     with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as client:
-        client.execute("DROP TABLE IF EXISTS story")
         client.execute("DROP TABLE IF EXISTS story_node")
+        client.execute("DROP TABLE IF EXISTS story")
 
         client.execute("""
         CREATE TABLE IF NOT EXISTS story (
@@ -27,8 +27,8 @@ def init_db():
             choices JSON,
             consumed BOOLEAN NOT NULL DEFAULT FALSE,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (story_id) REFERENCES story(id),
-            FOREIGN KEY (parent_node_id) REFERENCES story_node(node_id)
+            FOREIGN KEY (story_id) REFERENCES story(id) ON DELETE CASCADE,
+            FOREIGN KEY (parent_node_id) REFERENCES story_node(node_id) ON DELETE CASCADE
         );             
         """)
         print("Database initialized")

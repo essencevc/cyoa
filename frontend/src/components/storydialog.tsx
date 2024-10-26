@@ -14,13 +14,15 @@ import {
 import { cn } from "@/lib/utils";
 import { PlusCircleIcon } from "lucide-react";
 import { buttonVariants, Button } from "./ui/button";
-import { makePostRequest } from "@/lib/server";
-import {
-  storyGenerationAcknowledgementSchema,
-  storyResponseSchema,
-} from "@/lib/schemas";
+// import {
+//   storyGenerationAcknowledgementSchema,
+//   storyResponseSchema,
+// } from "@/lib/schemas";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
+import useStories from "@/hooks/useStories";
+import { useQueryClient } from "@tanstack/react-query";
+import { BeatLoader } from "react-spinners";
 
 type StoryDialogProps = {
   open: boolean;
@@ -29,34 +31,13 @@ type StoryDialogProps = {
 
 const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
   const [title, setTitle] = useState("");
-  const [backstory, setBackstory] = useState("");
-  const [mainCharacter, setMainCharacter] = useState("");
-  const { getToken } = useAuth();
+  const [description, setDescription] = useState("");
+  const { createStory, isCreatingStory } = useStories();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("No token found");
-      }
-      const response = await makePostRequest(
-        "/stories",
-        {
-          title,
-          main_character: mainCharacter,
-          content: backstory,
-        },
-
-        token,
-        storyGenerationAcknowledgementSchema
-      );
-      toast.success("Story generated successfully");
-      setOpen(false);
-    } catch (error) {
-      console.log(error);
-      toast.error("Error generating story - please try again later");
-    }
+    await createStory({ title, description });
+    setOpen(false);
   };
 
   return (
@@ -94,29 +75,24 @@ const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="username" className="text-right">
-                Main Character
-              </Label>
-              <Input
-                id="username"
-                value={mainCharacter}
-                onChange={(e) => setMainCharacter(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
                 Backstory
               </Label>
               <Textarea
                 id="username"
-                value={backstory}
-                onChange={(e) => setBackstory(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit" disabled={isCreatingStory}>
+              {isCreatingStory ? (
+                <BeatLoader color="white" size={10} speedMultiplier={0.3} />
+              ) : (
+                "Create"
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

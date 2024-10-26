@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
-from app.models.stories import StoryCreateInput, StoryStatus
+from app.models.stories import StoryCreateInput, StoryDeleteInput, StoryStatus
 from app.restate_service.restate_service import kickoff_story_generation
 
 
@@ -48,15 +48,16 @@ def get_stories(
     ]
 
 
-@router.post("/delete/{story_id}")
+@router.post("/delete")
 def delete_story(
-    story_id: int,
-    client: ClientSync = Depends(get_db),
     user_id: str = Depends(get_user_id_from_token),
+    client: ClientSync = Depends(get_db),
+    story_id: StoryDeleteInput = Body(),
 ):
     result = client.execute(
-        "DELETE FROM story WHERE id = ? AND user_id = ?", [story_id, user_id]
+        "DELETE FROM story WHERE id = ? AND user_id = ?", [story_id.story_id, user_id]
     )
+    print(f"Executing! {result.rows_affected}")
     if result.rows_affected == 0:
         raise HTTPException(
             status_code=404, detail="Story not found or not owned by the user"

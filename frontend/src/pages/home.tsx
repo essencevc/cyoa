@@ -1,6 +1,7 @@
 import EmptyState from "@/components/emptystate";
 import { useState } from "react";
 import StoryDialog from "@/components/storydialog";
+import StoryList from "@/components/storylist";
 
 const Home = () => {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ const Home = () => {
         <StoryDialog open={open} setOpen={setOpen} />
       </div>
       <div className="mt-4">
-        <EmptyState onClick={() => setOpen(true)} />
+        <StoryList setOpen={setOpen} />
       </div>
     </div>
   );

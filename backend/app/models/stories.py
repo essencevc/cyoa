@@ -35,6 +35,10 @@ class StoryCreateInput(BaseModel):
     description: str
 
 
+class StoryDeleteInput(BaseModel):
+    story_id: int
+
+
 class RestateStoryInput(BaseModel):
     story_id: str
     title: str

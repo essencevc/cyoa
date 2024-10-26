@@ -6,3 +6,6 @@ update-service:
 
 run-restate-server:
 	npx @restatedev/restate-server
+
+run-server:
+	fastapi dev app/main.py
