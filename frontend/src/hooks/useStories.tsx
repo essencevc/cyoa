@@ -8,7 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { storyArraySchema } from "@/lib/schemas";
+import { storyArraySchema, storyWithNodesSchema } from "@/lib/schemas";
 import { z } from "zod";
 
 const apiClient = axios.create({
@@ -26,6 +26,7 @@ const useStories = () => {
   } = useQuery({
     queryKey: ["stories"],
     refetchInterval: 20000,
+
     queryFn: async () => {
       const token = await getToken();
 
@@ -94,6 +95,27 @@ const useStories = () => {
     },
   });
 
+  const getStory = (storyId: string | undefined) => {
+    if (!storyId) {
+      throw new Error("Story ID is required");
+    }
+
+    return useQuery({
+      queryKey: ["story", storyId],
+      queryFn: async () => {
+        if (!storyId) return null;
+        const token = await getToken();
+        const response = await apiClient.get(`/stories/${storyId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        return storyWithNodesSchema.parse(response.data);
+      },
+      enabled: !!storyId,
+    });
+  };
+
   return {
     createStory,
     isCreatingStory,
@@ -102,6 +124,7 @@ const useStories = () => {
     refetchStories,
     deleteStory,
     isDeletingStory,
+    getStory,
   };
 };
 
