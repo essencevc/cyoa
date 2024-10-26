@@ -24,7 +24,7 @@ const StoryCard = ({ story }: StoryCardProps) => {
       className="hover:shadow-md transition-shadow duration-300 p-4 flex flex-col justify-between h-full"
     >
       <CardHeader className="space-y-2">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-xl font-semibold">{story.title}</CardTitle>
           <Badge
             variant={
@@ -51,6 +51,7 @@ const StoryCard = ({ story }: StoryCardProps) => {
           className={buttonVariants({ variant: "destructive" })}
         />
         <Button
+          disabled={story.status !== "submitted"}
           variant="outline"
           className="text-green-600 hover:bg-green-50 flex items-center space-x-2"
         >

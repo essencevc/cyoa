@@ -65,26 +65,28 @@ const StoryList = ({ setOpen }: StoryListProps) => {
             <StoryCard key={idx} story={story} />
           ))}
       </div>
-      <div className="flex justify-center mt-4 items-center gap-4">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                className="cursor-pointer"
-                isActive={previousEnabled}
-                onClick={() => setPreviousPage()}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                className="cursor-pointer"
-                isActive={nextEnabled}
-                onClick={() => setNextPage()}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4 items-center gap-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  className="cursor-pointer"
+                  isActive={previousEnabled}
+                  onClick={() => setPreviousPage()}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  className="cursor-pointer"
+                  isActive={nextEnabled}
+                  onClick={() => setNextPage()}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </>
   );
 };

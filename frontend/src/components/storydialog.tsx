@@ -14,14 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PlusCircleIcon } from "lucide-react";
 import { buttonVariants, Button } from "./ui/button";
-// import {
-//   storyGenerationAcknowledgementSchema,
-//   storyResponseSchema,
-// } from "@/lib/schemas";
-import { toast } from "sonner";
-import { useAuth } from "@clerk/clerk-react";
 import useStories from "@/hooks/useStories";
-import { useQueryClient } from "@tanstack/react-query";
 import { BeatLoader } from "react-spinners";
 
 type StoryDialogProps = {
@@ -37,6 +30,8 @@ const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await createStory({ title, description });
+    setTitle("");
+    setDescription("");
     setOpen(false);
   };
 
