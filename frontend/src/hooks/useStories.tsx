@@ -142,6 +142,12 @@ const useStories = () => {
       },
       enabled: !!storyId && !!nodeId,
       throwOnError: true,
+      refetchInterval: (query) => {
+        if (query.state.data?.status === "PROCESSING") {
+          return 5000; // Poll every 5 seconds if processing
+        }
+        return 30000; // Otherwise, poll every 30 seconds
+      },
     });
   };
 

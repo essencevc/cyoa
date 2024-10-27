@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { BarLoader } from "react-spinners";
 
 const StoryChoice = () => {
   const { storyId, nodeId } = useParams();
@@ -17,12 +18,13 @@ const StoryChoice = () => {
     navigate(`/story/${storyId}/${resolvedNode.node_id}`);
   };
 
-  if (!data || isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (data.status === "PROCESSING") {
-    return <div>Processing...</div>;
+  if (!data || isLoading || data.status === "PROCESSING") {
+    return (
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <p className="paragraph text-sm mb-4">Generating next choice</p>
+        <BarLoader speedMultiplier={0.5} />
+      </div>
+    );
   }
 
   return (

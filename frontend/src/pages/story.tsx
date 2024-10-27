@@ -154,7 +154,7 @@ const Story = () => {
             orientation="horizontal"
             pathFunc="step"
             nodeSize={nodeSize}
-            shouldCollapseNeighborNodes={true}
+            // shouldCollapseNeighborNodes={true}
             dimensions={{
               height: 500,
               width: 500,

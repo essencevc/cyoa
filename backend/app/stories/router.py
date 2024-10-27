@@ -127,8 +127,6 @@ def resolve_story_node(
     client: ClientSync = Depends(get_db),
     request: ResolveStoryInput = Body(),
 ):
-    # Get the choice from the request payload
-
     # Query the database to find the node_id for the given story_id and choice
     result = client.execute(
         """
