@@ -45,6 +45,17 @@ class RestateStoryInput(BaseModel):
     setting: str
 
 
+class RestateStoryContinuationInput(BaseModel):
+    story_id: str
+    parent_node_id: str
+
+
+class GenerateStoryContinuationInput(BaseModel):
+    story_id: str
+    parent_node_id: str
+    choice: str
+
+
 class GeneratedStory(BaseModel):
     setting: str
     choices: list[str]

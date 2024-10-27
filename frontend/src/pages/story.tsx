@@ -11,12 +11,7 @@ import useStories from "@/hooks/useStories";
 import { createGraph } from "@/lib/graph";
 import { cn } from "@/lib/utils";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import {
-  ArrowRightCircle,
-  DiamondPlus,
-  Gamepad,
-  Gamepad2Icon,
-} from "lucide-react";
+import { DiamondMinus, DiamondPlus, Gamepad2Icon } from "lucide-react";
 import Tree from "react-d3-tree";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -30,26 +25,39 @@ const renderForeignObjectNode = ({
   foreignObjectProps: any;
 }) => {
   const isParentNode = nodeDatum.attributes?.parent_node_id === null;
-
+  const hasChildren = nodeDatum.children.length > 0;
   return (
     <g>
-      {isParentNode ? (
-        <Gamepad2Icon
-          width="20"
-          height="20"
-          x="-10"
-          y="-10"
-          onClick={toggleNode}
-        />
-      ) : (
-        <DiamondPlus width="20" height="20" y="-10" onClick={toggleNode} />
-      )}
+      <foreignObject
+        width="40"
+        height="40"
+        x="-15"
+        y="-10"
+        onClick={toggleNode}
+      >
+        <div className="flex items-center justify-center bg-black text-white p-1 rounded-md">
+          {isParentNode ? (
+            <Gamepad2Icon width="20" height="20" />
+          ) : hasChildren ? (
+            <DiamondPlus width="20" height="20" />
+          ) : (
+            <DiamondMinus width="20" height="20" />
+          )}
+        </div>
+      </foreignObject>
 
       {!isParentNode && (
         <foreignObject {...foreignObjectProps}>
           <Dialog>
             <DialogTrigger>
-              <p className="text-sm -mt-4">{nodeDatum.name}</p>
+              <p
+                style={{
+                  maxWidth: "200px",
+                }}
+                className="border-2 border-gray-300 text-sm text-center"
+              >
+                {nodeDatum.name}
+              </p>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -89,12 +97,12 @@ const Story = () => {
   if (!story) return <div>Story not found</div>;
 
   const graph = createGraph(story);
-  const nodeSize = { x: 150, y: 150 };
+  const nodeSize = { x: 300, y: 200 };
   const foreignObjectProps = {
     width: nodeSize.x,
     height: nodeSize.y,
-    x: 30,
-    y: -28,
+    x: -100,
+    y: 20,
   };
 
   return (
@@ -113,10 +121,16 @@ const Story = () => {
         >
           <Tree
             orientation="horizontal"
-            pathFunc="elbow"
+            pathFunc="step"
+            nodeSize={nodeSize}
+            shouldCollapseNeighborNodes={true}
+            dimensions={{
+              height: 500,
+              width: 500,
+            }}
             //@ts-ignore
             data={graph}
-            collapsible={false}
+            collapsible={true}
             renderCustomNodeElement={(rd3tProps) =>
               renderForeignObjectNode({ ...rd3tProps, foreignObjectProps })
             }

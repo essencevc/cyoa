@@ -5,9 +5,11 @@ from app.models.stories import (
     StoryCreateInput,
     StoryDeleteInput,
     StoryStatus,
-    ResolveStoryChoiceInput,
 )
-from app.restate_service.restate_service import kickoff_story_generation
+from app.restate_service.restate_service import (
+    kickoff_story_generation,
+    generate_story_continuation,
+)
 import json
 
 router = APIRouter(
@@ -129,8 +131,7 @@ def get_story_node(
         [story_id, node_id],
     )
     if len(results.rows) != 1:
-        raise HTTPException(status_code=404, detail="Story node not found")
-
+        raise HTTPException(status_code=404, detail="Story Node not found")
     (
         node_id,
         parent_node_id,
@@ -141,6 +142,7 @@ def get_story_node(
         starting_choice,
         story_id,
     ) = results.rows[0]
+    generate_story_continuation(story_id, node_id)
     return {
         "node_id": node_id,
         "parent_node_id": parent_node_id,

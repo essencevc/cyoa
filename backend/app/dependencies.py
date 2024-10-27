@@ -22,4 +22,8 @@ def get_user_id_from_token(
 
 
 def get_db():
-    return create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
+    try:
+        db = create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN)
+        yield db
+    finally:
+        db.close()
