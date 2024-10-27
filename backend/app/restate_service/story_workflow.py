@@ -6,9 +6,11 @@ from app.settings import env
 from restate.exceptions import TerminalError
 from libsql_client import create_client_sync
 import instructor
+import asyncio
 import json
 from app.restate_service.story import generate_story_continuation
-from openai import OpenAI
+from app.restate_service.continuation_workflow import continuation_workflow
+from openai import AsyncOpenAI
 
 story_workflow = Workflow("cyoa")
 
@@ -17,9 +19,9 @@ story_workflow = Workflow("cyoa")
 async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     print(f"Workflow triggered with {story_input}")
     try:
-        client = instructor.from_openai(OpenAI())
+        client = instructor.from_openai(AsyncOpenAI())
 
-        story = client.chat.completions.create(
+        story = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
@@ -41,26 +43,35 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         )
 
         ctx.set("generated_story", story.model_dump())
+        print(f"Generated story: {story}")
 
         with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as db:
             result = db.execute(
-                "INSERT INTO story_node (story_id, setting, choices, consumed, starting_choice) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO story_node (story_id, setting, choices, consumed, starting_choice,status) VALUES (?, ?, ?, ?, ?, ?)",
                 [
                     story_input.story_id,
                     story.setting,
                     json.dumps(story.choices),
                     False,
                     story.setting,
+                    "PROCESSING",
                 ],
             )
             node_id = result.last_insert_rowid
-            for choice in story.choices:
+            coros = [
                 generate_story_continuation(
-                    story_input.story_id, node_id, choice, story.setting
+                    client, story_input.story_id, node_id, choice, story.setting
                 )
+                for choice in story.choices
+            ]
+            await asyncio.gather(*coros)
             db.execute(
                 "UPDATE story SET status = ? WHERE id = ?",
                 [StoryStatus.COMPLETED.value, story_input.story_id],
+            )
+            db.execute(
+                "UPDATE story_node SET status = ? WHERE story_id = ?",
+                ["COMPLETED", story_input.story_id],
             )
             print("Story updated")
 
@@ -69,4 +80,4 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         raise TerminalError("Something went wrong.")
 
 
-app = restate.app(services=[story_workflow])
+app = restate.app(services=[story_workflow, continuation_workflow])

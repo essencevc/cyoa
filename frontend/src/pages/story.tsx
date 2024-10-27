@@ -9,7 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import useStories from "@/hooks/useStories";
 import { createGraph } from "@/lib/graph";
-import { ArrowRightCircle, DiamondPlus, Gamepad } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import {
+  ArrowRightCircle,
+  DiamondPlus,
+  Gamepad,
+  Gamepad2Icon,
+} from "lucide-react";
 import Tree from "react-d3-tree";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -27,7 +34,13 @@ const renderForeignObjectNode = ({
   return (
     <g>
       {isParentNode ? (
-        <Gamepad width="20" height="20" x="-10" onClick={toggleNode} />
+        <Gamepad2Icon
+          width="20"
+          height="20"
+          x="-10"
+          y="-10"
+          onClick={toggleNode}
+        />
       ) : (
         <DiamondPlus width="20" height="20" y="-10" onClick={toggleNode} />
       )}
@@ -40,21 +53,21 @@ const renderForeignObjectNode = ({
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
+                <DialogTitle>Continue Your Story</DialogTitle>
                 <DialogDescription className="py-4">
                   <p className="text-sm">{nodeDatum.attributes?.setting}</p>
-                  <p className="text-md mt-4">
-                    You're choosing to{" "}
-                    <span className="font-bold">{nodeDatum.name}</span>
-                  </p>
                 </DialogDescription>
               </DialogHeader>
 
               <DialogFooter>
                 <Link
-                  className={buttonVariants({ variant: "default" })}
+                  className={cn(
+                    buttonVariants({ variant: "default" }),
+                    "w-full"
+                  )}
                   to={`/story/${nodeDatum.attributes?.story_id}/${nodeDatum.attributes?.id}`}
                 >
-                  <ArrowRightCircle /> Continue From Here
+                  {nodeDatum.name}
                 </Link>
               </DialogFooter>
             </DialogContent>

@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
-from app.models.stories import StoryCreateInput, StoryDeleteInput, StoryStatus
+from app.models.stories import (
+    StoryCreateInput,
+    StoryDeleteInput,
+    StoryStatus,
+    ResolveStoryChoiceInput,
+)
 from app.restate_service.restate_service import kickoff_story_generation
 import json
 
@@ -72,13 +77,13 @@ def get_story(
     user_id: str = Depends(get_user_id_from_token),
 ):
     result_set = client.execute(
-        "SELECT id,title,description,status,updated_at FROM story WHERE id = ? AND user_id = ?",
+        "SELECT id,title,description,status FROM story WHERE id = ? AND user_id = ?",
         [story_id, user_id],
     )
     if len(result_set.rows) != 1:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    id, title, description, status, updated_at = result_set.rows[0]
+    id, title, description, status = result_set.rows[0]
 
     # Fetch all story nodes for the given story_id
     nodes_result_set = client.execute(
@@ -86,7 +91,6 @@ def get_story(
         SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id
         FROM story_node
         WHERE story_id = ?
-        ORDER BY updated_at ASC
         """,
         [story_id],
     )
@@ -109,7 +113,6 @@ def get_story(
         "title": title,
         "description": description,
         "status": status,
-        "updated_at": updated_at,
         "story_nodes": story_nodes,
     }
 

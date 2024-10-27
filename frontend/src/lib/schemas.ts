@@ -5,7 +5,7 @@ export const storySchema = z.object({
     title: z.string(),
     description: z.string(),
     status: z.enum(['submitted', 'running', 'failed', 'completed']),
-    updated_at: z.string().pipe(z.coerce.date())
+    
 })
 
 export const storyNodeSchema = z.object({

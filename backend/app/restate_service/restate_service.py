@@ -22,3 +22,15 @@ def kickoff_story_generation(story_id: str, title: str, setting: str):
         workflow_name="run",
         data={"story_id": str(story_id), "title": title, "setting": setting},
     )
+
+
+def generate_story_continuation(story_id: str, parent_node_id: str, choice: str):
+    return call_restate_service(
+        workflow_id=str(uuid4()),
+        workflow_name="generate",
+        data={
+            "story_id": str(story_id),
+            "parent_node_id": parent_node_id,
+            "choice": choice,
+        },
+    )
