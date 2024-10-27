@@ -45,43 +45,45 @@ const renderForeignObjectNode = ({
           )}
         </div>
       </foreignObject>
+      (
+      <foreignObject {...foreignObjectProps}>
+        <Dialog>
+          <DialogTrigger>
+            <p
+              style={{
+                maxWidth: "200px",
+              }}
+              className="bg-gray-100 border border-gray-300 rounded-md text-sm text-center py-2 px-4 hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+            >
+              {isParentNode ? "Start From The Beginning" : nodeDatum.name}
+            </p>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Continue Your Story</DialogTitle>
+              <DialogDescription className="py-4">
+                <p className="text-sm">
+                  {isParentNode
+                    ? "This is the beginning of the story. You can start from the beginning or continue from the last node you were on."
+                    : nodeDatum.attributes?.setting}
+                </p>
+              </DialogDescription>
+            </DialogHeader>
 
-      {!isParentNode && (
-        <foreignObject {...foreignObjectProps}>
-          <Dialog>
-            <DialogTrigger>
-              <p
-                style={{
-                  maxWidth: "200px",
-                }}
-                className="border-2 border-gray-300 text-sm text-center"
+            <DialogFooter>
+              <Link
+                className={cn(buttonVariants({ variant: "default" }), "w-full")}
+                to={`/story/${nodeDatum.attributes?.story_id}/${nodeDatum.attributes?.id}`}
               >
-                {nodeDatum.name}
-              </p>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Continue Your Story</DialogTitle>
-                <DialogDescription className="py-4">
-                  <p className="text-sm">{nodeDatum.attributes?.setting}</p>
-                </DialogDescription>
-              </DialogHeader>
-
-              <DialogFooter>
-                <Link
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "w-full"
-                  )}
-                  to={`/story/${nodeDatum.attributes?.story_id}/${nodeDatum.attributes?.id}`}
-                >
-                  {nodeDatum.name}
-                </Link>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </foreignObject>
-      )}
+                {isParentNode
+                  ? "Start From The Beginning"
+                  : "Revisit your choice"}
+              </Link>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </foreignObject>
+      )
     </g>
   );
 };
@@ -96,7 +98,7 @@ const Story = () => {
 
   if (!story) return <div>Story not found</div>;
 
-  const graph = createGraph(story);
+  const graph = createGraph(story.story_nodes.filter((node) => node.consumed));
   const nodeSize = { x: 300, y: 200 };
   const foreignObjectProps = {
     width: nodeSize.x,
@@ -104,6 +106,35 @@ const Story = () => {
     x: -100,
     y: 20,
   };
+
+  // This is a new story, so we don't have any nodes
+  if (graph?.children.length == 0) {
+    return (
+      <>
+        <Button
+          onClick={() => navigate("/")}
+          variant="outline"
+          className="mb-4"
+        >
+          Back
+        </Button>
+        <div className="prose lg:prose-xl">
+          <h3>{story.title}</h3>
+          <p className="paragraph text-sm">{graph?.attributes?.setting}</p>
+          <div className="flex items-center justify-center mt-4">
+            <Button
+              onClick={() =>
+                navigate(`/story/${storyId}/${graph.attributes.id}`)
+              }
+              className="w-[300px] py-2"
+            >
+              Start Playthrough
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

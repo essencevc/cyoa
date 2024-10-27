@@ -70,8 +70,8 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
                 [StoryStatus.COMPLETED.value, story_input.story_id],
             )
             db.execute(
-                "UPDATE story_node SET status = ? WHERE story_id = ?",
-                ["COMPLETED", story_input.story_id],
+                "UPDATE story_node SET status = ?, consumed = ? WHERE node_id = ?",
+                ["COMPLETED", True, node_id],
             )
             print("Story updated")
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
 from app.models.stories import (
+    ResolveStoryInput,
     StoryCreateInput,
     StoryDeleteInput,
     StoryStatus,
@@ -90,7 +91,7 @@ def get_story(
     # Fetch all story nodes for the given story_id
     nodes_result_set = client.execute(
         """
-        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id
+        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id,status
         FROM story_node
         WHERE story_id = ?
         """,
@@ -107,8 +108,9 @@ def get_story(
             "consumed": bool(consumed),
             "starting_choice": starting_choice,
             "story_id": story_id,
+            "status": status,
         }
-        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id in nodes_result_set.rows
+        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id, status in nodes_result_set.rows
     ]
     return {
         "id": id,
@@ -119,6 +121,34 @@ def get_story(
     }
 
 
+@router.post("/resolve_node")
+def resolve_story_node(
+    user_id: str = Depends(get_user_id_from_token),
+    client: ClientSync = Depends(get_db),
+    request: ResolveStoryInput = Body(),
+):
+    # Get the choice from the request payload
+
+    # Query the database to find the node_id for the given story_id and choice
+    result = client.execute(
+        """
+        SELECT node_id
+        FROM story_node
+        WHERE story_id = ? AND starting_choice = ?
+        """,
+        [request.story_id, request.choice],
+    )
+
+    if not result.rows:
+        raise HTTPException(
+            status_code=404, detail="No matching node found for the given choice"
+        )
+
+    node_id = result.rows[0][0]
+
+    return {"story_id": request.story_id, "node_id": node_id}
+
+
 @router.get("/{story_id}/{node_id}")
 def get_story_node(
     story_id: int,
@@ -127,7 +157,7 @@ def get_story_node(
     user_id: str = Depends(get_user_id_from_token),
 ):
     results = client.execute(
-        "SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id FROM story_node WHERE story_id = ? AND node_id = ?",
+        "SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id,status FROM story_node WHERE story_id = ? AND node_id = ?",
         [story_id, node_id],
     )
     if len(results.rows) != 1:
@@ -141,14 +171,22 @@ def get_story_node(
         consumed,
         starting_choice,
         story_id,
+        status,
     ) = results.rows[0]
     generate_story_continuation(story_id, node_id)
+    # Update the story node as consumed
+    client.execute(
+        "UPDATE story_node SET consumed = ? WHERE story_id = ? AND node_id = ?",
+        [True, story_id, node_id],
+    )
     return {
+        "story_id": story_id,
         "node_id": node_id,
         "parent_node_id": parent_node_id,
         "image_url": image_url,
         "setting": setting,
-        "choices": choices,
-        "consumed": consumed,
+        "choices": json.loads(choices) if choices else [],
+        "consumed": bool(consumed),
+        "status": status,
         "starting_choice": starting_choice,
     }

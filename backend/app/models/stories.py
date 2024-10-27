@@ -56,6 +56,11 @@ class GenerateStoryContinuationInput(BaseModel):
     choice: str
 
 
+class ResolveStoryInput(BaseModel):
+    story_id: str
+    choice: str
+
+
 class GeneratedStory(BaseModel):
     setting: str
     choices: list[str]

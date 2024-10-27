@@ -1,4 +1,4 @@
-import { StoryWithNodes } from "./schemas";
+import { StoryNode, StoryWithNodes } from "./schemas";
 
 type GraphNode = {
     name: string
@@ -11,8 +11,7 @@ type GraphNode = {
     children: GraphNode[]
 }
 
-export const createGraph = (story: StoryWithNodes) => {
-    const nodes = story.story_nodes
+export const createGraph = (nodes: StoryNode[]) => {
     const id_to_node  = new Map<number, GraphNode>()
 
     // First we create all of the nodes

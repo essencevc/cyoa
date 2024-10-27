@@ -7,18 +7,22 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 const StoryChoice = () => {
   const { storyId, nodeId } = useParams();
-  const { getStoryNode } = useStories();
+  const { getStoryNode, resolveStoryNode } = useStories();
 
-  const { data, isLoading, isError } = getStoryNode(storyId, nodeId);
+  const { data, isLoading } = getStoryNode(storyId, nodeId);
   const navigate = useNavigate();
 
-  const handleChoiceClick = (choice: string) => {
-    // TODO:
-    // navigate(`/story/${storyId}/${choice["node_id"]}/`);
+  const handleChoiceClick = async (choice: string) => {
+    const resolvedNode = await resolveStoryNode(storyId, choice);
+    navigate(`/story/${storyId}/${resolvedNode.node_id}`);
   };
 
   if (!data || isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (data.status === "PROCESSING") {
+    return <div>Processing...</div>;
   }
 
   return (
@@ -31,16 +35,14 @@ const StoryChoice = () => {
         Back
       </Button>
       <div className="prose lg:prose-xl">
-        {data["starting_choice"] && (
-          <p className="text-md font-bold">{data["starting_choice"]}</p>
-        )}
         <p className="paragraph text-sm">{data["setting"]}</p>
         <hr />
-        {JSON.parse(data["choices"]).map((choice: string) => (
+        {data["choices"].map((choice: string) => (
           <Button
+            key={choice}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "text-center text-sm w-full my-2 text-black h-[50px]"
+              "text-center text-sm w-full my-2 text-black h-[80px] text-wrap"
             )}
             onClick={() => handleChoiceClick(choice)}
           >

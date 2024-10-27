@@ -17,7 +17,8 @@ export const storyNodeSchema = z.object({
     starting_choice: z.string(),
     choices: z.array(z.string()),
     consumed: z.boolean(),
-    story_id: z.number()
+    story_id: z.number(),
+    status: z.enum(['PROCESSING', 'FAILED', 'COMPLETED'])
 })
 
 export const storyWithNodesSchema = storySchema.extend({
@@ -25,6 +26,7 @@ export const storyWithNodesSchema = storySchema.extend({
 })
 
 export type StoryWithNodes = z.infer<typeof storyWithNodesSchema>;
+export type StoryNode = z.infer<typeof storyNodeSchema>;
 
 export type Story = z.infer<typeof storySchema>;
 export const storyArraySchema = z.array(storySchema)  

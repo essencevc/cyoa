@@ -19,6 +19,17 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryContinuationInput):
     client = instructor.from_openai(AsyncOpenAI())
     try:
         with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as db:
+            # Check if there are already child nodes for this parent
+            existing_nodes = db.execute(
+                "SELECT COUNT(*) FROM story_node WHERE story_id = ? AND parent_node_id = ?",
+                [story_input.story_id, story_input.parent_node_id],
+            ).rows[0][0]
+
+            if existing_nodes > 0:
+                print(
+                    f"Child nodes already exist for parent_node_id {story_input.parent_node_id}. Skipping generation."
+                )
+                return
             result = db.execute(
                 "SELECT choices,current_story_summary FROM story_node WHERE story_id = ? AND node_id = ?",
                 [story_input.story_id, story_input.parent_node_id],

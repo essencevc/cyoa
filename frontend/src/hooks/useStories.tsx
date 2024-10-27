@@ -8,7 +8,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { storyArraySchema, storyWithNodesSchema } from "@/lib/schemas";
+import {
+  storyArraySchema,
+  storyNodeSchema,
+  storyWithNodesSchema,
+} from "@/lib/schemas";
 import { z } from "zod";
 
 const apiClient = axios.create({
@@ -113,6 +117,7 @@ const useStories = () => {
         return storyWithNodesSchema.parse(response.data);
       },
       enabled: !!storyId,
+      throwOnError: true,
     });
   };
 
@@ -133,10 +138,35 @@ const useStories = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        return response.data;
+        return storyNodeSchema.parse(response.data);
       },
       enabled: !!storyId && !!nodeId,
+      throwOnError: true,
     });
+  };
+
+  const resolveStoryNode = async (
+    storyId: string | undefined,
+    choice: string | undefined
+  ) => {
+    if (!storyId || !choice) {
+      throw new Error("Story ID and choice are required");
+    }
+
+    const token = await getToken();
+    const response = await apiClient.post(
+      `/stories/resolve_node`,
+      {
+        story_id: storyId,
+        choice,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
   };
 
   return {
@@ -149,6 +179,7 @@ const useStories = () => {
     isDeletingStory,
     getStory,
     getStoryNode,
+    resolveStoryNode,
   };
 };
 
