@@ -7,7 +7,7 @@ type GraphNode = {
         setting: string,
         parent_node_id: number | null
         story_id: number
-        image_url: string
+        image_url: string | null
     }
     children: GraphNode[]
 }
