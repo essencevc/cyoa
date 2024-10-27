@@ -10,6 +10,7 @@ import asyncio
 import json
 from app.restate_service.story import generate_story_continuation
 from app.restate_service.continuation_workflow import continuation_workflow
+from app.modal_service.service import generate_image
 from openai import AsyncOpenAI
 
 story_workflow = Workflow("cyoa")
@@ -58,12 +59,14 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
                 ],
             )
             node_id = result.last_insert_rowid
+
             coros = [
                 generate_story_continuation(
                     client, story_input.story_id, node_id, choice, story.setting
                 )
                 for choice in story.choices
             ]
+            coros.append(generate_image(story.setting, story_input.story_id, node_id))
             await asyncio.gather(*coros)
             db.execute(
                 "UPDATE story SET status = ? WHERE id = ?",

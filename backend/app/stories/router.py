@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
+import random
 from app.models.stories import (
     ResolveStoryInput,
     StoryCreateInput,
     StoryDeleteInput,
     StoryStatus,
+    RandomStory,
 )
 from app.restate_service.restate_service import (
     kickoff_story_generation,
@@ -188,3 +190,51 @@ def get_story_node(
         "status": status,
         "starting_choice": starting_choice,
     }
+
+
+@router.post("/get_random_story")
+def get_random_story(
+    user_id: str = Depends(get_user_id_from_token),
+):
+    import instructor
+    import openai
+
+    client = instructor.from_openai(openai.OpenAI())
+
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "You're a {{persona}}.  Generate a title and description for a story that will be interesting - note that this is just an introduction to get things going, so it should be short and to the point. Description should be around 2-3 sentences at most",
+            },
+            {
+                "role": "user",
+                "content": "Please generate a story that is {{genre}} and {{ adjective}}",
+            },
+        ],
+        context={
+            "persona": random.choice(
+                [
+                    "Expert Storyteller",
+                    "1980s Action Hero",
+                    "Crossfit Athlete",
+                    "Michellin Chef",
+                    "Professional Dungeon and Dragon Master",
+                ]
+            ),
+            "genre": random.choice(
+                ["fantasy", "sci-fi", "mystery", "horror", "thriller", "comedy"]
+            ),
+            "adjective": random.choice(
+                [
+                    "exciting",
+                    "funny",
+                    "sad",
+                    "scary",
+                    "surprising",
+                ]
+            ),
+        },
+        response_model=RandomStory,
+    )

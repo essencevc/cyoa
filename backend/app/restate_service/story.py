@@ -2,6 +2,7 @@ from libsql_client import create_client_sync
 from app.settings import env
 from app.models.stories import GeneratedStoryContinuation
 import json
+from app.modal_service.service import generate_image
 
 
 async def generate_story_continuation(
@@ -55,6 +56,8 @@ async def generate_story_continuation(
                 "user_choice": user_choice,
             },
         )
+
+        await generate_image(resp.setting, story_id, node_id)
 
         db.execute(
             """

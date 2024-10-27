@@ -175,6 +175,20 @@ const useStories = () => {
     return response.data;
   };
 
+  const getRandomStory = async () => {
+    const token = await getToken();
+    const response = await apiClient.post(
+      `/stories/get_random_story`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
   return {
     createStory,
     isCreatingStory,
@@ -186,6 +200,7 @@ const useStories = () => {
     getStory,
     getStoryNode,
     resolveStoryNode,
+    getRandomStory,
   };
 };
 
