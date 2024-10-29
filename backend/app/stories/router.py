@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_user_id_from_token, get_db
 from libsql_client.sync import ClientSync
-from app.models.stories import StoryCreateInput, StoryDeleteInput, StoryStatus
-from app.restate_service.restate_service import kickoff_story_generation
-
+import random
+from app.models.stories import (
+    ResolveStoryInput,
+    StoryCreateInput,
+    StoryDeleteInput,
+    StoryStatus,
+    RandomStory,
+)
+from app.restate_service.restate_service import (
+    kickoff_story_generation,
+    generate_story_continuation,
+)
+import json
 
 router = APIRouter(
     prefix="/stories",
@@ -72,17 +82,159 @@ def get_story(
     user_id: str = Depends(get_user_id_from_token),
 ):
     result_set = client.execute(
-        "SELECT id,title,description,status,updated_at FROM story WHERE id = ? AND user_id = ?",
+        "SELECT id,title,description,status FROM story WHERE id = ? AND user_id = ?",
         [story_id, user_id],
     )
     if len(result_set.rows) != 1:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    id, title, description, status, updated_at = result_set.rows[0]
+    id, title, description, status = result_set.rows[0]
+
+    # Fetch all story nodes for the given story_id
+    nodes_result_set = client.execute(
+        """
+        SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id,status
+        FROM story_node
+        WHERE story_id = ?
+        """,
+        [story_id],
+    )
+
+    story_nodes = [
+        {
+            "node_id": node_id,
+            "parent_node_id": parent_node_id,
+            "image_url": image_url,
+            "setting": setting,
+            "choices": json.loads(choices) if choices else None,
+            "consumed": bool(consumed),
+            "starting_choice": starting_choice,
+            "story_id": story_id,
+            "status": status,
+        }
+        for node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id, status in nodes_result_set.rows
+    ]
     return {
         "id": id,
         "title": title,
         "description": description,
         "status": status,
-        "updated_at": updated_at,
+        "story_nodes": story_nodes,
     }
+
+
+@router.post("/resolve_node")
+def resolve_story_node(
+    user_id: str = Depends(get_user_id_from_token),
+    client: ClientSync = Depends(get_db),
+    request: ResolveStoryInput = Body(),
+):
+    # Query the database to find the node_id for the given story_id and choice
+    result = client.execute(
+        """
+        SELECT node_id
+        FROM story_node
+        WHERE story_id = ? AND starting_choice = ?
+        """,
+        [request.story_id, request.choice],
+    )
+
+    if not result.rows:
+        raise HTTPException(
+            status_code=404, detail="No matching node found for the given choice"
+        )
+
+    node_id = result.rows[0][0]
+
+    return {"story_id": request.story_id, "node_id": node_id}
+
+
+@router.get("/{story_id}/{node_id}")
+def get_story_node(
+    story_id: int,
+    node_id: int,
+    client: ClientSync = Depends(get_db),
+    user_id: str = Depends(get_user_id_from_token),
+):
+    results = client.execute(
+        "SELECT node_id, parent_node_id, image_url, setting, choices, consumed, starting_choice, story_id,status FROM story_node WHERE story_id = ? AND node_id = ?",
+        [story_id, node_id],
+    )
+    if len(results.rows) != 1:
+        raise HTTPException(status_code=404, detail="Story Node not found")
+    (
+        node_id,
+        parent_node_id,
+        image_url,
+        setting,
+        choices,
+        consumed,
+        starting_choice,
+        story_id,
+        status,
+    ) = results.rows[0]
+    generate_story_continuation(story_id, node_id)
+    # Update the story node as consumed
+    client.execute(
+        "UPDATE story_node SET consumed = ? WHERE story_id = ? AND node_id = ?",
+        [True, story_id, node_id],
+    )
+    return {
+        "story_id": story_id,
+        "node_id": node_id,
+        "parent_node_id": parent_node_id,
+        "image_url": image_url,
+        "setting": setting,
+        "choices": json.loads(choices) if choices else [],
+        "consumed": bool(consumed),
+        "status": status,
+        "starting_choice": starting_choice,
+    }
+
+
+@router.post("/get_random_story")
+def get_random_story(
+    user_id: str = Depends(get_user_id_from_token),
+):
+    import instructor
+    import openai
+
+    client = instructor.from_openai(openai.OpenAI())
+
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "You're a {{persona}}.  Generate a title and description for a story that will be interesting - note that this is just an introduction to get things going, so it should be short and to the point. Description should be around 2-3 sentences at most",
+            },
+            {
+                "role": "user",
+                "content": "Please generate a story that is {{genre}} and {{ adjective}}",
+            },
+        ],
+        context={
+            "persona": random.choice(
+                [
+                    "Expert Storyteller",
+                    "1980s Action Hero",
+                    "Crossfit Athlete",
+                    "Michellin Chef",
+                    "Professional Dungeon and Dragon Master",
+                ]
+            ),
+            "genre": random.choice(
+                ["fantasy", "sci-fi", "mystery", "horror", "thriller", "comedy"]
+            ),
+            "adjective": random.choice(
+                [
+                    "exciting",
+                    "funny",
+                    "sad",
+                    "scary",
+                    "surprising",
+                ]
+            ),
+        },
+        response_model=RandomStory,
+    )

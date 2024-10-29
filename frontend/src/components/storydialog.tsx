@@ -16,6 +16,7 @@ import { PlusCircleIcon } from "lucide-react";
 import { buttonVariants, Button } from "./ui/button";
 import useStories from "@/hooks/useStories";
 import { BeatLoader } from "react-spinners";
+import { toast } from "sonner";
 
 type StoryDialogProps = {
   open: boolean;
@@ -25,7 +26,7 @@ type StoryDialogProps = {
 const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const { createStory, isCreatingStory } = useStories();
+  const { createStory, isCreatingStory, getRandomStory } = useStories();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,6 +82,19 @@ const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
             </div>
           </div>
           <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={async (e) => {
+                e.preventDefault();
+                const story = await getRandomStory();
+                setTitle(story.title);
+                setDescription(story.description);
+                toast.success("Random Story Generated!");
+              }}
+            >
+              Surprise Me
+            </Button>
             <Button type="submit" disabled={isCreatingStory}>
               {isCreatingStory ? (
                 <BeatLoader color="white" size={10} speedMultiplier={0.3} />

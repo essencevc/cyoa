@@ -24,9 +24,11 @@ def init_db():
             parent_node_id INTEGER,
             image_url TEXT,
             setting TEXT NOT NULL,
+            starting_choice TEXT,
             choices JSON,
+            current_story_summary TEXT,
             consumed BOOLEAN NOT NULL DEFAULT FALSE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            status TEXT CHECK(status IN ('PROCESSING', 'FAILED', 'COMPLETED')) NOT NULL,
             FOREIGN KEY (story_id) REFERENCES story(id) ON DELETE CASCADE,
             FOREIGN KEY (parent_node_id) REFERENCES story_node(node_id) ON DELETE CASCADE
         );             

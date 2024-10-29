@@ -5,6 +5,7 @@ import RootLayout from "./layouts/rootlayout";
 import Story from "./pages/story";
 import Home from "./pages/home";
 import { env } from "./lib/clientenvschemas";
+import StoryChoice from "./pages/story_choice";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
       {
         path: "story/:storyId",
         element: <Story />,
+      },
+      {
+        path: "story/:storyId/:nodeId",
+        element: <StoryChoice />,
       },
     ],
   },

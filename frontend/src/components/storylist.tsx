@@ -1,26 +1,13 @@
 import useStories from "@/hooks/useStories";
-import React from "react";
 import EmptyState from "./emptystate";
 
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "./ui/button";
-import { ArrowRightSquare } from "lucide-react";
-import { Badge } from "./ui/badge";
 import StoryCard from "./storycard";
 import { BarLoader } from "react-spinners";
 import { usePagination } from "react-use-pagination";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
@@ -32,7 +19,6 @@ type StoryListProps = {
 const StoryList = ({ setOpen }: StoryListProps) => {
   const { stories, hasFetchedStories } = useStories();
   const {
-    currentPage,
     totalPages,
     setNextPage,
     setPreviousPage,
@@ -59,7 +45,7 @@ const StoryList = ({ setOpen }: StoryListProps) => {
     <>
       <div className="grid grid-cols-2 gap-4">
         {stories
-          ?.sort((a, b) => b.updated_at.getTime() - a.updated_at.getTime())
+          .sort((a, b) => b.id - a.id)
           .slice(startIndex, endIndex + 1)
           .map((story, idx) => (
             <StoryCard key={idx} story={story} />
