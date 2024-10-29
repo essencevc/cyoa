@@ -14,6 +14,7 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { DiamondMinus, DiamondPlus, Gamepad2Icon } from "lucide-react";
 import Tree from "react-d3-tree";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { BarLoader } from "react-spinners";
 
 const renderForeignObjectNode = ({
   nodeDatum,
@@ -94,7 +95,13 @@ const Story = () => {
   const { data: story, isLoading } = getStory(storyId);
   const navigate = useNavigate();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <p className="paragraph text-sm mb-4">Loading story...</p>
+        <BarLoader speedMultiplier={0.5} />
+      </div>
+    );
 
   if (!story) return <div>Story not found</div>;
 
@@ -121,6 +128,13 @@ const Story = () => {
         <div className="prose lg:prose-xl">
           <h3>{story.title}</h3>
           <p className="paragraph text-sm">{graph?.attributes?.setting}</p>
+          <div className="flex items-center justify-center">
+            <img
+              src={graph?.attributes?.image_url}
+              alt="Story Image"
+              className="w-[300px] h-[300px] object-cover"
+            />
+          </div>
           <div className="flex items-center justify-center mt-4">
             <Button
               onClick={() =>
@@ -144,6 +158,13 @@ const Story = () => {
       <div className="prose lg:prose-xl">
         <h3>{story.title}</h3>
         <p className="paragraph text-sm">{graph?.attributes?.setting}</p>
+        <div className="flex items-center justify-center">
+          <img
+            src={graph?.attributes?.image_url}
+            alt="Story Image"
+            className="w-[300px] h-[300px] object-cover"
+          />
+        </div>
         <hr />
         <p className="text-sm font-bold">Your Current Progress</p>
         <div

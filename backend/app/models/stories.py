@@ -70,3 +70,8 @@ class GeneratedStoryContinuation(BaseModel):
     current_story_summary: str
     setting: str
     choices: list[str]
+
+
+class RandomStory(BaseModel):
+    title: str
+    description: str

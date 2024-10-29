@@ -7,6 +7,7 @@ import instructor
 from libsql_client import create_client_sync
 from app.settings import env
 from app.restate_service.story import generate_story_continuation
+from app.modal_service.service import generate_image
 import asyncio
 import json
 
@@ -39,17 +40,19 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryContinuationInput):
 
             choices_json, story_summary = result.rows[0]
             choices = json.loads(choices_json)
-            print(choices)
-            coros = [
-                generate_story_continuation(
-                    client,
-                    story_input.story_id,
-                    story_input.parent_node_id,
-                    choice,
-                    story_summary,
+
+            coros = []
+            for choice in choices:
+                coros.append(
+                    generate_story_continuation(
+                        client,
+                        story_input.story_id,
+                        story_input.parent_node_id,
+                        choice,
+                        story_summary,
+                    )
                 )
-                for choice in choices
-            ]
+
             await asyncio.gather(*coros)
     except Exception as e:
         print(e)

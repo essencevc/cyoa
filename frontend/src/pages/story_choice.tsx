@@ -28,7 +28,7 @@ const StoryChoice = () => {
   }
 
   return (
-    <div>
+    <div className="mb-10">
       <Button
         className="mb-4"
         onClick={() => navigate(`/story/${storyId}`)}
@@ -37,6 +37,15 @@ const StoryChoice = () => {
         Back
       </Button>
       <div className="prose lg:prose-xl">
+        {data["image_url"] && (
+          <div className="flex justify-center items-center">
+            <img
+              className="w-[600px] h-[400px] object-cover"
+              src={data["image_url"]}
+              alt="Story Image"
+            />
+          </div>
+        )}
         <p className="paragraph text-sm">{data["setting"]}</p>
         <hr />
         {data["choices"].map((choice: string) => (
