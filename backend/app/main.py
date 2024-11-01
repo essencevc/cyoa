@@ -1,9 +1,11 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.stories.router import router as stories_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.include_router(stories_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # Add CORS middleware

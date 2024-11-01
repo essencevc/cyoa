@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "clerk-backend-api>=1.0.3",
-    "fal-client>=0.5.4",
     "fastapi[standard]>=0.115.3",
     "hypercorn>=0.17.3",
     "instructor>=1.6.3",

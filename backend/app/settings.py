@@ -10,8 +10,9 @@ class Settings(BaseSettings):
     RESTATE_TOKEN: Optional[str] = None
     ANTHROPIC_API_KEY: str
     LIBSQL_URL: str
-    FAL_KEY: str
+    MODAL_ENDPOINT: str
     LIBSQL_TOKEN: Optional[str] = None
+    BACKEND_URL: str
 
     @model_validator(mode="after")
     def validate_libsql_url(self) -> "Settings":

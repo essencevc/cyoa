@@ -168,7 +168,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "clerk-backend-api", specifier = ">=1.0.3" },
-    { name = "fal-client" },
+    { name = "fal-client", specifier = ">=0.5.4" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.3" },
     { name = "hypercorn", specifier = ">=0.17.3" },
     { name = "instructor", specifier = ">=1.6.3" },
