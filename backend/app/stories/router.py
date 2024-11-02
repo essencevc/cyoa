@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import Session
 from app.dependencies import get_session, get_user_id_from_token
 import random
-from app.db.models import Story, JobStatus, StoryNode
+from common.models import Story, JobStatus, StoryNode
 from sqlmodel import select
 from app.models.stories import (
     ResolveStoryInput,

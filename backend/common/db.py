@@ -1,4 +1,4 @@
-from app.settings import env
+from common.settings import env
 from sqlmodel import create_engine, Session
 
 

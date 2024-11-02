@@ -1,5 +1,5 @@
 import requests
-from app.settings import env
+from common.settings import env
 
 
 def call_restate_service(

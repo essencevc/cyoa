@@ -28,7 +28,7 @@ async def generate_image(prompt: str, story_id: str, node_id: str):
         f.write(image_data)
 
     # Set the URL for database storage
-    image_url = f"{env.BACKEND_URL}/static/{image_filename}"
+    image_url = f"/static/{image_filename}"
 
     with get_db_session() as session:
         statement = select(StoryNode).where(StoryNode.id == node_id)

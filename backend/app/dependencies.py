@@ -6,8 +6,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from clerk_backend_api import Clerk
 from clerk_backend_api.jwks_helpers import TokenVerificationError
 from fastapi import HTTPException, Security
-from app.settings import env
-from app.db.helpers import get_db_session
+from common.settings import env
+from common.db import get_db_session
 
 clerk = Clerk(bearer_auth=env.CLERK_SECRET_KEY)
 
