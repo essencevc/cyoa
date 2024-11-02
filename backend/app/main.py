@@ -5,7 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.include_router(stories_router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount(
+    "/",
+    StaticFiles(directory="../frontend/build", html=True),
+    name="frontend",
+)
 
 
 # Add CORS middleware
@@ -18,6 +23,6 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.get("/health")
+def health():
+    return {"status": "ok"}
