@@ -1,8 +1,54 @@
-from app.models.stories import GeneratedStoryContinuation
-from app.db.helpers import get_db_session
-from app.db.models import StoryNode, JobStatus
-from app.image_service.service import generate_image
+from common.models import StoryNode, JobStatus
+from story_service.app.models import GeneratedStoryContinuation
+from story_service.app.settings import restate_settings
+from sqlmodel import create_engine, Session
+import os
 from sqlmodel import select
+import requests
+
+
+def get_db_url():
+    return f"sqlite+{restate_settings.LIBSQL_URL}/?authToken={restate_settings.LIBSQL_TOKEN}&secure=true"
+
+
+def get_db_session():
+    engine = create_engine(
+        get_db_url(),
+        connect_args={"check_same_thread": False},
+    )
+    return Session(bind=engine)
+
+
+async def generate_image(prompt: str, story_id: str, node_id: str):
+    # Make request to modal endpoint
+    response = requests.post(
+        restate_settings.MODAL_ENDPOINT,
+        params={"prompt": prompt},
+    )
+    response.raise_for_status()
+    image_data = response.content
+
+    # TODO: Move this to use R2
+    image_filename = f"{story_id}_{node_id}.jpg"
+    image_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "backend",
+        "static",
+        image_filename,
+    )
+
+    with open(image_path, "wb") as f:
+        f.write(image_data)
+
+    # Set the URL for database storage
+    image_url = f"/static/{image_filename}"
+
+    with get_db_session() as session:
+        statement = select(StoryNode).where(StoryNode.id == node_id)
+        node = session.exec(statement).first()
+        node.image_url = image_url
+        session.add(node)
+        session.commit()
 
 
 async def generate_story_continuation(

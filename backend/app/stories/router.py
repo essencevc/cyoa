@@ -10,7 +10,7 @@ from app.models.stories import (
     StoryDeleteInput,
     RandomStory,
 )
-from app.restate_service.restate_service import (
+from app.helpers.restate import (
     kickoff_story_generation,
     generate_story_continuation,
 )

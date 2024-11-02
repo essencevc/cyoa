@@ -1,14 +1,14 @@
 from restate.workflow import Workflow
 from restate import WorkflowContext
-from app.models.stories import RestateStoryContinuationInput
+from story_service.app.models import RestateStoryContinuationInput
 from restate.exceptions import TerminalError
 from openai import AsyncOpenAI
 import instructor
-from app.restate_service.story import generate_story_continuation
+from story_service.app.helpers import generate_story_continuation
 import asyncio
 from sqlmodel import select
-from app.db.models import StoryNode
-from app.db.helpers import get_db_session
+from common.models import StoryNode
+from story_service.app.helpers import get_db_session
 from datetime import timedelta
 
 continuation_workflow = Workflow("continuation")

@@ -39,17 +39,6 @@ class StoryDeleteInput(BaseModel):
     story_id: int
 
 
-class RestateStoryInput(BaseModel):
-    story_id: str
-    title: str
-    setting: str
-
-
-class RestateStoryContinuationInput(BaseModel):
-    story_id: str
-    parent_node_id: str
-
-
 class GenerateStoryContinuationInput(BaseModel):
     story_id: str
     parent_node_id: str
@@ -62,12 +51,6 @@ class ResolveStoryInput(BaseModel):
 
 
 class GeneratedStory(BaseModel):
-    setting: str
-    choices: list[str]
-
-
-class GeneratedStoryContinuation(BaseModel):
-    current_story_summary: str
     setting: str
     choices: list[str]
 

@@ -1,17 +1,20 @@
 import restate
 from restate.workflow import Workflow
 from restate import WorkflowContext
-from app.models.stories import RestateStoryInput, GeneratedStory
+from story_service.app.models import RestateStoryInput, GeneratedStory
 from restate.exceptions import TerminalError
 import instructor
 import asyncio
-from app.restate_service.story import generate_story_continuation
-from app.restate_service.continuation_workflow import continuation_workflow
-from app.image_service.service import generate_image
+from story_service.app.helpers import generate_story_continuation
+from story_service.app.continuation import continuation_workflow
+from sqlmodel import select
+from common.models import Story
 from openai import AsyncOpenAI
-from app.db.models import JobStatus, StoryNode
-from app.db.helpers import get_db_session
+from common.models import JobStatus, StoryNode
+from story_service.app.helpers import get_db_session
+import logging
 
+logger = logging.getLogger(__name__)
 
 story_workflow = Workflow("cyoa")
 
@@ -43,7 +46,7 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
             response_model=GeneratedStory,
         )
 
-        print("Generated Story", story)
+        logger.info("Generated Story", story)
 
         ctx.set("generated_story", story.model_dump())
 
@@ -72,25 +75,22 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
                 )
                 for choice in story.choices
             ]
-            coros.append(
-                generate_image(story.setting, story_input.story_id, story_node.id)
-            )
+            # coros.append(
+            #     generate_image(story.setting, story_input.story_id, story_node.id)
+            # )
             await asyncio.gather(*coros)
 
             story_node.status = JobStatus.COMPLETED
             story_node.consumed = True
-
-            from sqlmodel import select
-            from app.db.models import Story
 
             statement = select(Story).where(Story.id == story_input.story_id)
             story = session.exec(statement).first()
             story.status = JobStatus.COMPLETED
             session.add(story)
             session.commit()
-            print("Story Workflow Completed")
+            logger.info("Story Workflow Completed")
     except Exception as e:
-        print(e)
+        logger.error(e)
         raise TerminalError("Something went wrong.")
 
 

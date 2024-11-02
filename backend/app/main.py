@@ -7,13 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 app.include_router(stories_router)
 
-if env.ENV == "production":
-    app.mount(
-        "/",
-        StaticFiles(directory="../frontend/build", html=True),
-        name="frontend",
-    )
-
 
 # Add CORS middleware
 app.add_middleware(
