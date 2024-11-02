@@ -20,7 +20,7 @@ export const createGraph = (nodes: StoryNode[]) => {
         const graphNode: GraphNode = {
             name: node.starting_choice,
             attributes: {
-                id: node.node_id,
+                id: node.id,
                 setting: node.setting,
                 image_url: node.image_url ?? undefined,
                 parent_node_id: node.parent_node_id,
@@ -28,12 +28,12 @@ export const createGraph = (nodes: StoryNode[]) => {
             },
             children: []
         }
-        id_to_node.set(node.node_id, graphNode)
+        id_to_node.set(node.id, graphNode)
     }
 
     // Then we for every node, we add the children to the parent
     for (const node of nodes) {
-        const graphNode = id_to_node.get(node.node_id)
+        const graphNode = id_to_node.get(node.id)
         if (graphNode && node.parent_node_id) {
             const parentNode = id_to_node.get(node.parent_node_id)
             if (parentNode) {
@@ -45,7 +45,7 @@ export const createGraph = (nodes: StoryNode[]) => {
     // Then we find the root node
     for (const node of nodes) {
         if (node.parent_node_id === null) {
-            return id_to_node.get(node.node_id)
+            return id_to_node.get(node.id)
         }
     }
 }

@@ -31,7 +31,7 @@ const StoryCard = ({ story }: StoryCardProps) => {
           <CardTitle className="text-xl font-semibold">{story.title}</CardTitle>
           <Badge
             variant={
-              story.status === "submitted"
+              story.status === "processing"
                 ? "secondary"
                 : story.status === "completed"
                 ? "default"

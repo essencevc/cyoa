@@ -4,56 +4,68 @@ from app.models.stories import RestateStoryContinuationInput
 from restate.exceptions import TerminalError
 from openai import AsyncOpenAI
 import instructor
-from libsql_client import create_client_sync
-from app.settings import env
 from app.restate_service.story import generate_story_continuation
-from app.modal_service.service import generate_image
 import asyncio
-import json
+from sqlmodel import select
+from app.db.models import StoryNode
+from app.db.helpers import get_db_session
+from datetime import timedelta
 
 continuation_workflow = Workflow("continuation")
 
 
 @continuation_workflow.main()
 async def run(ctx: WorkflowContext, story_input: RestateStoryContinuationInput):
-    print(f"Workflow triggered with {story_input}")
+    print(f"Continuation Workflow triggered with {story_input}")
     client = instructor.from_openai(AsyncOpenAI())
-    try:
-        with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as db:
-            # Check if there are already child nodes for this parent
-            existing_nodes = db.execute(
-                "SELECT COUNT(*) FROM story_node WHERE story_id = ? AND parent_node_id = ?",
-                [story_input.story_id, story_input.parent_node_id],
-            ).rows[0][0]
 
-            if existing_nodes > 0:
+    while True:
+        with get_db_session() as session:
+            story_node = session.exec(
+                select(StoryNode)
+                .where(StoryNode.story_id == story_input.story_id)
+                .where(StoryNode.id == story_input.parent_node_id)
+            ).one_or_none()
+
+            if story_node is None:
+                raise TerminalError(
+                    f"Story node with id {story_input.parent_node_id} not found."
+                )
+
+            if story_node.children:
                 print(
-                    f"Child nodes already exist for parent_node_id {story_input.parent_node_id}. Skipping generation."
+                    f"Child nodes already exist for parent_node with id of {story_input.parent_node_id}. Skipping generation."
                 )
                 return
-            result = db.execute(
-                "SELECT choices,current_story_summary FROM story_node WHERE story_id = ? AND node_id = ?",
-                [story_input.story_id, story_input.parent_node_id],
+
+            if story_node.status == "completed":
+                print(f"Story Node {story_node.id} completed. Exiting.")
+                break
+
+            if story_node.status == "failed":
+                raise TerminalError("Story node generation failed.")
+
+            await ctx.sleep(delta=timedelta(seconds=4))
+
+    try:
+        coros = [
+            generate_story_continuation(
+                client=client,
+                story_id=story_input.story_id,
+                parent_node_id=story_node.id,
+                story_summary=story_node.current_story_summary,
+                user_choice=choice,
             )
-            if not result.rows:
-                raise TerminalError("Story node not found.")
-
-            choices_json, story_summary = result.rows[0]
-            choices = json.loads(choices_json)
-
-            coros = []
-            for choice in choices:
-                coros.append(
-                    generate_story_continuation(
-                        client,
-                        story_input.story_id,
-                        story_input.parent_node_id,
-                        choice,
-                        story_summary,
-                    )
-                )
-
-            await asyncio.gather(*coros)
+            for choice in story_node.choices
+        ]
+        await asyncio.gather(*coros)
     except Exception as e:
-        print(e)
+        print(f"Encountered error: {e}. Deleting generated nodes.")
         raise TerminalError("Something went wrong.")
+
+    with get_db_session() as session:
+        statement = select(StoryNode).where(StoryNode.parent_node_id == story_node.id)
+        results = session.exec(statement)
+        for node in results:
+            session.delete(node)
+        session.commit()

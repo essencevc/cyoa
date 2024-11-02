@@ -106,6 +106,8 @@ const Story = () => {
   if (!story) return <div>Story not found</div>;
 
   const graph = createGraph(story.story_nodes.filter((node) => node.consumed));
+
+  console.log(graph);
   const nodeSize = { x: 300, y: 200 };
   const foreignObjectProps = {
     width: nodeSize.x,

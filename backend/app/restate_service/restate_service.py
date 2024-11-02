@@ -1,6 +1,5 @@
 import requests
 from app.settings import env
-from uuid import uuid4
 
 
 def call_restate_service(
@@ -22,10 +21,10 @@ def call_restate_service(
     return resp
 
 
-def kickoff_story_generation(story_id: str, title: str, setting: str):
+def kickoff_story_generation(story_id: int, title: str, setting: str):
     return call_restate_service(
         service_name="cyoa",
-        invocation_id=str(uuid4()),
+        invocation_id=f"story-{story_id}-{title}-{setting}",
         service_handler="run",
         data={"story_id": str(story_id), "title": title, "setting": setting},
     )
@@ -34,7 +33,7 @@ def kickoff_story_generation(story_id: str, title: str, setting: str):
 def generate_story_continuation(story_id: str, parent_node_id: str):
     return call_restate_service(
         service_name="continuation",
-        invocation_id=str(uuid4()),
+        invocation_id=f"story-continuation-{story_id}-{parent_node_id}",
         service_handler="run",
         data={"story_id": str(story_id), "parent_node_id": str(parent_node_id)},
     )

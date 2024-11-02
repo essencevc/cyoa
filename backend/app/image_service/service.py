@@ -1,7 +1,9 @@
 import os
 import requests
-from libsql_client import create_client_sync
+from sqlmodel import select
 from app.settings import env
+from app.db.helpers import get_db_session
+from app.db.models import StoryNode
 
 
 async def generate_image(prompt: str, story_id: str, node_id: str):
@@ -28,8 +30,9 @@ async def generate_image(prompt: str, story_id: str, node_id: str):
     # Set the URL for database storage
     image_url = f"{env.BACKEND_URL}/static/{image_filename}"
 
-    with create_client_sync(url=env.LIBSQL_URL, auth_token=env.LIBSQL_TOKEN) as client:
-        client.execute(
-            "UPDATE story_node SET image_url = ? WHERE node_id = ? AND story_id = ?",
-            (image_url, node_id, story_id),
-        )
+    with get_db_session() as session:
+        statement = select(StoryNode).where(StoryNode.id == node_id)
+        node = session.exec(statement).first()
+        node.image_url = image_url
+        session.add(node)
+        session.commit()

@@ -1,7 +1,6 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import useStories from "@/hooks/useStories";
 import { cn } from "@/lib/utils";
-import React from "react";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { BarLoader } from "react-spinners";
@@ -18,7 +17,7 @@ const StoryChoice = () => {
     navigate(`/story/${storyId}/${resolvedNode.node_id}`);
   };
 
-  if (!data || isLoading || data.status === "PROCESSING") {
+  if (!data || isLoading || data.status === "processing") {
     return (
       <div className="flex flex-col justify-center items-center h-[300px]">
         <p className="paragraph text-sm mb-4">Generating next choice</p>
