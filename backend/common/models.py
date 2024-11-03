@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, JSON, Relationship, Column, Enum
 import enum
+import uuid
 
 
 class JobStatus(str, enum.Enum):
@@ -12,7 +13,7 @@ class JobStatus(str, enum.Enum):
 
 class Story(SQLModel, table=True):
     __tablename__ = "story"
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str
     description: str
     user_id: str
@@ -26,15 +27,15 @@ class Story(SQLModel, table=True):
 
 class StoryNode(SQLModel, table=True):
     __tablename__ = "story_node"
-    id: int = Field(primary_key=True)
-    story_id: int = Field(foreign_key="story.id", ondelete="CASCADE")
-    parent_node_id: Optional[int] = Field(
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    story_id: uuid.UUID = Field(foreign_key="story.id", ondelete="CASCADE")
+    parent_node_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="story_node.id", ondelete="CASCADE"
     )
     image_url: Optional[str] = None
     setting: str
     starting_choice: Optional[str] = None
-    choices: Optional[dict] = Field(default=None, sa_type=JSON)
+    choices: List[str] = Field(default_factory=list, min_items=1, sa_type=JSON)
     current_story_summary: Optional[str] = None
     consumed: bool = Field(default=False)
     status: JobStatus = Column(Enum(JobStatus))

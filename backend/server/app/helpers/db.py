@@ -1,5 +1,5 @@
-from common.settings import env
 from sqlmodel import create_engine, Session
+from server.app.settings import env
 
 
 def get_db_url():

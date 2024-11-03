@@ -1,19 +1,9 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is the backend for the cyoa project."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "clerk-backend-api>=1.0.3",
-    "fastapi[standard]>=0.115.3",
-    "hypercorn>=0.17.3",
-    "instructor>=1.6.3",
-    "libsql-client>=0.3.1",
-    "modal>=0.64.232",
-    "openai>=1.52.2",
-    "pydantic-settings>=2.6.0",
-    "restate-sdk>=0.4.1",
-    "sqlalchemy-libsql>=0.1.0",
-    "sqlmodel>=0.0.22",
-]
+
+[tool.uv.workspace]
+members = ["story_service", "server"]

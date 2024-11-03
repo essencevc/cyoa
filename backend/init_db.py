@@ -1,5 +1,5 @@
-from app.db.models import Story, StoryNode
-from app.settings import env
+from common.models import Story, StoryNode
+from common.settings import env
 from sqlmodel import SQLModel, create_engine, Session
 
 
