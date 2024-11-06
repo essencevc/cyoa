@@ -161,11 +161,11 @@ const Story = () => {
         <h3>{story.title}</h3>
         <p className="paragraph text-sm">{graph?.attributes?.setting}</p>
         <div className="flex items-center justify-center">
-          <img
+          {/* <img
             src={graph?.attributes?.image_url}
             alt="Story Image"
             className="w-[300px] h-[300px] object-cover"
-          />
+          /> */}
         </div>
         <hr />
         <p className="text-sm font-bold">Your Current Progress</p>
