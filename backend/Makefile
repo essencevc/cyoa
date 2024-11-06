@@ -8,7 +8,7 @@ run-restate-server:
 	npx @restatedev/restate-server
 
 run-server:
-	fastapi dev app/main.py
+	fastapi dev server/app/main.py --env-file server/.env
 
 deploy-restate:	
 	fly deploy --config ./story_service/fly.toml --dockerfile ./story_service/Dockerfile --ha=false

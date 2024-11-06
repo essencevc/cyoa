@@ -6,7 +6,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from clerk_backend_api import Clerk
 from clerk_backend_api.jwks_helpers import TokenVerificationError
 from fastapi import HTTPException, Security
-from sqlalchemy.exc import SQLAlchemyError
+from sqlmodel import create_engine, Session
+from sqlalchemy.pool import QueuePool
+from sqlalchemy.orm import sessionmaker
+
 from server.app.helpers.db import get_db_session
 from server.app.settings import env
 import time
@@ -14,6 +17,23 @@ import time
 clerk = Clerk(bearer_auth=env.CLERK_SECRET_KEY)
 
 security = HTTPBearer()
+
+SQLALCHEMY_DATABASE_URL = (
+    f"sqlite+{env.LIBSQL_URL}/?authToken={env.LIBSQL_TOKEN}&secure=true"
+)
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    connect_args={"check_same_thread": False},
+    echo=True,
+    pool_pre_ping=True,
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_user_id_from_token(
@@ -28,23 +48,10 @@ def get_user_id_from_token(
 
 
 def get_session():
-    max_retries = 3
-    retry_delay = 1  # seconds
-
-    for attempt in range(max_retries):
-        try:
-            with get_db_session() as session:
-                yield session
-                return
-        except TimeoutError:
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)
-                continue
-            raise
-        except Exception as e:
-            session.rollback()
-            raise e
-        finally:
-            session.close()
-
-    raise TimeoutError("Failed to connect to database after multiple attempts")
+    db = SessionLocal()
+    try:
+        # Convert SQLAlchemy session to SQLModel session to get access to .exec()
+        db = Session(bind=db.bind)
+        yield db
+    finally:
+        db.close()

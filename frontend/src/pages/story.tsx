@@ -130,13 +130,13 @@ const Story = () => {
         <div className="prose lg:prose-xl">
           <h3>{story.title}</h3>
           <p className="paragraph text-sm">{graph?.attributes?.setting}</p>
-          <div className="flex items-center justify-center">
+          {/* <div className="flex items-center justify-center">
             <img
               src={graph?.attributes?.image_url}
               alt="Story Image"
               className="w-[300px] h-[300px] object-cover"
             />
-          </div>
+          </div> */}
           <div className="flex items-center justify-center mt-4">
             <Button
               onClick={() =>
