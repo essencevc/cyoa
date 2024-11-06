@@ -1,0 +1,9 @@
+# flyctl launch added from .venv/.gitignore
+.venv/**/*
+
+# flyctl launch added from server/.venv/.gitignore
+server/.venv/**/*
+
+# flyctl launch added from story_service/.venv/.gitignore
+story_service/.venv/**/*
+fly.toml

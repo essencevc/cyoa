@@ -1,11 +1,23 @@
 run-restate-service:
-	hypercorn -c app/restate_service/hypercorn-config.toml app.restate_service.workflow:app
+	hypercorn -c story_service/hypercorn-config.toml story_service.app.story:app
 
 update-service:
-	restate deployment register localhost:9080 --force --yes
+	restate deployment register tunnel://laptop:9080 --force --yes
 
 run-restate-server:
 	npx @restatedev/restate-server
 
 run-server:
-	fastapi dev app/main.py
+	fastapi dev server/app/main.py --env-file server/.env
+
+deploy-restate:	
+	fly deploy --config ./story_service/fly.toml --dockerfile ./story_service/Dockerfile --ha=false
+
+deploy-server:
+	fly deploy --config ./server/fly.toml --dockerfile ./server/Dockerfile --ha=false
+
+build-server:
+	docker build -f server/Dockerfile . -t cyoa-server
+
+run-server-container:
+	docker run -p 8000:8000 cyoa-server

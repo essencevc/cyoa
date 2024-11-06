@@ -8,7 +8,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { storyArraySchema } from "@/lib/schemas";
+import {
+  storyArraySchema,
+  storyNodeSchema,
+  storyWithNodesSchema,
+} from "@/lib/schemas";
 import { z } from "zod";
 
 const apiClient = axios.create({
@@ -25,6 +29,8 @@ const useStories = () => {
     refetch: refetchStories,
   } = useQuery({
     queryKey: ["stories"],
+    refetchInterval: 20000,
+
     queryFn: async () => {
       const token = await getToken();
 
@@ -51,7 +57,7 @@ const useStories = () => {
     }) => {
       const token = await getToken();
       const response = await apiClient.post(
-        "/stories",
+        "/stories/",
         { title, description },
         {
           headers: {
@@ -75,7 +81,7 @@ const useStories = () => {
       const token = await getToken();
       const response = await apiClient.post(
         "/stories/delete",
-        { story_id: storyId },
+        { id: storyId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -93,6 +99,96 @@ const useStories = () => {
     },
   });
 
+  const getStory = (storyId: string | undefined) => {
+    if (!storyId) {
+      throw new Error("Story ID is required");
+    }
+
+    return useQuery({
+      queryKey: ["story", storyId],
+      queryFn: async () => {
+        if (!storyId) return null;
+        const token = await getToken();
+        const response = await apiClient.get(`/stories/${storyId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        return storyWithNodesSchema.parse(response.data);
+      },
+      enabled: !!storyId,
+      throwOnError: true,
+    });
+  };
+
+  const getStoryNode = (
+    storyId: string | undefined,
+    nodeId: string | undefined
+  ) => {
+    if (!storyId || !nodeId) {
+      throw new Error("Story ID and Node ID are required");
+    }
+
+    return useQuery({
+      queryKey: ["storyNode", storyId, nodeId],
+      queryFn: async () => {
+        const token = await getToken();
+        const response = await apiClient.get(`/stories/${storyId}/${nodeId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        return storyNodeSchema.parse(response.data);
+      },
+      enabled: !!storyId && !!nodeId,
+      throwOnError: true,
+      refetchInterval: (query) => {
+        if (query.state.data?.status === "processing") {
+          return 5000; // Poll every 5 seconds if processing
+        }
+        return 30000; // Otherwise, poll every 30 seconds
+      },
+    });
+  };
+
+  const resolveStoryNode = async (
+    storyId: string | undefined,
+    choice: string | undefined
+  ) => {
+    if (!storyId || !choice) {
+      throw new Error("Story ID and choice are required");
+    }
+
+    const token = await getToken();
+    const response = await apiClient.post(
+      `/stories/resolve_node`,
+      {
+        story_id: storyId,
+        choice,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
+  const getRandomStory = async () => {
+    const token = await getToken();
+    const response = await apiClient.post(
+      `/stories/get_random_story`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
   return {
     createStory,
     isCreatingStory,
@@ -101,6 +197,10 @@ const useStories = () => {
     refetchStories,
     deleteStory,
     isDeletingStory,
+    getStory,
+    getStoryNode,
+    resolveStoryNode,
+    getRandomStory,
   };
 };
 
