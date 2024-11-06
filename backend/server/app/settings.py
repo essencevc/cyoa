@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     LIBSQL_URL: str
     MODAL_ENDPOINT: str
     LIBSQL_TOKEN: Optional[str] = None
+    OPENAI_API_KEY: str
 
     class Config:
         env_file = ".env"

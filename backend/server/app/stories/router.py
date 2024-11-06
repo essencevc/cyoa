@@ -13,6 +13,7 @@ from server.app.stories.models import (
     StoryNodePublic,
 )
 from common.models import Story, JobStatus, StoryNode
+from server.app.settings import env
 from server.app.helpers.restate import (
     kickoff_story_generation,
     generate_story_continuation,
@@ -36,7 +37,7 @@ router = APIRouter(
 def get_random_story(
     user_id: str = Depends(get_user_id_from_token),
 ):
-    client = instructor.from_openai(openai.OpenAI())
+    client = instructor.from_openai(openai.OpenAI(api_key=env.OPENAI_API_KEY))
 
     return client.chat.completions.create(
         model="gpt-4o-mini",
