@@ -10,7 +10,7 @@ class RestateStoryInput(BaseModel):
 
 class RestateStoryContinuationInput(BaseModel):
     story_id: UUID
-    parent_node_id: str
+    parent_node_id: UUID
 
 
 class GeneratedStory(BaseModel):

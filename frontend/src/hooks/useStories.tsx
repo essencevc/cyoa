@@ -81,7 +81,7 @@ const useStories = () => {
       const token = await getToken();
       const response = await apiClient.post(
         "/stories/delete",
-        { story_id: storyId },
+        { id: storyId },
         {
           headers: {
             Authorization: `Bearer ${token}`,

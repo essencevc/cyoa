@@ -7,6 +7,8 @@ requires-python = ">=3.11"
 dependencies = [
     "clerk-backend-api>=1.1.2",
     "fastapi[standard]>=0.115.3",
+    "instructor>=1.6.3",
+    "openai>=1.52.2",
     "pydantic-settings>=2.6.0",
     "requests>=2.32.3",
     "sqlalchemy-libsql>=0.1.0",

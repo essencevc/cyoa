@@ -2,7 +2,7 @@ run-restate-service:
 	hypercorn -c story_service/hypercorn-config.toml story_service.app.story:app
 
 update-service:
-	restate deployment register localhost:9080 --force --yes
+	restate deployment register tunnel://laptop:9080 --force --yes
 
 run-restate-server:
 	npx @restatedev/restate-server

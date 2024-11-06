@@ -62,10 +62,3 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryContinuationInput):
     except Exception as e:
         print(f"Encountered error: {e}. Deleting generated nodes.")
         raise TerminalError("Something went wrong.")
-
-    with get_db_session() as session:
-        statement = select(StoryNode).where(StoryNode.parent_node_id == story_node.id)
-        results = session.exec(statement)
-        for node in results:
-            session.delete(node)
-        session.commit()

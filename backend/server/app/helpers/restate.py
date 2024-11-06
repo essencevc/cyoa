@@ -10,7 +10,10 @@ def call_restate_service(
     return requests.post(
         url,
         json=data,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {env.RESTATE_TOKEN}",
+        },
     ).json()
 
 

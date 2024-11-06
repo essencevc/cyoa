@@ -54,13 +54,14 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         logger.error(e)
         raise TerminalError("Something went wrong.")
 
+    node_id = None
     with get_db_session() as session:
         story_node = StoryNode(
             story_id=story_input.story_id,
             setting=story.setting,
             current_story_summary=story.setting,
             choices=story.choices,
-            consumed=False,
+            consumed=True,
             starting_choice=story.setting,
             status=JobStatus.PROCESSING,
         )
@@ -69,11 +70,13 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         session.commit()
         session.refresh(story_node)
 
+    node_id = story_node.id
+
     coros = [
         generate_story_continuation(
             client,
             story_id=story_input.story_id,
-            parent_node_id=story_node.id,
+            parent_node_id=node_id,
             user_choice=choice,
             story_summary=story.setting,
         )
@@ -87,6 +90,9 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     logger.info("Generated Continuations, proceeding to complete story")
 
     with get_db_session() as session:
+        story_node = session.exec(
+            select(StoryNode).where(StoryNode.id == node_id)
+        ).first()
         story_node.status = JobStatus.COMPLETED
         story_node.consumed = True
 
@@ -94,6 +100,7 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         story = session.exec(statement).first()
         story.status = JobStatus.COMPLETED
         session.add(story)
+        session.add(story_node)
         session.commit()
         logger.info("Story Workflow Completed")
 
