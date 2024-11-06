@@ -57,7 +57,7 @@ const useStories = () => {
     }) => {
       const token = await getToken();
       const response = await apiClient.post(
-        "/stories",
+        "/stories/",
         { title, description },
         {
           headers: {
