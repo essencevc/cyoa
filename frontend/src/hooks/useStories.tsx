@@ -16,7 +16,7 @@ import {
 import { z } from "zod";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.MODE === "development" ? env.VITE_SERVER_URL : "",
+  baseURL: env.VITE_SERVER_URL,
 });
 
 const useStories = () => {
