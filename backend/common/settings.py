@@ -13,6 +13,3 @@ class CoreSettings(BaseSettings):
 
     class Config:
         env_file = ".env"
-
-
-core_settings = CoreSettings()

@@ -2,7 +2,6 @@ import time
 from typing import Generator
 from sqlmodel import Session, create_engine, text
 from sqlalchemy.engine import Engine
-from common.settings import core_settings
 import logging
 
 
@@ -14,9 +13,10 @@ class DatabaseEngine:
     _engine = None
     _sessionLocal = None
 
-    def __new__(cls):
+    def __new__(cls, settings):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            cls._settings = settings  # Set settings only
         return cls._instance
 
     @property
@@ -25,7 +25,7 @@ class DatabaseEngine:
             try:
                 if not self._engine or not self._engine.pool:
                     self._engine = create_engine(
-                        core_settings.db_url,
+                        self._settings.db_url,
                         pool_pre_ping=True,
                         pool_recycle=30,
                         connect_args={"check_same_thread": False},
