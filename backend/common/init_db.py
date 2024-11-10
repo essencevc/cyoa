@@ -1,12 +1,10 @@
-from common.models import Story, StoryNode
-from common.settings import env
+from models import Story, StoryNode
 from sqlmodel import SQLModel, create_engine, Session
+from settings import core_settings
 
-
-dbUrl = f"sqlite+{env.LIBSQL_URL}/?authToken={env.LIBSQL_TOKEN}&secure=true"
 
 engine = create_engine(
-    dbUrl,
+    core_settings.db_url,
     connect_args={"check_same_thread": False},
     echo=True,
 )
@@ -14,7 +12,7 @@ engine = create_engine(
 
 def create_db_and_tables():
     # Drop all tables first
-    SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.drop_all(engine, checkfirst=True)
     # Then recreate them
     SQLModel.metadata.create_all(engine)
 
