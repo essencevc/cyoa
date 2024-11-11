@@ -14,8 +14,8 @@ class JobStatus(str, enum.Enum):
 class Story(SQLModel, table=True):
     __tablename__ = "story"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    title: str = Field(max_length=255)
-    description: str = Field(max_length=1024)
+    title: str
+    description: str
     user_id: str
     status: JobStatus = Column(Enum(JobStatus))
     updated_at: datetime = Field(default_factory=datetime.now)
@@ -29,8 +29,8 @@ class StoryNode(SQLModel, table=True):
     parent_node_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="story_node.id", ondelete="CASCADE"
     )
-    choice_text: str = Field(max_length=1024)
-    image_url: str = Field(max_length=512)
-    setting: str = Field(max_length=255)
+    choice_text: str
+    image_url: str
+    setting: str
     user_id: Optional[str] = None
     consumed_at: Optional[datetime] = None
