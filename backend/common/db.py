@@ -3,7 +3,7 @@ from typing import Generator
 from sqlmodel import Session, create_engine, text
 from sqlalchemy.engine import Engine
 import logging
-
+from common.settings import CoreSettings
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,8 @@ class DatabaseEngine:
     _sessionLocal = None
 
     def __new__(cls, settings):
+        if not isinstance(settings, CoreSettings):
+            raise TypeError("Settings must be an instance of CoreSettings")
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._settings = settings  # Set settings only

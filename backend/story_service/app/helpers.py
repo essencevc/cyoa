@@ -3,18 +3,13 @@ from story_service.app.models import GeneratedStoryContinuation
 from story_service.app.settings import restate_settings
 from sqlmodel import create_engine, Session
 from sqlmodel import select
+from common.db import DatabaseEngine
 
-
-def get_db_url():
-    return f"sqlite+{restate_settings.LIBSQL_URL}/?authToken={restate_settings.LIBSQL_TOKEN}&secure=true"
+database_engine = DatabaseEngine(restate_settings)
 
 
 def get_db_session():
-    engine = create_engine(
-        get_db_url(),
-        connect_args={"check_same_thread": False},
-    )
-    return Session(bind=engine)
+    return next(database_engine.get_session())
 
 
 async def generate_story_continuation(

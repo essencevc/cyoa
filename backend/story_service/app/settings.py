@@ -1,10 +1,8 @@
-from pydantic_settings import BaseSettings
+from common.settings import CoreSettings
 
 
-class Settings(BaseSettings):
-    OPENAI_API_KEY: str
-    LIBSQL_URL: str
-    LIBSQL_TOKEN: str
+class Settings(CoreSettings):
+    GOOGLE_API_KEY: str
 
     class Config:
         env_file = "./story_service/.env"
