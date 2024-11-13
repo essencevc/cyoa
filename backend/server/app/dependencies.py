@@ -21,7 +21,6 @@ database_engine = DatabaseEngine(env)
 def get_user_id_from_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
-    return "123"
     token_options = VerifyTokenOptions(secret_key=env.CLERK_SECRET_KEY)
     try:
         jwt_obj = verify_token(credentials.credentials, token_options)
