@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field, Column, Enum
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Column, Enum, Relationship
 import enum
 import uuid
 
@@ -34,3 +34,11 @@ class StoryNode(SQLModel, table=True):
     setting: str
     user_id: Optional[str] = None
     consumed_at: Optional[datetime] = None
+
+    children: List["StoryNode"] = Relationship(
+        back_populates="parent",
+        sa_relationship_kwargs={"remote_side": [parent_node_id]},
+    )
+    parent: Optional["StoryNode"] = Relationship(
+        back_populates="children", sa_relationship_kwargs={"remote_side": [id]}
+    )

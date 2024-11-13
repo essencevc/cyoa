@@ -1,10 +1,10 @@
 from models import Story, StoryNode
 from sqlmodel import SQLModel, create_engine, Session
-from settings import core_settings
+from settings import CoreSettings
 
 
 engine = create_engine(
-    core_settings.db_url,
+    CoreSettings().db_url,
     connect_args={"check_same_thread": False},
     echo=True,
 )
