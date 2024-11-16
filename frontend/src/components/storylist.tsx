@@ -45,7 +45,7 @@ const StoryList = ({ setOpen }: StoryListProps) => {
     <>
       <div className="grid grid-cols-2 gap-4">
         {stories
-          .sort((a, b) => b.id - a.id)
+          .sort((a, b) => a.updated_at.getTime() - b.updated_at.getTime())
           .slice(startIndex, endIndex + 1)
           .map((story, idx) => (
             <StoryCard key={idx} story={story} />

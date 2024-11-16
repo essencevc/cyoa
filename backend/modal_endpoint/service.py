@@ -32,7 +32,7 @@ flux_image = cuda_dev_image.apt_install(
     "numpy<2",
 )
 
-app = modal.App("example-flux", image=flux_image)
+app = modal.App("flux-endpoint", image=flux_image)
 
 with flux_image.imports():
     import torch
@@ -46,15 +46,6 @@ NUM_INFERENCE_STEPS = 4  # use ~50 for [dev], smaller for [schnell]
 
 @app.cls(
     gpu="A100",  # fastest GPU on Modal
-    container_idle_timeout=20 * MINUTES,
-    timeout=60 * MINUTES,  # leave plenty of time for compilation
-    volumes={  # add Volumes to store serializable compilation artifacts, see section on torch.compile below
-        "/root/.nv": modal.Volume.from_name("nv-cache", create_if_missing=True),
-        "/root/.triton": modal.Volume.from_name("triton-cache", create_if_missing=True),
-        "/root/.inductor-cache": modal.Volume.from_name(
-            "inductor-cache", create_if_missing=True
-        ),
-    },
 )
 class Model:
     compile: int = (  # see section on torch.compile below for details
@@ -85,14 +76,14 @@ class Model:
         self.pipe.to("cuda")  # move model to GPU
 
     @modal.web_endpoint(docs=True, method="POST")
-    def inference(self, prompt: str) -> bytes:
+    def inference(self, prompt: str, width: int = 800, height: int = 400) -> bytes:
         print("🎨 generating image...")
         out = self.pipe(
             prompt,
             output_type="pil",
             num_inference_steps=NUM_INFERENCE_STEPS,
-            width=1200,
-            height=800,
+            width=width,
+            height=height,
         ).images[0]
 
         byte_stream = BytesIO()

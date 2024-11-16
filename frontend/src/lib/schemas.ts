@@ -5,6 +5,7 @@ export const storySchema = z.object({
   title: z.string(),
   description: z.string(),
   status: z.enum(["processing", "failed", "completed"]),
+  updated_at: z.coerce.date(),
 });
 
 export const StoryNodeBaseSchema = z.object({
