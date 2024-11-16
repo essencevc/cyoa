@@ -73,7 +73,7 @@ async def rewrite_choice(
     task = (
         "This is a terminal choice. End the story and rewrite the choice setting and consequence to reflect that. The story should be wrapped up here."
         if len(prev_choices) == max_depth - 1
-        else "Continue the story and suggest 2-4 potential choices if applicable"
+        else f"Continue the story and suggest 2-4 potential choices if applicable. The story should end in around {max_depth-len(prev_choices)-1} turns so take note of that"
     )
     async with sem:
         for retry_attempt in range(3):
@@ -90,11 +90,12 @@ async def rewrite_choice(
                             Choice: {{ choice }}
 
                             Rules
-                            - Make sure that the choice is consistent with the overall plot of the story.
+                            - The choice description should be 1-2 sentences at most and describe a specific action (Eg. Do X , Go to Y ). It should not mention the name of the main character
+
+                            - Choice Consequences will be shown to the user after they make the choice. It should be descriptive and well formatted.
+
+                            - When generating choices, they have to be distinct and move the story forward. This means that they should not be a repeat of the choice above but instead reflect a new choice that the user can make because of a previous choice.
                             - {{task}}
-                            - If the story is ending, make sure that the story consequence reflects a proper wrap up to the story.
-                            - Choice descriptions should just be 1-2 sentences and reflect a specific user action that the user can take.
-                            - New Potential choices should be unique and distinct. They should move the story forward in a meaningful way and be distinct from the provided choice above since they are choices to be made after the user has made the choice above.
                             - Feel free to terminate the story at this specific choice if it makes sense to do so. Just return an empty list for choices. 
                             
                             Story Description: 
@@ -200,7 +201,7 @@ def flatten_and_format_nodes(
             parent_node_id=parent_id,
             choice_text=node.choice_description,
             image_url="",
-            setting=node.choice_description,
+            setting=node.choice_consequences,
             user_id=user_id,
         )
         acc = acc + [new_node]
@@ -209,66 +210,3 @@ def flatten_and_format_nodes(
                 story_id, user_id, node.choices, node_id, acc
             )
     return acc
-
-
-# ------- Old Stuff ------
-async def generate_story_continuation(
-    client, story_id: str, parent_node_id: str, user_choice: str, story_summary: str
-):
-    with get_db_session() as session:
-        story_node = StoryNode(
-            story_id=story_id,
-            parent_node_id=parent_node_id,
-            starting_choice=user_choice,
-            status=JobStatus.PROCESSING,
-            consumed=False,
-            setting=story_summary,
-            choices=[],
-        )
-        session.add(story_node)
-        session.commit()
-        session.refresh(story_node)
-        node_id = story_node.id
-
-    resp = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "user",
-                "content": """
-                You're a fantasy story writer. You're given a setting and a user choice.
-                You need to generate a continuation of the story based on the user choice.
-
-                Current Story Setting: {{story_summary}}
-
-                When faced with this, the user chose: {{user_choice}}
-
-                Generate a continuation of the story based off the setting and the user choice. 
-
-                This should include
-                - A new setting that describes what happened as a result of the user choice
-                - A new story summary that describes the current state of the story and takkes into account the user choice
-                - A list of choices that the user can choose from next. Each choice should be a 1-2 sentences at most of a action description.
-
-                
-                """,
-            }
-        ],
-        response_model=GeneratedStoryContinuation,
-        context={
-            "story_summary": story_summary,
-            "user_choice": user_choice,
-        },
-    )
-
-    # await generate_image(resp.setting, story_id, node_id)
-
-    with get_db_session() as session:
-        story_node = session.exec(
-            select(StoryNode).where(StoryNode.id == node_id)
-        ).one()
-        story_node.status = JobStatus.COMPLETED
-        story_node.setting = resp.setting
-        story_node.choices = resp.choices
-        story_node.current_story_summary = resp.current_story_summary
-        session.commit()

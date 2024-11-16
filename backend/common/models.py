@@ -33,6 +33,7 @@ class StoryNode(SQLModel, table=True):
     image_url: str
     setting: str
     user_id: str
+    consumed: bool = False
 
     parent: Optional["StoryNode"] = Relationship(
         back_populates="children",

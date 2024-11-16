@@ -183,20 +183,27 @@ def get_story_node(
     if not result:
         raise HTTPException(status_code=404, detail="Story Node not found")
 
-    generate_story_continuation(story_id, node_id)
     result.consumed = True
     session.add(result)
     session.commit()
     session.refresh(result)
-
     return StoryNodePublic(
-        id=node_id,
+        id=result.id,
+        choice_text=result.choice_text,
         parent_node_id=result.parent_node_id,
         image_url=result.image_url,
         setting=result.setting,
-        starting_choice=result.starting_choice,
-        choices=result.choices,
         consumed=result.consumed,
-        story_id=story_id,
-        status=result.status,
+        children=[
+            StoryNodePublic(
+                id=child.id,
+                choice_text=child.choice_text,
+                parent_node_id=child.parent_node_id,
+                image_url=child.image_url,
+                setting=child.setting,
+                consumed=child.consumed,
+                children=[],
+            )
+            for child in result.children
+        ],
     )
