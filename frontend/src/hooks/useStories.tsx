@@ -44,7 +44,6 @@ const useStories = () => {
       );
       return storyArraySchema.parse(response.data);
     },
-    throwOnError: true,
   });
 
   const { mutateAsync: createStory, isPending: isCreatingStory } = useMutation({
@@ -117,7 +116,6 @@ const useStories = () => {
         return storyWithNodesSchema.parse(response.data);
       },
       enabled: !!storyId,
-      throwOnError: true,
     });
   };
 
@@ -142,12 +140,6 @@ const useStories = () => {
       },
       enabled: !!storyId && !!nodeId,
       throwOnError: true,
-      refetchInterval: (query) => {
-        if (query.state.data?.status === "processing") {
-          return 5000; // Poll every 5 seconds if processing
-        }
-        return 30000; // Otherwise, poll every 30 seconds
-      },
     });
   };
 
