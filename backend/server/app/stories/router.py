@@ -44,7 +44,7 @@ def get_random_story(
         messages=[
             {
                 "role": "system",
-                "content": "You're a {{persona}}.  Generate a title and description for a story that will be interesting - note that this is just an introduction to get things going, so it should be short and to the point. Description should be around 2-3 sentences at most",
+                "content": "Generate a title and description for a story that will be interesting - note that this is just an introduction to get things going, so it should be short and to the point. Description should be around 2-3 sentences at most",
             },
             {
                 "role": "user",
@@ -52,24 +52,11 @@ def get_random_story(
             },
         ],
         context={
-            "persona": random.choice(
-                [
-                    "Expert Storyteller",
-                    "1980s Action Hero",
-                    "Crossfit Athlete",
-                    "Michellin Chef",
-                    "Professional Dungeon and Dragon Master",
-                ]
-            ),
-            "genre": random.choice(
-                ["fantasy", "sci-fi", "mystery", "horror", "thriller", "comedy"]
-            ),
+            "genre": random.choice(["fantasy", "sci-fi", "thriller", "comedy"]),
             "adjective": random.choice(
                 [
                     "exciting",
                     "funny",
-                    "sad",
-                    "scary",
                     "surprising",
                 ]
             ),
@@ -161,7 +148,7 @@ def create_story(
     session.commit()
     session.refresh(story)
 
-    kickoff_story_generation(story.id, story.title, story.description)
+    kickoff_story_generation(story.id, story.title, story.description, user_id)
 
     return StoryCreatePublic(
         id=story.id,

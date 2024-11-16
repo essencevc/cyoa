@@ -32,13 +32,12 @@ class StoryNode(SQLModel, table=True):
     choice_text: str
     image_url: str
     setting: str
-    user_id: Optional[str] = None
-    consumed_at: Optional[datetime] = None
+    user_id: str
 
-    children: List["StoryNode"] = Relationship(
-        back_populates="parent",
-        sa_relationship_kwargs={"remote_side": [parent_node_id]},
-    )
     parent: Optional["StoryNode"] = Relationship(
-        back_populates="children", sa_relationship_kwargs={"remote_side": [id]}
+        back_populates="children",
+        sa_relationship_kwargs=dict(
+            remote_side="StoryNode.id",
+        ),
     )
+    children: list["StoryNode"] = Relationship(back_populates="parent")
