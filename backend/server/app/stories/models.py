@@ -30,6 +30,7 @@ class StorySelectPublic(BaseModel):
     description: str
     status: JobStatus
     story_nodes: list[StoryNode]
+    updated_at: datetime
 
 
 class StoryCreatePublic(BaseModel):

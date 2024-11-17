@@ -85,6 +85,7 @@ def get_story(
         description=story.description,
         status=story.status,
         story_nodes=nodes,
+        updated_at=story.updated_at,
     )
 
 
@@ -104,31 +105,6 @@ def delete_story(
     except Exception as e:
         logger.error(f"Error deleting story: {e}")
         raise HTTPException(status_code=404, detail="Story not found")
-
-
-@router.post("/resolve_node")
-def resolve_story_node(
-    user_id: str = Depends(get_user_id_from_token),
-    session: Session = Depends(get_session),
-    request: StoryResolveNodeInput = Body(),
-):
-    # Query the database to find the node_id for the given story_id and choice
-    statement = (
-        select(StoryNode.id)
-        .where(StoryNode.story_id == request.story_id)
-        .where(StoryNode.starting_choice == request.choice)
-    )
-    result = session.exec(statement).first()
-
-    if not result:
-        raise HTTPException(
-            status_code=404, detail="No matching node found for the given choice"
-        )
-
-    return StoryResolveNodePublic(
-        story_id=request.story_id,
-        node_id=result,
-    )
 
 
 @router.post("/")
