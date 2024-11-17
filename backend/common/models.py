@@ -19,6 +19,7 @@ class Story(SQLModel, table=True):
     user_id: str
     status: JobStatus = Column(Enum(JobStatus))
     updated_at: datetime = Field(default_factory=datetime.now)
+    banner_image_url: Optional[str] = Field(default=None)
     error_message: Optional[str] = Field(default=None, max_length=1024)
 
 

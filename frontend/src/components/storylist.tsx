@@ -44,12 +44,9 @@ const StoryList = ({ setOpen }: StoryListProps) => {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
-        {stories
-          .sort((a, b) => a.updated_at.getTime() - b.updated_at.getTime())
-          .slice(startIndex, endIndex + 1)
-          .map((story, idx) => (
-            <StoryCard key={idx} story={story} />
-          ))}
+        {stories.slice(startIndex, endIndex + 1).map((story, idx) => (
+          <StoryCard key={idx} story={story} />
+        ))}
       </div>
       {totalPages > 1 && (
         <div className="flex justify-center mt-4 items-center gap-4">

@@ -31,6 +31,7 @@ class StorySelectPublic(BaseModel):
     status: JobStatus
     story_nodes: list[StoryNode]
     updated_at: datetime
+    banner_image_url: Optional[str]
 
 
 class StoryCreatePublic(BaseModel):
@@ -42,6 +43,7 @@ class StoryPublic(StoryCreateInput):
     id: UUID
     status: JobStatus
     updated_at: datetime
+    banner_image_url: Optional[str]
 
 
 class StoryResolveNodePublic(BaseModel):

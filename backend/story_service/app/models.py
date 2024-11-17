@@ -17,8 +17,7 @@ class RestateStoryContinuationInput(BaseModel):
 class GeneratedStory(BaseModel):
     setting: str
     plot_summary: str
-    art_style: str
-    main_character_description: str
+    image_description: str
     choices: list[str]
 
 
@@ -49,7 +48,5 @@ class RewrittenChoice(BaseModel):
         return v
 
 
-class GeneratedStoryContinuation(BaseModel):
-    current_story_summary: str
-    setting: str
-    choices: list[str] = Field(min_items=1)
+class GeneratedImageDescription(BaseModel):
+    image_description: str

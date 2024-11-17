@@ -86,6 +86,7 @@ def get_story(
         status=story.status,
         story_nodes=nodes,
         updated_at=story.updated_at,
+        banner_image_url=story.banner_image_url,
     )
 
 

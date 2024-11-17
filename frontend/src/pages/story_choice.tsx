@@ -1,7 +1,6 @@
 import ChoiceLink from "@/components/choicelink";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import useStories from "@/hooks/useStories";
-import { cn } from "@/lib/utils";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { BarLoader } from "react-spinners";
@@ -27,6 +26,13 @@ const StoryChoice = () => {
       <div className="flex flex-col justify-center items-center h-[600px]">
         <div className="grid grid-cols-1 gap-4">
           <p className="paragraph text-lg font-bold mb-4">The End</p>
+          <div className="flex items-center justify-center">
+            <img
+              src={data.image_url ?? ""}
+              alt="Story Image"
+              className="w-[300px] h-[300px] object-cover"
+            />
+          </div>
           <p className="paragraph text-sm text-justify mb-4">{data.setting}</p>
           <Button
             className="w-full"

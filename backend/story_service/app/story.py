@@ -3,15 +3,17 @@ from restate import WorkflowContext
 from story_service.app.models import RestateStoryInput
 import instructor
 from rich import print
+from datetime import datetime
 from restate.exceptions import TerminalError
 from story_service.app.helpers import (
+    generate_story_images,
     rewrite_story,
     log_story_error,
     flatten_and_format_nodes,
     get_db_session,
+    generate_banner_image,
 )
-from common.models import Story, JobStatus
-from story_service.app.models import GeneratedStory, FinalStory
+from common.models import Story, JobStatus, StoryNode
 from openai import AsyncOpenAI
 from story_service.app.helpers import generate_story
 from sqlmodel import select
@@ -23,17 +25,6 @@ import time
 story_workflow = Workflow("cyoa")
 
 
-def wrap_async_call(coro_fn, *args, **kwargs):
-    async def wrapped():
-        start_time = time.time()
-        result = await coro_fn(*args, **kwargs)
-        end_time = time.time()
-        print(f"Function {coro_fn.__name__} took {end_time - start_time:.2f} seconds")
-        return result
-
-    return wrapped
-
-
 @story_workflow.main()
 async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     print(f"Workflow triggered with {story_input}")
@@ -41,56 +32,72 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     # 1. Initialise Instructor Client
     client = instructor.from_openai(AsyncOpenAI())
 
-    # 2. Generate Instructor Story
+    # 2. Generate Story
     try:
-        story = await ctx.run(
-            "Generate Story",
-            wrap_async_call(
-                generate_story,
-                **{
-                    "client": client,
-                    "story_input": story_input,
-                },
-            ),
-        )
-        story = GeneratedStory(**story)
+        story = await generate_story(client, story_input)
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
 
-    # 2. Recursively Generate the Story
+    print("Generated story")
+    await ctx.run("Generate Story", lambda: story.model_dump())
+
+    # 3. Rewrite Story nodes
     try:
-        rewritten_story = await ctx.run(
-            "Rewrite Story",
-            wrap_async_call(
-                rewrite_story,
-                **{"client": client, "story": story, "max_depth": 3},
-            ),
+        rewritten_story = await rewrite_story(
+            client, story, max_depth=5, max_concurrent_requests=10
         )
-        rewritten_story = FinalStory(**rewritten_story)
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
-    import json
-    from pathlib import Path
 
-    # Write the rewritten story to a jsonl file for debugging
-    story_path = Path("./story.jsonl")
-    try:
-        with story_path.open("a") as f:
-            f.write(json.dumps(rewritten_story.model_dump()) + "\n")
-    except Exception as e:
-        print(f"Failed to write story to file: {e}")
+    print("Rewrote Story")
+    await ctx.run("Rewrite Story", lambda: rewritten_story.model_dump())
 
-    # TODO: Debug why this seems to generate so many nodes?? -> Generated a total of 5279060 nodes for max depth of 3. This is wrong, if we look at billing for the entire day it's only been 0.17 so we can't have generated that many nodes.
+    # 4. Convert to StoryNodes and Generate Images
     nodes = flatten_and_format_nodes(
         story_input.story_id, story_input.user_id, rewritten_story.choices, None, []
     )
-    print(f"Generated a total of {len(nodes)} nodes")
+
+    print(f"Generated {len(nodes)} nodes")
 
     try:
+        nodes_to_image_url = await generate_story_images(client, story, nodes, 10)
+    except Exception as e:
+        log_story_error(story_input.story_id, e)
+        raise TerminalError("Something went wrong")
+
+    await ctx.run("Generate Images", lambda: nodes_to_image_url)
+
+    nodes_with_image_url = [
+        StoryNode(
+            id=node.id,
+            story_id=node.story_id,
+            parent_node_id=node.parent_node_id,
+            choice_text=node.choice_text,
+            image_url=nodes_to_image_url[str(node.id)],
+            setting=node.setting,
+            user_id=node.user_id,
+            consumed=False,
+        )
+        for node in nodes
+    ]
+
+    print(f"Generated {len(nodes)} images.")
+    try:
+        banner_image_url = await generate_banner_image(
+            client, story, story_input.story_id
+        )
+    except Exception as e:
+        log_story_error(story_input.story_id, e)
+        raise TerminalError("Something went wrong")
+
+    await ctx.run("Generate Banner Image", lambda: banner_image_url)
+
+    # 5. Insert Nodes into Database
+    try:
         with get_db_session() as session:
-            session.add_all(nodes)
+            session.add_all(nodes_with_image_url)
             session.commit()
             print(f"Inserted {len(nodes)} nodes into database")
 
@@ -98,11 +105,16 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
                 select(Story).where(Story.id == story_input.story_id)
             ).first()
             story.status = JobStatus.COMPLETED
+            story.description = rewritten_story.story_setting
+            story.updated_at = datetime.now()
+            story.banner_image_url = banner_image_url
             session.add(story)
             session.commit()
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
+
+    print(f"Completed workflow for story {story_input.story_id}")
 
 
 app = restate.app(services=[story_workflow])  #

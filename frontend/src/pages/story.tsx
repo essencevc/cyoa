@@ -132,6 +132,9 @@ const Story = () => {
         <div className="prose lg:prose-xl">
           <h3>{story.title}</h3>
           <p className="paragraph text-sm">{story.description}</p>
+          {story.banner_image_url && (
+            <img src={story.banner_image_url} alt="Banner" />
+          )}
           <div className="flex items-center justify-center mt-4">
             <Button
               onClick={() => navigate(`/story/${storyId}/start`)}
@@ -153,13 +156,9 @@ const Story = () => {
       <div className="prose lg:prose-xl">
         <h3>{story.title}</h3>
         <p className="paragraph text-sm">{story.description}</p>
-        <div className="flex items-center justify-center">
-          {/* <img
-            src={graph?.attributes?.image_url}
-            alt="Story Image"
-            className="w-[300px] h-[300px] object-cover"
-          /> */}
-        </div>
+        {story.banner_image_url && (
+          <img src={story.banner_image_url} alt="Banner" />
+        )}
         <hr />
         <p className="text-sm font-bold">Your Current Progress</p>
         <div

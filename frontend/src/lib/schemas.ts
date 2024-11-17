@@ -6,6 +6,7 @@ export const storySchema = z.object({
   description: z.string(),
   status: z.enum(["processing", "failed", "completed"]),
   updated_at: z.coerce.date(),
+  banner_image_url: z.string().nullable(),
 });
 
 export const StoryNodeBaseSchema = z.object({

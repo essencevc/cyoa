@@ -1,12 +1,14 @@
 from common.models import StoryNode, JobStatus, Story
+import requests
 from story_service.app.models import (
     RestateStoryInput,
-    GeneratedStoryContinuation,
     GeneratedStory,
     FinalStoryChoice,
     RewrittenChoice,
     FinalStory,
+    GeneratedImageDescription,
 )
+import boto3
 from typing import Optional
 from uuid import UUID, uuid4
 import asyncio
@@ -52,6 +54,7 @@ async def generate_story(
         - Generate 2-4 choices that represent actions which the user can take and make sure it's not a terminal choice, the story is just beginning!
         - Generate a visual description that can be used to generate an image for the story
         - Art style should just describe the style of the image. This should mention the color palette, the style of the characters, and the style of the background.
+        - Give a short description of an image for this story. This should be 1 sentence at most
         """,
             }
         ],
@@ -59,7 +62,28 @@ async def generate_story(
         response_model=GeneratedStory,
         context={"story_input": story_input},
     )
-    return resp.model_dump()
+    return resp
+
+
+async def generate_image(prompt: str):
+    response = requests.post(
+        "https://ivanleomk--flux-endpoint-model-inference.modal.run",
+        params={"prompt": prompt},
+    )
+    return response.content
+
+
+async def upload_image(image: bytes, image_key: str):
+    s3_resource = boto3.resource(
+        "s3",
+        region_name=restate_settings.AWS_REGION,
+        aws_access_key_id=restate_settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=restate_settings.AWS_SECRET_ACCESS_KEY,
+    )
+    s3_resource.Bucket(restate_settings.AWS_BUCKET_NAME).put_object(
+        Key=image_key,
+        Body=image,
+    )
 
 
 async def rewrite_choice(
@@ -97,7 +121,7 @@ async def rewrite_choice(
                             - When generating choices, they have to be distinct and move the story forward. This means that they should not be a repeat of the choice above but instead reflect a new choice that the user can make because of a previous choice.
                             - {{task}}
                             - Feel free to terminate the story at this specific choice if it makes sense to do so. Just return an empty list for choices. 
-                            
+                            - Give a short description of an image for this choice. This should be 1 sentence at most
                             Story Description: 
                             - Setting : {{ story.setting }}
                             - Plot Summary : {{ story.plot_summary }}
@@ -161,8 +185,8 @@ async def rewrite_choice(
 async def rewrite_story(
     client: instructor.AsyncInstructor,
     story: GeneratedStory,
-    max_depth: int = 3,
-    max_concurrent_requests: int = 10,
+    max_depth: int,
+    max_concurrent_requests: int,
 ):
     sem = asyncio.Semaphore(max_concurrent_requests)
     coros = [
@@ -183,7 +207,7 @@ async def rewrite_story(
         choices=rewritten_choices,
     )
 
-    return result.model_dump()
+    return result
 
 
 def flatten_and_format_nodes(
@@ -195,6 +219,7 @@ def flatten_and_format_nodes(
 ) -> list[StoryNode]:
     for node in nodes:
         node_id = uuid4()
+
         new_node = StoryNode(
             id=node_id,
             story_id=story_id,
@@ -210,3 +235,74 @@ def flatten_and_format_nodes(
                 story_id, user_id, node.choices, node_id, acc
             )
     return acc
+
+
+async def generate_image_for_node(
+    client: instructor.AsyncInstructor,
+    node: StoryNode,
+    story: GeneratedStory,
+    sem: asyncio.Semaphore,
+):
+    async with sem:
+        image_description = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": """
+                You're an AI which excels at generating short succint prompts that generate high quality images.
+
+                Generate a prompt for this image in a single sentence. This should only make reference to what is within the image itself.
+
+                Original Story Image Description : {{ story.image_description }}
+
+                Choice that user made : {{ node.choice_text}}
+                Current Story setting : {{ story.setting }}
+
+                Rules
+                - Adhere to the following style: whimsical, illustrative style reminiscent of a storybook, utilizing soft, flowing lines and light pastel colors if possible
+                - The prompt should be a single sentence
+                - Closely study the current setting, choice text and the story's original image description. 
+                - generated prompt should only describe what is within the image itself and not make reference to character names, elements outside the image etc
+                
+
+                Good Image Descriptions
+                - A whimsical image of a magic forest with a river platying through it. The trees are glowing and there are mushrooms and flowers everywhere.
+                - A photo realistic image of a bustling farmer's market during golden hour. The scene is filled with vendors arranging colorful produce, customers interacting, and warm sunlight filtering through a canvas awning, casting long shadows on the ground.
+                """,
+                }
+            ],
+            context={
+                "node": node,
+                "story": story,
+            },
+            response_model=GeneratedImageDescription,
+        )
+
+    image = await generate_image(image_description.image_description)
+    await upload_image(image, f"{node.story_id}/{node.id}.jpg")
+
+    return {
+        "node_id": str(node.id),
+        "image_url": f"{restate_settings.BUCKET_URL_PREFIX}/{node.story_id}/{node.id}.jpg",
+    }
+
+
+async def generate_banner_image(
+    client: instructor.AsyncInstructor, story: GeneratedStory, story_id: UUID
+):
+    image = await generate_image(story.image_description)
+    await upload_image(image, f"{story_id}/banner.jpg")
+    return f"{restate_settings.BUCKET_URL_PREFIX}/{story_id}/banner.jpg"
+
+
+async def generate_story_images(
+    client: instructor.AsyncInstructor,
+    story: GeneratedStory,
+    nodes: list[StoryNode],
+    max_concurrent_requests: int,
+):
+    sem = asyncio.Semaphore(max_concurrent_requests)
+    coros = [generate_image_for_node(client, node, story, sem) for node in nodes]
+    nodes = await asyncio.gather(*coros)
+    return {node["node_id"]: node["image_url"] for node in nodes}

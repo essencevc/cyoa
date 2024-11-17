@@ -42,7 +42,9 @@ const useStories = () => {
           },
         }
       );
-      return storyArraySchema.parse(response.data);
+      return storyArraySchema.parse(response.data).sort((a, b) => {
+        return b.updated_at.getTime() - a.updated_at.getTime();
+      });
     },
   });
 
@@ -116,6 +118,7 @@ const useStories = () => {
         return storyWithNodesSchema.parse(response.data);
       },
       enabled: !!storyId,
+      throwOnError: true,
     });
   };
 

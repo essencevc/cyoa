@@ -34,6 +34,9 @@ const StoryRoot = () => {
       <div className="mb-10">
         <div className="prose lg:prose-xl">
           <p className="paragraph text-sm">{story.description}</p>
+          {story.banner_image_url && (
+            <img src={story.banner_image_url} alt="Banner" />
+          )}
           <hr />
           <div className="flex flex-col">
             {starting_choices.map((choice) => (
