@@ -8,6 +8,7 @@ from story_service.app.models import (
     RestateStoryInput,
     PromptInfo,
 )
+from restate.serde import PydanticJsonSerde
 from rich import print
 from datetime import datetime
 from restate.exceptions import TerminalError
@@ -37,8 +38,6 @@ def wrap_async_call(coro_fn, *args, **kwargs):
         result = await coro_fn(*args, **kwargs)
         end_time = time.time()
         print(f"Function {coro_fn.__name__} took {end_time - start_time:.2f} seconds")
-        if hasattr(result, "model_dump"):
-            return result.model_dump(mode="json")
         return result
 
     return wrapped
@@ -50,21 +49,15 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
 
     # 1. Initialise Instructor Client
     client = instructor.from_openai(AsyncOpenAI())
-
     try:
         story = await ctx.run(
             "Generate Story",
             wrap_async_call(
                 coro_fn=generate_story, client=client, story_input=story_input
             ),
+            serde=PydanticJsonSerde(model=GeneratedStory),
         )
-        story = GeneratedStory(**story)
-    except Exception as e:
-        log_story_error(story_input.story_id, e)
-        raise TerminalError("Something went wrong")
 
-    # 3. Rewrite Story nodes
-    try:
         rewritten_story = await ctx.run(
             "Rewrite Story Nodes",
             wrap_async_call(
@@ -74,9 +67,9 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
                 max_depth=4,
                 max_concurrent_requests=10,
             ),
+            serde=PydanticJsonSerde(model=FinalStory),
         )
-        rewritten_story = FinalStory(**rewritten_story)
-    except Exception as e:
+    except TerminalError as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
 
@@ -106,8 +99,8 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
             ),
         )
 
-    except Exception as e:
-        log_story_error(story_input.story_id, e)
+    except TerminalError as t:
+        log_story_error(story_input.story_id, t)
         raise TerminalError("Something went wrong")
 
     node_image_prompts["root"] = {
