@@ -7,8 +7,9 @@ from story_service.app.models import (
     RewrittenChoice,
     FinalStory,
     GeneratedImageDescription,
+    PromptInfo,
+    InferenceInput,
 )
-import boto3
 from typing import Optional
 from uuid import UUID, uuid4
 import asyncio
@@ -65,25 +66,20 @@ async def generate_story(
     return resp
 
 
-async def generate_image(prompt: str):
-    response = requests.post(
-        "https://ivanleomk--flux-endpoint-model-inference.modal.run",
-        params={"prompt": prompt},
-    )
-    return response.content
-
-
-async def upload_image(image: bytes, image_key: str):
-    s3_resource = boto3.resource(
-        "s3",
-        region_name=restate_settings.AWS_REGION,
-        aws_access_key_id=restate_settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=restate_settings.AWS_SECRET_ACCESS_KEY,
-    )
-    s3_resource.Bucket(restate_settings.AWS_BUCKET_NAME).put_object(
-        Key=image_key,
-        Body=image,
-    )
+async def call_modal_endpoint(image_prompts: list[PromptInfo], callback_url: str):
+    try:
+        async with asyncio.timeout(3):
+            requests.post(
+                "https://ivanleomk--flux-model-batch-model-inference.modal.run",
+                json=InferenceInput(
+                    prompts=image_prompts, callback_url=callback_url
+                ).model_dump(),
+                timeout=3,
+            )
+            return None
+    except Exception as e:
+        print(f"Error calling modal endpoint: {e}")
+        return None
 
 
 async def rewrite_choice(
@@ -237,7 +233,7 @@ def flatten_and_format_nodes(
     return acc
 
 
-async def generate_image_for_node(
+async def generate_image_description(
     client: instructor.AsyncInstructor,
     node: StoryNode,
     story: GeneratedStory,
@@ -279,30 +275,20 @@ async def generate_image_for_node(
             response_model=GeneratedImageDescription,
         )
 
-    image = await generate_image(image_description.image_description)
-    await upload_image(image, f"{node.story_id}/{node.id}.jpg")
-
-    return {
-        "node_id": str(node.id),
-        "image_url": f"{restate_settings.BUCKET_URL_PREFIX}/{node.story_id}/{node.id}.jpg",
-    }
+    return PromptInfo(
+        node_id=str(node.id),
+        image_slug=f"{node.story_id}/{node.id}.jpg",
+        image_description=image_description.image_description,
+    )
 
 
-async def generate_banner_image(
-    client: instructor.AsyncInstructor, story: GeneratedStory, story_id: UUID
-):
-    image = await generate_image(story.image_description)
-    await upload_image(image, f"{story_id}/banner.jpg")
-    return f"{restate_settings.BUCKET_URL_PREFIX}/{story_id}/banner.jpg"
-
-
-async def generate_story_images(
+async def generate_image_prompts(
     client: instructor.AsyncInstructor,
     story: GeneratedStory,
     nodes: list[StoryNode],
     max_concurrent_requests: int,
-):
+) -> dict[str, PromptInfo]:
     sem = asyncio.Semaphore(max_concurrent_requests)
-    coros = [generate_image_for_node(client, node, story, sem) for node in nodes]
-    nodes = await asyncio.gather(*coros)
-    return {node["node_id"]: node["image_url"] for node in nodes}
+    coros = [generate_image_description(client, node, story, sem) for node in nodes]
+    image_prompts = await asyncio.gather(*coros)
+    return {node.node_id: node.model_dump() for node in image_prompts}

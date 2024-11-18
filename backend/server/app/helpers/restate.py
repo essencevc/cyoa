@@ -32,13 +32,3 @@ def kickoff_story_generation(story_id: int, title: str, setting: str, user_id: s
             "user_id": user_id,
         },
     )
-
-
-def generate_story_continuation(story_id: str, parent_node_id: str):
-    invocation_id = f"story-continuation-{story_id}-{parent_node_id}"
-    return call_restate_service(
-        service_name="continuation",
-        invocation_id=invocation_id,
-        service_handler="run",
-        data={"story_id": str(story_id), "parent_node_id": str(parent_node_id)},
-    )

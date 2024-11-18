@@ -1,28 +1,47 @@
 from restate.workflow import Workflow
-from restate import WorkflowContext
-from story_service.app.models import RestateStoryInput
 import instructor
+import uuid
+from restate import WorkflowContext
+from story_service.app.models import (
+    FinalStory,
+    GeneratedStory,
+    RestateStoryInput,
+    PromptInfo,
+)
 from rich import print
 from datetime import datetime
 from restate.exceptions import TerminalError
 from story_service.app.helpers import (
-    generate_story_images,
+    call_modal_endpoint,
+    generate_image_prompts,
     rewrite_story,
     log_story_error,
     flatten_and_format_nodes,
     get_db_session,
-    generate_banner_image,
 )
 from common.models import Story, JobStatus, StoryNode
 from openai import AsyncOpenAI
 from story_service.app.helpers import generate_story
 from sqlmodel import select
-
+from story_service.app.settings import restate_settings
 import restate
 import time
 
 
 story_workflow = Workflow("cyoa")
+
+
+def wrap_async_call(coro_fn, *args, **kwargs):
+    async def wrapped():
+        start_time = time.time()
+        result = await coro_fn(*args, **kwargs)
+        end_time = time.time()
+        print(f"Function {coro_fn.__name__} took {end_time - start_time:.2f} seconds")
+        if hasattr(result, "model_dump"):
+            return result.model_dump(mode="json")
+        return result
+
+    return wrapped
 
 
 @story_workflow.main()
@@ -32,50 +51,115 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     # 1. Initialise Instructor Client
     client = instructor.from_openai(AsyncOpenAI())
 
-    # 2. Generate Story
     try:
-        story = await generate_story(client, story_input)
+        story = await ctx.run(
+            "Generate Story",
+            wrap_async_call(
+                coro_fn=generate_story, client=client, story_input=story_input
+            ),
+        )
+        story = GeneratedStory(**story)
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
-
-    print("Generated story")
-    await ctx.run("Generate Story", lambda: story.model_dump())
 
     # 3. Rewrite Story nodes
     try:
-        rewritten_story = await rewrite_story(
-            client, story, max_depth=5, max_concurrent_requests=10
+        rewritten_story = await ctx.run(
+            "Rewrite Story Nodes",
+            wrap_async_call(
+                coro_fn=rewrite_story,
+                client=client,
+                story=story,
+                max_depth=4,
+                max_concurrent_requests=10,
+            ),
         )
+        rewritten_story = FinalStory(**rewritten_story)
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
 
-    print("Rewrote Story")
-    await ctx.run("Rewrite Story", lambda: rewritten_story.model_dump())
-
-    # 4. Convert to StoryNodes and Generate Images
-    nodes = flatten_and_format_nodes(
-        story_input.story_id, story_input.user_id, rewritten_story.choices, None, []
+    nodes = await ctx.run(
+        "Flatten and Format Nodes",
+        lambda: [
+            item.model_dump(mode="json")
+            for item in flatten_and_format_nodes(
+                story_input.story_id,
+                story_input.user_id,
+                rewritten_story.choices,
+                None,
+                [],
+            )
+        ],
     )
 
-    print(f"Generated {len(nodes)} nodes")
-
     try:
-        nodes_to_image_url = await generate_story_images(client, story, nodes, 10)
+        node_image_prompts = await ctx.run(
+            "Generate Image Prompts",
+            wrap_async_call(
+                coro_fn=generate_image_prompts,
+                client=client,
+                story=story,
+                nodes=[StoryNode(**item) for item in nodes],
+                max_concurrent_requests=15,
+            ),
+        )
+
     except Exception as e:
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
 
-    await ctx.run("Generate Images", lambda: nodes_to_image_url)
+    node_image_prompts["root"] = {
+        "node_id": "root",
+        "image_slug": f"{story_input.story_id}/banner.jpg",
+        "image_description": story.image_description,
+    }
+
+    # Call Modal Endpoint
+    # await call_modal_endpoint(node_image_prompts)
+    print("Sent image prompts to Modal Endpoint, awaiting completion")
+    # Wait for Modal to process and generate images
+    name, promise = ctx.awakeable()
+    callback_url = (
+        f"{restate_settings.RESTATE_RUNTIME_ENDPOINT}/restate/awakeables/{name}/resolve"
+    )
+    print(f"Callback URL: {callback_url}")
+
+    await ctx.run(
+        "Generate Images",
+        wrap_async_call(
+            coro_fn=call_modal_endpoint,
+            image_prompts=[
+                PromptInfo(**node_image_prompts[node_id])
+                for node_id in node_image_prompts
+            ],
+            callback_url=callback_url,
+        ),
+    )
+    await promise
+
+    print(f"Images generated for story {story_input.story_id}")
+
+    nodes = [StoryNode(**item) for item in nodes]
+
+    # 5. Generate updated nodes with image_urls
+    node_to_s3_image_url = {
+        node_id: f"{restate_settings.BUCKET_URL_PREFIX}/{node_image_prompts[node_id]['image_slug']}"
+        for node_id in node_image_prompts
+    }
+
+    print(node_to_s3_image_url)
 
     nodes_with_image_url = [
         StoryNode(
-            id=node.id,
-            story_id=node.story_id,
-            parent_node_id=node.parent_node_id,
+            id=uuid.UUID(node.id),
+            story_id=uuid.UUID(node.story_id),
+            parent_node_id=uuid.UUID(node.parent_node_id)
+            if node.parent_node_id
+            else None,
             choice_text=node.choice_text,
-            image_url=nodes_to_image_url[str(node.id)],
+            image_url=node_to_s3_image_url[str(node.id)],
             setting=node.setting,
             user_id=node.user_id,
             consumed=False,
@@ -84,15 +168,6 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     ]
 
     print(f"Generated {len(nodes)} images.")
-    try:
-        banner_image_url = await generate_banner_image(
-            client, story, story_input.story_id
-        )
-    except Exception as e:
-        log_story_error(story_input.story_id, e)
-        raise TerminalError("Something went wrong")
-
-    await ctx.run("Generate Banner Image", lambda: banner_image_url)
 
     # 5. Insert Nodes into Database
     try:
@@ -107,7 +182,7 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
             story.status = JobStatus.COMPLETED
             story.description = rewritten_story.story_setting
             story.updated_at = datetime.now()
-            story.banner_image_url = banner_image_url
+            story.banner_image_url = node_to_s3_image_url["root"]
             session.add(story)
             session.commit()
     except Exception as e:
@@ -117,4 +192,4 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     print(f"Completed workflow for story {story_input.story_id}")
 
 
-app = restate.app(services=[story_workflow])  #
+app = restate.app(services=[story_workflow])

@@ -9,9 +9,15 @@ class RestateStoryInput(BaseModel):
     user_id: str
 
 
-class RestateStoryContinuationInput(BaseModel):
-    story_id: UUID
-    parent_node_id: UUID
+class PromptInfo(BaseModel):
+    node_id: str
+    image_slug: str
+    image_description: str
+
+
+class InferenceInput(BaseModel):
+    callback_url: str
+    prompts: list[PromptInfo]
 
 
 class GeneratedStory(BaseModel):

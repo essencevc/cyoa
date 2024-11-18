@@ -16,7 +16,6 @@ from common.models import Story, JobStatus, StoryNode
 from server.app.settings import env
 from server.app.helpers.restate import (
     kickoff_story_generation,
-    generate_story_continuation,
 )
 from sqlmodel import select
 import logging
