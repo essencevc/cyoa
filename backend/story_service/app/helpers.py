@@ -67,6 +67,7 @@ async def generate_story(
 
 
 async def call_modal_endpoint(image_prompts: list[PromptInfo], callback_url: str):
+    print("Sent image prompts to Modal Endpoint, awaiting completion")
     try:
         async with asyncio.timeout(3):
             requests.post(
@@ -250,21 +251,14 @@ async def generate_image_description(
 
                 Generate a prompt for this image in a single sentence. This should only make reference to what is within the image itself.
 
-                Original Story Image Description : {{ story.image_description }}
-
                 Choice that user made : {{ node.choice_text}}
                 Current Story setting : {{ story.setting }}
 
                 Rules
-                - Adhere to the following style: whimsical, illustrative style reminiscent of a storybook, utilizing soft, flowing lines and light pastel colors if possible
-                - The prompt should be a single sentence
-                - Closely study the current setting, choice text and the story's original image description. 
-                - generated prompt should only describe what is within the image itself and not make reference to character names, elements outside the image etc
-                
+                - Generate a single sentence prompt that describes the image
 
-                Good Image Descriptions
-                - A whimsical image of a magic forest with a river platying through it. The trees are glowing and there are mushrooms and flowers everywhere.
-                - A photo realistic image of a bustling farmer's market during golden hour. The scene is filled with vendors arranging colorful produce, customers interacting, and warm sunlight filtering through a canvas awning, casting long shadows on the ground.
+                Eg. Control room, lit up electronics, a scientist working, a robot, a computer screen, a table with wires
+                Eg. Bustling farmer market during golden hour, two men laughing, a dog, a cart, a stall with vegetables
                 """,
                 }
             ],

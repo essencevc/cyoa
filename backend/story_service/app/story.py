@@ -99,40 +99,37 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
             ),
         )
 
+        node_image_prompts["root"] = {
+            "node_id": "root",
+            "image_slug": f"{story_input.story_id}/banner.jpg",
+            "image_description": story.image_description,
+        }
+
     except TerminalError as t:
         log_story_error(story_input.story_id, t)
         raise TerminalError("Something went wrong")
 
-    node_image_prompts["root"] = {
-        "node_id": "root",
-        "image_slug": f"{story_input.story_id}/banner.jpg",
-        "image_description": story.image_description,
-    }
-
-    # Call Modal Endpoint
-    # await call_modal_endpoint(node_image_prompts)
-    print("Sent image prompts to Modal Endpoint, awaiting completion")
     # Wait for Modal to process and generate images
     name, promise = ctx.awakeable()
-    callback_url = (
-        f"{restate_settings.RESTATE_RUNTIME_ENDPOINT}/restate/awakeables/{name}/resolve"
-    )
-    print(f"Callback URL: {callback_url}")
+    try:
+        callback_url = f"{restate_settings.RESTATE_RUNTIME_ENDPOINT}/restate/awakeables/{name}/resolve"
 
-    await ctx.run(
-        "Generate Images",
-        wrap_async_call(
-            coro_fn=call_modal_endpoint,
-            image_prompts=[
-                PromptInfo(**node_image_prompts[node_id])
-                for node_id in node_image_prompts
-            ],
-            callback_url=callback_url,
-        ),
-    )
+        await ctx.run(
+            "Generate Images",
+            wrap_async_call(
+                coro_fn=call_modal_endpoint,
+                image_prompts=[
+                    PromptInfo(**node_image_prompts[node_id])
+                    for node_id in node_image_prompts
+                ],
+                callback_url=callback_url,
+            ),
+        )
+    except TerminalError as t:
+        log_story_error(story_input.story_id, t)
+        raise TerminalError("Something went wrong")
+
     await promise
-
-    print(f"Images generated for story {story_input.story_id}")
 
     nodes = [StoryNode(**item) for item in nodes]
 
@@ -141,7 +138,6 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         node_id: f"{restate_settings.BUCKET_URL_PREFIX}/{node_image_prompts[node_id]['image_slug']}"
         for node_id in node_image_prompts
     }
-
     print(node_to_s3_image_url)
 
     nodes_with_image_url = [
