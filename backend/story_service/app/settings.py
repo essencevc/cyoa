@@ -1,10 +1,11 @@
-from pydantic_settings import BaseSettings
+from common.settings import CoreSettings
 
 
-class Settings(BaseSettings):
+class Settings(CoreSettings):
     OPENAI_API_KEY: str
-    LIBSQL_URL: str
-    LIBSQL_TOKEN: str
+    MODAL_ENDPOINT: str
+    RESTATE_RUNTIME_ENDPOINT: str
+    BUCKET_URL_PREFIX: str
 
     class Config:
         env_file = "./story_service/.env"

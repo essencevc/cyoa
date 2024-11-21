@@ -4,9 +4,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "./layouts/rootlayout";
 import Story from "./pages/story";
 import Home from "./pages/home";
-import { env } from "./lib/clientenvschemas";
 import StoryChoice from "./pages/story_choice";
-
+import StoryRoot from "./pages/story_root";
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -34,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: "story/:storyId",
         element: <Story />,
+      },
+      {
+        path: "story/:storyId/start",
+        element: <StoryRoot />,
       },
       {
         path: "story/:storyId/:nodeId",

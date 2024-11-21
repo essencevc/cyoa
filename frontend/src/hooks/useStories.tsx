@@ -42,9 +42,10 @@ const useStories = () => {
           },
         }
       );
-      return storyArraySchema.parse(response.data);
+      return storyArraySchema.parse(response.data).sort((a, b) => {
+        return b.updated_at.getTime() - a.updated_at.getTime();
+      });
     },
-    throwOnError: true,
   });
 
   const { mutateAsync: createStory, isPending: isCreatingStory } = useMutation({
@@ -142,12 +143,6 @@ const useStories = () => {
       },
       enabled: !!storyId && !!nodeId,
       throwOnError: true,
-      refetchInterval: (query) => {
-        if (query.state.data?.status === "processing") {
-          return 5000; // Poll every 5 seconds if processing
-        }
-        return 30000; // Otherwise, poll every 30 seconds
-      },
     });
   };
 

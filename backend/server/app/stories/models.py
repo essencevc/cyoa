@@ -30,6 +30,8 @@ class StorySelectPublic(BaseModel):
     description: str
     status: JobStatus
     story_nodes: list[StoryNode]
+    updated_at: datetime
+    banner_image_url: Optional[str]
 
 
 class StoryCreatePublic(BaseModel):
@@ -41,6 +43,7 @@ class StoryPublic(StoryCreateInput):
     id: UUID
     status: JobStatus
     updated_at: datetime
+    banner_image_url: Optional[str]
 
 
 class StoryResolveNodePublic(BaseModel):
@@ -50,13 +53,9 @@ class StoryResolveNodePublic(BaseModel):
 
 class StoryNodePublic(BaseModel):
     id: UUID
-    parent_node_id: Optional[
-        UUID
-    ]  # Note this is optional since for the first node, it has no parent.
+    choice_text: str
+    parent_node_id: Optional[UUID]
     image_url: Optional[str]
     setting: str
-    starting_choice: str
-    choices: list[str]
     consumed: bool
-    story_id: UUID
-    status: JobStatus
+    children: list["StoryNodePublic"]
