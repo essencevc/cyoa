@@ -6,14 +6,20 @@ import Story from "./pages/story";
 import Home from "./pages/home";
 import StoryChoice from "./pages/story_choice";
 import StoryRoot from "./pages/story_root";
+import LandingPage from "./pages/landing_page";
+import Blog from "./pages/blog";
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <LandingPage />,
+  },
+  {
+    path: "/how-it-works",
+    element: <Blog />,
+  },
   {
     element: <RootLayout />,
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
       {
         path: "/sign-in",
         element: (
@@ -49,7 +55,7 @@ const router = createBrowserRouter([
 function App() {
   return (
     <>
-      <div className="flex flex-col h-screen">
+      <div className="flex">
         <RouterProvider router={router} />
       </div>
       <Toaster />

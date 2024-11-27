@@ -11,7 +11,7 @@ const RootLayout = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/sign-in" || location.pathname === "/sign-up") {
+    if (location.pathname === "/sign-in" || location.pathname === "/sign-up" || location.pathname == "/") {
       return;
     }
     if (isLoaded && !userId) {
