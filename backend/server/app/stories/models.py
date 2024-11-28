@@ -32,6 +32,7 @@ class StorySelectPublic(BaseModel):
     story_nodes: list[StoryNode]
     updated_at: datetime
     banner_image_url: Optional[str]
+    public: bool
 
 
 class StoryCreatePublic(BaseModel):
@@ -44,6 +45,7 @@ class StoryPublic(StoryCreateInput):
     status: JobStatus
     updated_at: datetime
     banner_image_url: Optional[str]
+    public: bool
 
 
 class StoryResolveNodePublic(BaseModel):
@@ -59,3 +61,4 @@ class StoryNodePublic(BaseModel):
     setting: str
     consumed: bool
     children: list["StoryNodePublic"]
+    public: bool

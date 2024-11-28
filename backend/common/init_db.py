@@ -11,10 +11,12 @@ engine = create_engine(
 
 
 def create_db_and_tables():
-    # Drop all tables first
+    # Drop all tables first if they exist
     SQLModel.metadata.drop_all(engine, checkfirst=True)
-    # Then recreate them
+    # Then recreate them with any new fields
     SQLModel.metadata.create_all(engine)
+    # Alternatively, you can use alembic for migrations to preserve data
+    # See: https://alembic.sqlalchemy.org/
 
     # Commit the changes
     with Session(engine) as session:

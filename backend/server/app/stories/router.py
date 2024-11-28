@@ -8,8 +8,6 @@ from server.app.stories.models import (
     StoryDeleteInput,
     StorySelectPublic,
     RandomStory,
-    StoryResolveNodeInput,
-    StoryResolveNodePublic,
     StoryNodePublic,
 )
 from common.models import Story, JobStatus, StoryNode
@@ -19,7 +17,7 @@ from server.app.helpers.restate import (
 )
 from sqlmodel import select
 import logging
-from uuid import UUID
+from uuid import UUID, uuid4
 import random
 import instructor
 import openai
@@ -70,9 +68,13 @@ def get_story(
     user_id: str = Depends(get_user_id_from_token),
     session: Session = Depends(get_session),
 ):
-    statement = select(Story).where(Story.id == story_id, Story.user_id == user_id)
+    statement = select(Story).where(Story.id == story_id)
     story = session.exec(statement).first()
+
     if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    if story.user_id != user_id and not story.is_public:
         raise HTTPException(status_code=404, detail="Story not found")
 
     statement = select(StoryNode).where(StoryNode.story_id == story_id)
@@ -86,6 +88,7 @@ def get_story(
         story_nodes=nodes,
         updated_at=story.updated_at,
         banner_image_url=story.banner_image_url,
+        public=story.public,
     )
 
 
@@ -121,10 +124,16 @@ def create_story(
     )
 
     session.add(story)
+    try:
+        kickoff_story_generation(story.id, story.title, story.description, user_id)
+    except Exception as e:
+        logger.error(f"Error kicking off story generation: {e}")
+        raise HTTPException(
+            status_code=500, detail="Error kicking off story generation"
+        )
+
     session.commit()
     session.refresh(story)
-
-    kickoff_story_generation(story.id, story.title, story.description, user_id)
 
     return StoryCreatePublic(
         id=story.id,
@@ -140,7 +149,91 @@ def get_stories(
     statement = select(Story).where(Story.user_id == user_id)
     stories = session.exec(statement).all()
 
-    return [StoryPublic(**story.model_dump()) for story in stories]
+    res = [StoryPublic(**story.model_dump()) for story in stories]
+    print(res)
+    return res
+
+
+@router.post("/toggle_visibility")
+def toggle_visibility(
+    story_id: UUID,
+    user_id: str = Depends(get_user_id_from_token),
+    session: Session = Depends(get_session),
+):
+    statement = select(Story).where(Story.id == story_id, Story.user_id == user_id)
+    story = session.exec(statement).first()
+
+    if not story:
+        raise ValueError("Story not found")
+
+    # Toggle visibility
+    story.public = not story.public
+
+    # Save changes to database
+    session.commit()
+    session.refresh(story)
+
+    return {"message": "ok"}
+
+
+@router.post("/copy")
+def copy_story(
+    story_id: UUID,
+    user_id: str = Depends(get_user_id_from_token),
+    session: Session = Depends(get_session),
+) -> StoryCreatePublic:
+    # Get original story
+    statement = select(Story).where(Story.id == story_id)
+    original_story = session.exec(statement).first()
+
+    if not original_story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    if not original_story.is_public:
+        raise HTTPException(status_code=403, detail="Unable to copy private story")
+
+    # Create new story copy
+    new_story = Story(
+        user_id=user_id,
+        title=original_story.title,
+        description=original_story.description,
+        status=JobStatus.COMPLETED,
+    )
+    session.add(new_story)
+    session.refresh(new_story)
+
+    # Get all nodes from original story
+    node_statement = select(StoryNode).where(StoryNode.story_id == story_id)
+    original_nodes = session.exec(node_statement).all()
+
+    # Create mapping of old node IDs to new node IDs
+    id_mapping = {}
+
+    # Generate new UUIDs for new nodes
+    for node in original_nodes:
+        id_mapping[node.id] = uuid4()
+
+    for node in original_nodes:
+        new_node = StoryNode(
+            id=id_mapping[node.id],
+            story_id=new_story.id,
+            choice_text=node.choice_text,
+            parent_node_id=None
+            if not node.parent_node_id
+            else id_mapping[node.parent_node_id],
+            image_url=node.image_url,
+            setting=node.setting,
+            consumed=False,
+            story=new_story,
+        )
+        session.add(new_node)
+
+    session.commit()
+
+    return StoryCreatePublic(
+        id=new_story.id,
+        status=new_story.status,
+    )
 
 
 @router.get("/{story_id}/{node_id}")
@@ -159,7 +252,16 @@ def get_story_node(
     if not result:
         raise HTTPException(status_code=404, detail="Story Node not found")
 
-    result.consumed = True
+    story_creator = result.user_id
+    if story_creator == user_id:
+        result.consumed = True
+
+    statement = select(Story).where(Story.id == story_id)
+    story = session.exec(statement).first()
+
+    if user_id != story.user_id and not story.is_public:
+        raise HTTPException(status_code=401, detail="Not authorized to view story")
+
     session.add(result)
     session.commit()
     session.refresh(result)
@@ -170,6 +272,7 @@ def get_story_node(
         image_url=result.image_url,
         setting=result.setting,
         consumed=result.consumed,
+        public=story.public,
         children=[
             StoryNodePublic(
                 id=child.id,
@@ -179,6 +282,7 @@ def get_story_node(
                 setting=child.setting,
                 consumed=child.consumed,
                 children=[],
+                public=story.public,
             )
             for child in result.children
         ],
