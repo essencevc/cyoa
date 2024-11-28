@@ -18,23 +18,28 @@ const router = createBrowserRouter([
     element: <Blog />,
   },
   {
+    path: "/sign-in",
+    element: (
+      <div className="flex flex-col items-center justify-center">
+        <SignIn />
+      </div>
+    ),
+  },
+  {
+    path: "/sign-up",
+    element: (
+      <div className="flex flex-col items-center justify-center">
+        <SignUp />
+      </div>
+    ),
+  },
+  {
+    path: "/dashboard",
     element: <RootLayout />,
     children: [
       {
-        path: "/sign-in",
-        element: (
-          <div className="flex flex-col items-center justify-center">
-            <SignIn />
-          </div>
-        ),
-      },
-      {
-        path: "/sign-up",
-        element: (
-          <div className="flex flex-col items-center justify-center">
-            <SignUp />
-          </div>
-        ),
+        path: "",
+        element: <Home />,
       },
       {
         path: "story/:storyId",
@@ -55,9 +60,7 @@ const router = createBrowserRouter([
 function App() {
   return (
     <>
-      <div className="flex">
-        <RouterProvider router={router} />
-      </div>
+      <RouterProvider router={router} />
       <Toaster />
     </>
   );

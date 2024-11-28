@@ -1,6 +1,5 @@
 import useStories from "@/hooks/useStories";
 import EmptyState from "./emptystate";
-
 import StoryCard from "./storycard";
 import { BarLoader } from "react-spinners";
 import { usePagination } from "react-use-pagination";
@@ -18,6 +17,7 @@ type StoryListProps = {
 
 const StoryList = ({ setOpen }: StoryListProps) => {
   const { stories, hasFetchedStories } = useStories();
+  
   const {
     totalPages,
     setNextPage,
@@ -26,7 +26,6 @@ const StoryList = ({ setOpen }: StoryListProps) => {
     previousEnabled,
     startIndex,
     endIndex,
-    setPage,
   } = usePagination({
     totalItems: stories?.length || 0,
     initialPageSize: 4,
@@ -35,42 +34,49 @@ const StoryList = ({ setOpen }: StoryListProps) => {
 
   if (!hasFetchedStories || !stories) {
     return (
-      <div className="flex justify-center items-center h-[300px] ">
+      <div className="flex h-[300px] items-center justify-center">
         <BarLoader />
       </div>
     );
   }
-  if (stories.length === 0) return <EmptyState onClick={() => setOpen(true)} />;
+
+  if (stories.length === 0) {
+    return <EmptyState onClick={() => setOpen(true)} />;
+  }
+
+  const visibleStories = stories.slice(startIndex, endIndex + 1);
+
   return (
-    <>
-      <div className="grid grid-cols-2 gap-4">
-        {stories.slice(startIndex, endIndex + 1).map((story, idx) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {visibleStories.map((story, idx) => (
           <StoryCard key={idx} story={story} />
         ))}
       </div>
+
       {totalPages > 1 && (
-        <div className="flex justify-center mt-4 items-center gap-4">
+        <div className="flex justify-center">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   className="cursor-pointer"
                   isActive={previousEnabled}
-                  onClick={() => setPreviousPage()}
+                  onClick={setPreviousPage}
                 />
               </PaginationItem>
               <PaginationItem>
                 <PaginationNext
                   className="cursor-pointer"
                   isActive={nextEnabled}
-                  onClick={() => setNextPage()}
+                  onClick={setNextPage}
                 />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

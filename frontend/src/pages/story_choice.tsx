@@ -1,42 +1,43 @@
 import ChoiceLink from "@/components/choicelink";
 import { Button } from "@/components/ui/button";
 import useStories from "@/hooks/useStories";
-
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BarLoader } from "react-spinners";
 
 const StoryChoice = () => {
   const { storyId, nodeId } = useParams();
-  const { getStoryNode, resolveStoryNode } = useStories();
-
+  const { getStoryNode } = useStories();
   const { data, isLoading } = getStoryNode(storyId, nodeId);
   const navigate = useNavigate();
 
   if (!data || isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-[300px]">
-        <p className="paragraph text-sm mb-4">Fetching Story Information</p>
-        <BarLoader speedMultiplier={0.5} />
+      <div className="flex h-96 flex-col items-center justify-center space-y-4">
+        <p className="text-sm text-gray-500">Loading your adventure...</p>
+        <BarLoader color="#6366f1" speedMultiplier={0.5} />
       </div>
     );
   }
 
   if (data.children.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-[600px]">
-        <div className="grid grid-cols-1 gap-4">
-          <p className="paragraph text-lg font-bold mb-4">The End</p>
-          <div className="flex items-center justify-center">
+      <div className="mx-auto max-w-2xl py-8">
+        <div className="space-y-6 text-center">
+          <h2 className="text-2xl font-bold">The End</h2>
+          
+          {data.image_url && (
             <img
-              src={data.image_url ?? ""}
+              src={data.image_url}
               alt="Story Image"
-              className="w-[300px] h-[300px] object-cover"
+              className="mx-auto aspect-square w-full max-w-md rounded-lg object-cover shadow-md"
             />
-          </div>
-          <p className="paragraph text-sm text-justify mb-4">{data.setting}</p>
+          )}
+          
+          <p className="text-sm text-gray-600">{data.setting}</p>
+          
           <Button
-            className="w-full"
-            onClick={() => navigate(`/story/${storyId}`)}
+            className="w-full sm:w-auto"
+            onClick={() => navigate(`/dashboard/story/${storyId}`)}
           >
             Start Again?
           </Button>
@@ -46,37 +47,38 @@ const StoryChoice = () => {
   }
 
   return (
-    <div className="mb-10">
-      <Button
-        className="mb-4"
-        onClick={() => navigate(`/story/${storyId}`)}
-        variant="secondary"
-      >
-        Back
-      </Button>
-      <div className="prose lg:prose-xl">
-        {data["image_url"] && (
-          <div className="flex justify-center items-center">
+    <div className="mx-auto max-w-2xl py-8">
+      <div className="space-y-6">
+        <Button
+          onClick={() => navigate(`/dashboard/story/${storyId}`)}
+          variant="outline"
+          size="sm"
+        >
+          ← Back
+        </Button>
+
+        <div className="space-y-6">
+          {data.image_url && (
             <img
-              className="w-[600px] h-[400px] object-cover"
-              src={data["image_url"]}
-              alt="Story Image"
+              src={data.image_url}
+              alt="Story Scene"
+              className="w-full rounded-lg object-cover shadow-md"
+              style={{ aspectRatio: '3/2' }}
             />
+          )}
+          
+          <p className="text-sm text-gray-600">{data.setting}</p>
+          
+          <div className="grid gap-3 border-t pt-6">
+            {data.children.map((choice) => (
+              <ChoiceLink
+                key={choice.id}
+                choice={choice}
+                storyId={storyId as string}
+              />
+            ))}
           </div>
-        )}
-        <p className="paragraph text-sm">{data.setting}</p>
-        <hr />
-        {data.children.length === 0 ? (
-          <p className="paragraph text-sm">No more choices</p>
-        ) : (
-          data.children.map((choice) => (
-            <ChoiceLink
-              key={choice.id}
-              choice={choice}
-              storyId={storyId as string}
-            />
-          ))
-        )}
+        </div>
       </div>
     </div>
   );
