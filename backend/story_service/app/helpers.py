@@ -59,10 +59,12 @@ async def generate_story(
         """,
             }
         ],
-        model="gpt-4o-mini",
+        model="gpt-4o",
         response_model=GeneratedStory,
         context={"story_input": story_input},
     )
+
+    print("Generated Initial Story")
     return resp
 
 
@@ -99,9 +101,9 @@ async def rewrite_choice(
     async with sem:
         for retry_attempt in range(3):
             try:
-                async with asyncio.timeout(15):
+                async with asyncio.timeout(45):
                     rewritten_choice = await client.chat.completions.create(
-                        model="gpt-4o-mini",
+                        model="gpt-4o",
                         messages=[
                             {
                                 "role": "user",
@@ -204,6 +206,8 @@ async def rewrite_story(
         choices=rewritten_choices,
     )
 
+    print("Finished story rewrite")
+
     return result
 
 
@@ -242,7 +246,7 @@ async def generate_image_description(
 ):
     async with sem:
         image_description = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {
                     "role": "user",

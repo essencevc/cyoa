@@ -3,6 +3,7 @@ from common.settings import CoreSettings
 
 class Settings(CoreSettings):
     OPENAI_API_KEY: str
+    ANTHROPIC_API_KEY: str
     MODAL_ENDPOINT: str
     RESTATE_RUNTIME_ENDPOINT: str
     BUCKET_URL_PREFIX: str

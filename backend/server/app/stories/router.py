@@ -10,7 +10,7 @@ from server.app.stories.models import (
     RandomStory,
     StoryNodePublic,
 )
-from common.models import Story, JobStatus, StoryNode
+from common.models import Story, JobStatus, StoryNode, User
 from server.app.settings import env
 from server.app.helpers.restate import (
     kickoff_story_generation,
@@ -69,12 +69,12 @@ def get_story(
     session: Session = Depends(get_session),
 ):
     statement = select(Story).where(Story.id == story_id)
-    story = session.exec(statement).first()
+    story: Story = session.exec(statement).first()
 
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    if story.user_id != user_id and not story.is_public:
+    if story.user_id != user_id and not story.public:
         raise HTTPException(status_code=404, detail="Story not found")
 
     statement = select(StoryNode).where(StoryNode.story_id == story_id)
@@ -86,6 +86,7 @@ def get_story(
         description=story.description,
         status=story.status,
         story_nodes=nodes,
+        user_id=story.user_id,
         updated_at=story.updated_at,
         banner_image_url=story.banner_image_url,
         public=story.public,
@@ -116,6 +117,19 @@ def create_story(
     session: Session = Depends(get_session),
     story: StoryCreateInput = Body(),
 ) -> StoryCreatePublic:
+    user: User = session.exec(select(User).where(User.user_id == user_id)).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not user.admin and user.credits == 0:
+        raise HTTPException(status_code=400, detail="No credits remaining")
+
+    if not user.admin:
+        user.credits -= 1
+        session.commit()
+        session.refresh(user)
+
     story = Story(
         user_id=user_id,
         title=story.title,
@@ -149,7 +163,9 @@ def get_stories(
     statement = select(Story).where(Story.user_id == user_id)
     stories = session.exec(statement).all()
 
-    res = [StoryPublic(**story.model_dump()) for story in stories]
+    res = [
+        StoryPublic(**{**story.model_dump(), "user_id": user_id}) for story in stories
+    ]
     print(res)
     return res
 
@@ -176,7 +192,7 @@ def toggle_visibility(
     return {"message": "ok"}
 
 
-@router.post("/copy")
+@router.post("/copy/{story_id}")
 def copy_story(
     story_id: UUID,
     user_id: str = Depends(get_user_id_from_token),
@@ -184,12 +200,15 @@ def copy_story(
 ) -> StoryCreatePublic:
     # Get original story
     statement = select(Story).where(Story.id == story_id)
-    original_story = session.exec(statement).first()
+    original_story: Story = session.exec(statement).first()
+
+    if user_id == original_story.user_id:
+        return
 
     if not original_story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    if not original_story.is_public:
+    if not original_story.public:
         raise HTTPException(status_code=403, detail="Unable to copy private story")
 
     # Create new story copy
@@ -200,7 +219,6 @@ def copy_story(
         status=JobStatus.COMPLETED,
     )
     session.add(new_story)
-    session.refresh(new_story)
 
     # Get all nodes from original story
     node_statement = select(StoryNode).where(StoryNode.story_id == story_id)
@@ -225,6 +243,7 @@ def copy_story(
             setting=node.setting,
             consumed=False,
             story=new_story,
+            user_id=user_id,
         )
         session.add(new_node)
 
@@ -248,7 +267,7 @@ def get_story_node(
         .where(StoryNode.story_id == story_id)
         .where(StoryNode.id == node_id)
     )
-    result = session.exec(statement).first()
+    result: Story = session.exec(statement).first()
     if not result:
         raise HTTPException(status_code=404, detail="Story Node not found")
 
@@ -259,7 +278,7 @@ def get_story_node(
     statement = select(Story).where(Story.id == story_id)
     story = session.exec(statement).first()
 
-    if user_id != story.user_id and not story.is_public:
+    if user_id != story.user_id and not story.public:
         raise HTTPException(status_code=401, detail="Not authorized to view story")
 
     session.add(result)
@@ -273,6 +292,7 @@ def get_story_node(
         setting=result.setting,
         consumed=result.consumed,
         public=story.public,
+        user_id=story_creator,
         children=[
             StoryNodePublic(
                 id=child.id,
@@ -281,6 +301,7 @@ def get_story_node(
                 image_url=child.image_url,
                 setting=child.setting,
                 consumed=child.consumed,
+                user_id=story.user_id,
                 children=[],
                 public=story.public,
             )

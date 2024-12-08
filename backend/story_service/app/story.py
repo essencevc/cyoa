@@ -20,6 +20,7 @@ from story_service.app.helpers import (
     flatten_and_format_nodes,
     get_db_session,
 )
+from anthropic import AsyncAnthropic
 from common.models import Story, JobStatus, StoryNode
 from openai import AsyncOpenAI
 from story_service.app.helpers import generate_story
@@ -34,6 +35,7 @@ story_workflow = Workflow("cyoa")
 
 def wrap_async_call(coro_fn, *args, **kwargs):
     async def wrapped():
+        print(f"Starting {coro_fn.__name__}")
         start_time = time.time()
         result = await coro_fn(*args, **kwargs)
         end_time = time.time()
@@ -48,7 +50,11 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
     print(f"Workflow triggered with {story_input}")
 
     # 1. Initialise Instructor Client
-    client = instructor.from_openai(AsyncOpenAI())
+    client = instructor.from_openai(
+        AsyncOpenAI(api_key=restate_settings.OPENAI_API_KEY)
+    )
+
+    # 2. Generate Initial Story Scaffolding
     try:
         story = await ctx.run(
             "Generate Story",
@@ -57,7 +63,12 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
             ),
             serde=PydanticJsonSerde(model=GeneratedStory),
         )
+    except TerminalError as e:
+        log_story_error(story_input.story_id, e)
+        raise TerminalError("Something went wrong")
 
+    # 3. Starting Story Node rewrite
+    try:
         rewritten_story = await ctx.run(
             "Rewrite Story Nodes",
             wrap_async_call(
@@ -73,19 +84,23 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
         log_story_error(story_input.story_id, e)
         raise TerminalError("Something went wrong")
 
-    nodes = await ctx.run(
-        "Flatten and Format Nodes",
-        lambda: [
-            item.model_dump(mode="json")
-            for item in flatten_and_format_nodes(
-                story_input.story_id,
-                story_input.user_id,
-                rewritten_story.choices,
-                None,
-                [],
-            )
-        ],
-    )
+    try:
+        nodes = await ctx.run(
+            "Flatten and Format Nodes",
+            lambda: [
+                item.model_dump(mode="json")
+                for item in flatten_and_format_nodes(
+                    story_input.story_id,
+                    story_input.user_id,
+                    rewritten_story.choices,
+                    None,
+                    [],
+                )
+            ],
+        )
+    except TerminalError as e:
+        log_story_error(story_input.story_id, e)
+        raise TerminalError("Something went wrong")
 
     try:
         node_image_prompts = await ctx.run(
@@ -158,25 +173,42 @@ async def run(ctx: WorkflowContext, story_input: RestateStoryInput):
 
     print(f"Generated {len(nodes)} images.")
 
-    # 5. Insert Nodes into Database
-    try:
-        with get_db_session() as session:
-            session.add_all(nodes_with_image_url)
-            session.commit()
-            print(f"Inserted {len(nodes)} nodes into database")
+    async def insert_nodes_and_update_story(
+        nodes_with_image_url: list[StoryNode],
+        story_input: RestateStoryInput,
+        rewritten_story: FinalStory,
+        node_to_s3_image_url: dict[str, str],
+    ):
+        try:
+            with get_db_session() as session:
+                session.add_all(nodes_with_image_url)
+                session.commit()
+                print(f"Inserted {len(nodes_with_image_url)} nodes into database")
 
-            story = session.exec(
-                select(Story).where(Story.id == story_input.story_id)
-            ).first()
-            story.status = JobStatus.COMPLETED
-            story.description = rewritten_story.story_setting
-            story.updated_at = datetime.now()
-            story.banner_image_url = node_to_s3_image_url["root"]
-            session.add(story)
-            session.commit()
-    except Exception as e:
-        log_story_error(story_input.story_id, e)
-        raise TerminalError("Something went wrong")
+                story = session.exec(
+                    select(Story).where(Story.id == story_input.story_id)
+                ).first()
+                story.status = JobStatus.COMPLETED
+                story.description = rewritten_story.story_setting
+                story.updated_at = datetime.now()
+                story.banner_image_url = node_to_s3_image_url["root"]
+                session.add(story)
+                session.commit()
+        except Exception as e:
+            log_story_error(story_input.story_id, e)
+            raise TerminalError("Something went wrong")
+
+    # 6. Insert Nodes and Update Story
+    await ctx.run(
+        "Insert Nodes and Update Story",
+        wrap_async_call(
+            coro_fn=insert_nodes_and_update_story,
+            nodes_with_image_url=nodes_with_image_url,
+            story_input=story_input,
+            rewritten_story=rewritten_story,
+            node_to_s3_image_url=node_to_s3_image_url,
+        ),
+    )
 
     print(f"Completed workflow for story {story_input.story_id}")
 

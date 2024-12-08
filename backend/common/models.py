@@ -10,11 +10,15 @@ class JobStatus(str, enum.Enum):
     FAILED = "failed"
     COMPLETED = "completed"
 
+
 class User(SQLModel, table=True):
     __tablename__ = "user"
-    user_id: str = Field(primary_key=True)  # This will store the auth provider's user ID
+    user_id: str = Field(
+        primary_key=True
+    )  # This will store the auth provider's user ID
     admin: bool = Field(default=False)
     credits: int = Field(default=0)
+    email: str
 
 
 class Story(SQLModel, table=True):

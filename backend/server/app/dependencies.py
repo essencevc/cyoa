@@ -21,7 +21,6 @@ security = HTTPBearer()
 database_engine = DatabaseEngine(env)
 
 
-
 def get_session():
     db = database_engine.engine.connect()
     session = Session(bind=db)
@@ -31,6 +30,7 @@ def get_session():
         session.close()
         db.close()
 
+
 def get_user_id_from_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     session: Session = Depends(get_session),
@@ -39,9 +39,12 @@ def get_user_id_from_token(
     try:
         jwt_obj = verify_token(credentials.credentials, token_options)
         user_id = jwt_obj.get("sub")
+
         user = session.exec(select(User).where(User.user_id == user_id)).first()
         if not user:
-            user = User(user_id=user_id, admin=False, credits=3)
+            user_data = clerk.users.get(user_id=user_id)
+            email = user_data.email_addresses[0].email_address
+            user = User(user_id=user_id, admin=False, credits=3, email=email)
             session.add(user)
             session.commit()
         return user_id
