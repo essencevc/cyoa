@@ -5,6 +5,7 @@ import App from "./App";
 import "./index.css";
 import { env } from "./lib/clientenvschemas";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "./components/ui/toaster";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -17,6 +18,7 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
         <App />
+        <Toaster />
       </ClerkProvider>
     </QueryClientProvider>
     ,

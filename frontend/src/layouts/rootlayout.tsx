@@ -11,7 +11,11 @@ const RootLayout = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/sign-in" || location.pathname === "/sign-up") {
+    if (
+      location.pathname === "/sign-in" ||
+      location.pathname === "/sign-up" ||
+      location.pathname == "/"
+    ) {
       return;
     }
     if (isLoaded && !userId) {
@@ -21,20 +25,15 @@ const RootLayout = () => {
   }, [isLoaded, userId, location.pathname]);
 
   if (!isLoaded) {
-    return (
-      <div>
-        <Header />
-        <div className="flex flex-col items-center gap-4">
-          <PacmanLoader />
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="max-w-2xl w-full mx-auto">
+    <div>
       <Header />
-      <Outlet />
+      <div className="max-w-2xl w-full mx-auto">
+        <Outlet />
+      </div>
     </div>
   );
 };

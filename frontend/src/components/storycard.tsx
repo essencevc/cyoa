@@ -18,53 +18,56 @@ interface StoryCardProps {
 }
 
 const StoryCard = ({ story }: StoryCardProps) => {
-  const { deleteStory, isDeletingStory } = useStories();
-
+  const { deleteStory } = useStories();
   const navigate = useNavigate();
+
+  const statusVariant = {
+    processing: "secondary",
+    completed: "default",
+    failed: "destructive",
+  }[story.status];
+
   return (
-    <Card
-      key={story.id}
-      className="hover:shadow-md transition-shadow duration-300 p-4 flex flex-col justify-between h-full"
-    >
-      <CardHeader className="space-y-2">
-        <div className="flex justify-between items-start mb-2">
-          <CardTitle className="text-xl font-semibold">{story.title}</CardTitle>
+    <Card className="flex h-full flex-col justify-between p-4 transition-shadow duration-300 hover:shadow-md">
+      <CardHeader className="space-y-3 p-0">
+        <div className="space-y-2">
+          <CardTitle className="text-lg font-semibold line-clamp-2">
+            {story.title}
+          </CardTitle>
           <Badge
-            variant={
-              story.status === "processing"
-                ? "secondary"
-                : story.status === "completed"
-                ? "default"
-                : "destructive"
-            }
-            className="px-3 py-1 rounded-full font-medium"
+            //@ts-ignore
+            variant={statusVariant}
+            className="shrink-0 rounded-full px-3 py-1 text-xs font-medium"
           >
             {story.status}
           </Badge>
+          <CardDescription className="text-sm text-gray-600 line-clamp-2">
+            {story.description}
+          </CardDescription>
+          
         </div>
-        <CardDescription className="text-sm text-gray-600 line-clamp-2">
-          {story.description}
-        </CardDescription>
       </CardHeader>
-      <CardFooter className="flex justify-between items-center mt-4 border-t pt-4 space-x-2">
+
+      <div className="flex w-full gap-3 mt-4 border-t pt-4">
+        <Button
+          onClick={() => navigate(`/dashboard/story/${story.id}`)}
+          disabled={story.status !== "completed"}
+          variant="outline"
+          className="flex flex-1 items-center justify-center gap-2"
+        >
+          <ArrowRightSquare className="h-4 w-4" />
+          <span>Continue</span>
+        </Button>
         <ConfirmationButton
           buttonText="Delete"
           warningText="This action cannot be undone."
           onConfirm={() => deleteStory(story.id)}
-          className={buttonVariants({ variant: "destructive" })}
+          className={buttonVariants({
+            variant: "destructive",
+            className: "px-6"
+          })}
         />
-        <Button
-          onClick={() => {
-            navigate(`/story/${story.id}`);
-          }}
-          disabled={story.status !== "completed"}
-          variant="outline"
-          className="text-green-600 hover:bg-green-50 flex items-center space-x-2"
-        >
-          <ArrowRightSquare className="w-4 h-4" />
-          <span>Continue</span>
-        </Button>
-      </CardFooter>
+      </div>
     </Card>
   );
 };
