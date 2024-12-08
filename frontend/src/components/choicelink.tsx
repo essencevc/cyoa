@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 type Props = {
   choice: StoryNode;
   storyId: string;
+  isAuthor: boolean;
 };
 
-const ChoiceLink = ({ choice, storyId }: Props) => {
+const ChoiceLink = ({ choice, storyId, isAuthor }: Props) => {
   return (
     <Link
       key={choice.id}
@@ -19,7 +20,7 @@ const ChoiceLink = ({ choice, storyId }: Props) => {
       )}
       to={`/dashboard/story/${storyId}/${choice.id}`}
     >
-      {choice.consumed && (
+      {choice.consumed && isAuthor && (
         <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md">
           Previously Chosen
         </div>

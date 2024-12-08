@@ -2,8 +2,8 @@ import { env } from "@/lib/clientenvschemas";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { toast } from "sonner";
 import { z } from "zod";
+import { useToast } from "./use-toast";
 
 const apiClient = axios.create({
   baseURL: env.VITE_SERVER_URL,
@@ -15,14 +15,9 @@ const creditSchema = z.object({
 
 const useUserCredits = () => {
   const { getToken } = useAuth();
-  const queryClient = useQueryClient();
-  const { user, isLoaded } = useUser();
-
-  const {
-    data,
-    isFetching: isFetchingCredits,
-    refetch,
-  } = useQuery({
+  const { user } = useUser();
+  const { toast } = useToast();
+  const { data, isFetching: isFetchingCredits } = useQuery({
     queryKey: ["userCredits"],
     queryFn: async () => {
       const token = await getToken();
@@ -32,18 +27,22 @@ const useUserCredits = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log(response.data);
         return creditSchema.parse(response.data);
       } catch (error) {
-        toast.error("Failed to fetch user credits");
+        toast({
+          title: "Error Encountered",
+          description: "Failed to fetch user credits",
+        });
         throw error;
       }
     },
-    enabled: isLoaded,
+    enabled: user !== null,
   });
 
   return {
     credits: data?.credits,
-    isLoading: isFetchingCredits || !isLoaded,
+    isLoading: isFetchingCredits || !user,
   };
 };
 

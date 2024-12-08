@@ -2,14 +2,14 @@ import { env } from "@/lib/clientenvschemas";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import {
   storyArraySchema,
   storyNodeSchema,
   storyWithNodesSchema,
 } from "@/lib/schemas";
 import { z } from "zod";
-import { i } from "vite/dist/node/types.d-aGj9QkWt";
+import { useToast } from "./use-toast";
 
 const apiClient = axios.create({
   baseURL: env.VITE_SERVER_URL,
@@ -22,6 +22,7 @@ interface CreateStoryParams {
 
 const useStories = () => {
   const { getToken } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const addAuthHeader = async () => ({
@@ -40,10 +41,12 @@ const useStories = () => {
         "/stories/",
         await addAuthHeader()
       );
+
       return storyArraySchema
         .parse(response.data)
         .sort((a, b) => b.updated_at.getTime() - a.updated_at.getTime());
     },
+    throwOnError: true,
   });
 
   const { mutateAsync: createStory, isPending: isCreatingStory } = useMutation({
@@ -56,10 +59,20 @@ const useStories = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Story created successfully");
+      toast({
+        title: "Success",
+        description: "Starting to create Story",
+      });
       queryClient.invalidateQueries({ queryKey: ["stories"] });
     },
-    onError: () => toast.error("Failed to create story"),
+    onError: (e) => {
+      console.log(e);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: e instanceof Error ? e.message : "Failed to create story",
+      });
+    },
   });
 
   const { mutateAsync: deleteStory, isPending: isDeletingStory } = useMutation({
@@ -72,17 +85,50 @@ const useStories = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Story deleted successfully");
+      toast({
+        description: "Story deleted successfully",
+      });
       queryClient.invalidateQueries({ queryKey: ["stories"] });
     },
-    onError: () => toast.error("Failed to delete story"),
+    onError: () =>
+      toast({
+        description: "Failed to delete story",
+      }),
+  });
+
+  const { mutateAsync: copyStory, isPending: isCopyingStory } = useMutation({
+    mutationFn: async (storyId: string) => {
+      if (!storyId) {
+        return;
+      }
+      const response = await apiClient.post(
+        `/stories/copy/${storyId}`,
+        {},
+        await addAuthHeader()
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast({
+        description: "Story copied successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["stories"] });
+    },
+    onError: () =>
+      toast({
+        description: "Failed to copy story",
+        variant: "destructive",
+      }),
   });
 
   const getStory = (storyId: string | undefined) =>
     useQuery({
       queryKey: ["story", storyId],
       enabled: !!storyId,
-      throwOnError: true,
+      retry: (failureCount, error) => {
+        if (error?.response?.status === 404) return false;
+        return failureCount < 3;
+      },
       queryFn: async () => {
         if (!storyId) return null;
         const response = await apiClient.get(
@@ -146,7 +192,10 @@ const useStories = () => {
         return response.data;
       },
       onSuccess: () => {
-        toast.success("Visibility updated successfully");
+        toast({
+          title: "Success",
+          description: "Visibility updated successfully",
+        });
         queryClient.invalidateQueries({ queryKey: ["stories"] });
       },
       onMutate: async (storyId) => {
@@ -160,7 +209,13 @@ const useStories = () => {
 
         return { previousStory };
       },
-      onError: () => toast.error("Failed to update visibility"),
+      onError: (e) =>
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description:
+            e instanceof Error ? e.message : "Failed to update visibility",
+        }),
     });
 
   return {
@@ -177,6 +232,8 @@ const useStories = () => {
     getRandomStory,
     toggleVisibility,
     isTogglingVisibility,
+    copyStory,
+    isCopyingStory,
   };
 };
 

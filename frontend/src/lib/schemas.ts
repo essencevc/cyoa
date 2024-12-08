@@ -1,4 +1,4 @@
-import { boolean, z } from "zod";
+import { z } from "zod";
 
 export const storySchema = z.object({
   id: z.string().uuid(),
@@ -7,6 +7,7 @@ export const storySchema = z.object({
   status: z.enum(["processing", "failed", "completed"]),
   updated_at: z.coerce.date(),
   banner_image_url: z.string().nullable(),
+  user_id: z.string(),
   public: z.boolean()
 });
 
@@ -17,6 +18,7 @@ export const StoryNodeBaseSchema = z.object({
   image_url: z.string().nullable(),
   setting: z.string(),
   consumed: z.boolean(),
+  user_id: z.string(),
 });
 
 export const storyNodeSchema = StoryNodeBaseSchema.extend({

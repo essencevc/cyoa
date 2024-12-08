@@ -1,6 +1,7 @@
 import ChoiceLink from "@/components/choicelink";
 import { Button } from "@/components/ui/button";
 import useStories from "@/hooks/useStories";
+import { useUser } from "@clerk/clerk-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BarLoader } from "react-spinners";
 
@@ -9,6 +10,7 @@ const StoryChoice = () => {
   const { getStoryNode } = useStories();
   const { data, isLoading } = getStoryNode(storyId, nodeId);
   const navigate = useNavigate();
+  const { user } = useUser();
 
   if (!data || isLoading) {
     return (
@@ -24,7 +26,7 @@ const StoryChoice = () => {
       <div className="mx-auto max-w-2xl py-8">
         <div className="space-y-6 text-center">
           <h2 className="text-2xl font-bold">The End</h2>
-          
+
           {data.image_url && (
             <img
               src={data.image_url}
@@ -32,9 +34,9 @@ const StoryChoice = () => {
               className="mx-auto aspect-square w-full max-w-md rounded-lg object-cover shadow-md"
             />
           )}
-          
+
           <p className="text-sm text-gray-600">{data.setting}</p>
-          
+
           <Button
             className="w-full sm:w-auto"
             onClick={() => navigate(`/dashboard/story/${storyId}`)}
@@ -63,18 +65,19 @@ const StoryChoice = () => {
               src={data.image_url}
               alt="Story Scene"
               className="w-full rounded-lg object-cover shadow-md"
-              style={{ aspectRatio: '3/2' }}
+              style={{ aspectRatio: "3/2" }}
             />
           )}
-          
+
           <p className="text-sm text-gray-600">{data.setting}</p>
-          
+
           <div className="grid gap-3 border-t pt-6">
             {data.children.map((choice) => (
               <ChoiceLink
                 key={choice.id}
                 choice={choice}
                 storyId={storyId as string}
+                isAuthor={user?.id === data.user_id}
               />
             ))}
           </div>

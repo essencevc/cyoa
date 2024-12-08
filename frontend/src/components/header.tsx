@@ -1,11 +1,7 @@
-import React from 'react';
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +12,7 @@ import useUserCredits from "@/hooks/useCredits";
 
 const Header = () => {
   const { credits, isLoading } = useUserCredits();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -29,10 +25,7 @@ const Header = () => {
     <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-center">
         <div className="flex w-full max-w-[800px] items-center justify-between px-4">
-          <Link 
-            to="/dashboard" 
-            className="mr-6 flex items-center space-x-2"
-          >
+          <Link to="/dashboard" className="mr-6 flex items-center space-x-2">
             <img
               src="/logo.webp"
               alt="Logo"
@@ -40,7 +33,10 @@ const Header = () => {
             />
           </Link>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-muted-foreground">
+              {isLoading ? "Loading..." : `${credits} credits remaining`}
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer transition-opacity hover:opacity-80">

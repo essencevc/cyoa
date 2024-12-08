@@ -1,17 +1,33 @@
-import React from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import Tree from 'react-d3-tree';
-import { BarLoader } from 'react-spinners';
-import { DiamondMinus, DiamondPlus, Gamepad2Icon } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
-import { DialogTitle } from '@radix-ui/react-dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import useStories from '@/hooks/useStories';
-import { createGraph } from '@/lib/graph';
-import { StoryWithNodes } from '@/lib/schemas';
+import React from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import Tree from "react-d3-tree";
+import { BarLoader } from "react-spinners";
+import {
+  CopyIcon,
+  DiamondMinus,
+  DiamondPlus,
+  Gamepad2Icon,
+} from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
+import useStories from "@/hooks/useStories";
+import { createGraph } from "@/lib/graph";
+import { StoryWithNodes } from "@/lib/schemas";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@clerk/clerk-react";
+import StoryShare from "@/components/StoryShare";
 
 type NodeDatum = {
   name: string;
@@ -30,12 +46,12 @@ type ForeignObjectProps = {
   y: number;
 };
 
-const NodeContent = ({ 
-  nodeDatum, 
-  isParentNode, 
-  storyId 
-}: { 
-  nodeDatum: NodeDatum; 
+const NodeContent = ({
+  nodeDatum,
+  isParentNode,
+  storyId,
+}: {
+  nodeDatum: NodeDatum;
   isParentNode: boolean;
   storyId: string;
 }) => (
@@ -68,7 +84,13 @@ const NodeContent = ({
   </Dialog>
 );
 
-const NodeIcon = ({ isParentNode, hasChildren }: { isParentNode: boolean; hasChildren: boolean }) => (
+const NodeIcon = ({
+  isParentNode,
+  hasChildren,
+}: {
+  isParentNode: boolean;
+  hasChildren: boolean;
+}) => (
   <div className="flex items-center justify-center bg-black text-white p-1 rounded-md">
     {isParentNode ? (
       <Gamepad2Icon width="20" height="20" />
@@ -91,46 +113,67 @@ const renderForeignObjectNode = ({
 }) => {
   const isParentNode = nodeDatum.attributes?.id === "start";
   const hasChildren = nodeDatum.children.length > 0;
-  
+
   return (
     <g>
-      <foreignObject width="40" height="40" x="-15" y="-10" onClick={toggleNode}>
+      <foreignObject
+        width="40"
+        height="40"
+        x="-15"
+        y="-10"
+        onClick={toggleNode}
+      >
         <NodeIcon isParentNode={isParentNode} hasChildren={hasChildren} />
       </foreignObject>
       <foreignObject {...foreignObjectProps}>
-        <NodeContent 
-          nodeDatum={nodeDatum} 
+        <NodeContent
+          nodeDatum={nodeDatum}
           isParentNode={isParentNode}
-          storyId={nodeDatum.attributes?.story_id || ''} 
+          storyId={nodeDatum.attributes?.story_id || ""}
         />
       </foreignObject>
     </g>
   );
 };
 
-const StoryContent = ({ story, storyId }: { story: StoryWithNodes ; storyId: string }) => {
+const StoryContent = ({
+  story,
+  storyId,
+}: {
+  story: StoryWithNodes;
+  storyId: string;
+}) => {
   const navigate = useNavigate();
-  const graph = createGraph(story.story_nodes.filter((node: any) => node.consumed), story.id);
-  const { toggleVisibility } = useStories();
+  const graph = createGraph(
+    story.story_nodes.filter((node: any) => node.consumed),
+    story.id
+  );
+  const user = useUser();
 
-  if (!graph) {
+  if (!graph || user.user?.id !== story.user_id) {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <Button onClick={() => navigate("/dashboard")} variant="outline">← Back</Button>
-          <div className="flex items-center gap-3">
-            <Switch id="public-mode" />
-            <Label htmlFor="public-mode">Make Story Public</Label>
-          </div>
+          <Button onClick={() => navigate("/dashboard")} variant="outline">
+            ← Back
+          </Button>
+          <StoryShare story={story} />
         </div>
         <div className="prose lg:prose-xl">
           <h3 className="text-2xl font-bold">{story.title}</h3>
           <p className="text-sm mb-6">{story.description}</p>
           {story.banner_image_url && (
-            <img src={story.banner_image_url} alt="Banner" className="w-full rounded-lg shadow-md mb-6" />
+            <img
+              src={story.banner_image_url}
+              alt="Banner"
+              className="w-full rounded-lg shadow-md mb-6"
+            />
           )}
           <div className="flex justify-center mt-8">
-            <Button onClick={() => navigate(`/dashboard/story/${storyId}/start`)} className="w-[300px] py-2">
+            <Button
+              onClick={() => navigate(`/dashboard/story/${storyId}/start`)}
+              className="w-[300px] py-2"
+            >
               Start Playthrough
             </Button>
           </div>
@@ -140,26 +183,30 @@ const StoryContent = ({ story, storyId }: { story: StoryWithNodes ; storyId: str
   }
 
   const nodeSize = { x: 300, y: 200 };
-  const foreignObjectProps = { width: nodeSize.x, height: nodeSize.y, x: -100, y: 20 };
+  const foreignObjectProps = {
+    width: nodeSize.x,
+    height: nodeSize.y,
+    x: -100,
+    y: 20,
+  };
 
-  
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <Button onClick={() => navigate("/dashboard")} variant="outline">← Back</Button>
-        <div className="flex items-center gap-3">
-          <Switch
-          checked={story.public}
-          onCheckedChange={() => toggleVisibility(story.id)}
-          id="public-mode" />
-          <Label htmlFor="public-mode">Make Story Public</Label>
-        </div>
+        <Button onClick={() => navigate("/dashboard")} variant="outline">
+          ← Back
+        </Button>
+        <StoryShare story={story} />
       </div>
       <div className="prose lg:prose-xl">
         <h3 className="text-2xl font-bold">{story.title}</h3>
         <p className="text-sm mb-6">{story.description}</p>
         {story.banner_image_url && (
-          <img src={story.banner_image_url} alt="Banner" className="w-full rounded-lg shadow-md mb-6" />
+          <img
+            src={story.banner_image_url}
+            alt="Banner"
+            className="w-full rounded-lg shadow-md mb-6"
+          />
         )}
         <hr className="my-6" />
         <p className="text-sm font-bold mb-4">Your Current Progress</p>
@@ -200,7 +247,7 @@ const Story = () => {
 
   if (!story) return <div>Story not found</div>;
 
-  return <StoryContent story={story} storyId={storyId || ''} />;
+  return <StoryContent story={story} storyId={storyId || ""} />;
 };
 
 export default Story;

@@ -216,44 +216,44 @@ const EmblaCarousel: React.FC<EmblaCarouselPropType> = (props) => {
 
 const CarouselSlidesData = [
   {
-    id: 1,
-    text: "The Sky-Dweller is a compelling timepiece of contemporary design.",
-    name: "John Doe",
-    role: "CEO, Company Name",
+    id: "b9b1ae78-389d-46f1-bd6d-4aaa407aed98",
+    text: "Galatic Pursuit",
+    name: "Action, Suspense",
+    role: "A thrilling space adventure awaits as our pilot discovers a new suprise hiding in every galaxy",
     image:
-      "https://plus.unsplash.com/premium_photo-1675432656807-216d786dd468?q=80&w=1980&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://restate-story.s3.ap-southeast-1.amazonaws.com/b9b1ae78-389d-46f1-bd6d-4aaa407aed98/banner.jpg",
   },
   {
-    id: 2,
-    text: "The Sky-Dweller is a compelling timepiece of contemporary design.",
-    name: "John Doe",
-    role: "CEO, Company Name",
+    id: "18f00675-02d5-4f34-be4f-7fe5243e6080",
+    text: "The Last Heist",
+    name: "Action, Adventure",
+    role: "it's the final job before Elize retires, but when they arrive on the scene, they find old colleagues ready to take them down instead at every turn ",
     image:
-      "https://plus.unsplash.com/premium_photo-1669725687221-6fe12c2da6b1?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://restate-story.s3.ap-southeast-1.amazonaws.com/18f00675-02d5-4f34-be4f-7fe5243e6080/banner.jpg",
   },
   {
-    id: 3,
-    text: "The Sky-Dweller is a compelling timepiece of contemporary design.",
-    name: "John Doe",
-    role: "CEO, Company Name",
+    id: "2547d732-3855-450f-a825-0c1de422b3c9",
+    text: "The Great Gnome Heist",
+    name: "Mystery, Suspense",
+    role: "A group of friends discover a hidden treasure trove of gnomes in the woods, but as they dig deeper, they uncover a dangerous secret that could change the course of history",
     image:
-      "https://plus.unsplash.com/premium_photo-1669725687150-15c603ac6a73?w=200&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1pbi1zYW1lLXNlcmllc3w1fHx8ZW58MHx8fHx8",
+      "https://restate-story.s3.ap-southeast-1.amazonaws.com/2547d732-3855-450f-a825-0c1de422b3c9/banner.jpg",
   },
   {
-    id: 4,
-    text: "The Sky-Dweller is a compelling timepiece of contemporary design.",
-    name: "John Doe",
-    role: "CEO, Company Name",
+    id: "1b890ad7-8000-4ca2-b0d5-7330073e0dcb",
+    text: "The Crystal Crown",
+    name: "Fantasy, Adventure",
+    role: "A young girl discovers her hidden powers and embarks on a journey to save Eldoria from the tyranny of the Iron Council which has banned magic for generations",
     image:
-      "https://plus.unsplash.com/premium_photo-1669740462444-ba6e0c316b59?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDZ8fHxlbnwwfHx8fHw%3D",
+      "https://restate-story.s3.ap-southeast-1.amazonaws.com/1b890ad7-8000-4ca2-b0d5-7330073e0dcb/banner.jpg",
   },
   {
-    id: 5,
-    text: "The Sky-Dweller is a compelling timepiece of contemporary design.",
-    name: "John Doe",
-    role: "CEO, Company Name",
+    id: "8c8d8415-706d-4d0f-9e68-1b08f7b4c724",
+    text: "Galactic Rift",
+    name: "Fantasy, Adventure",
+    role: "A mysterious rift in space-time opens, forcing brave explorers to venture into an alternate universe filled with strange creatures and advanced tech to save humanity.",
     image:
-      "https://plus.unsplash.com/premium_photo-1669725687221-6fe12c2da6b1?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://restate-story.s3.ap-southeast-1.amazonaws.com/8c8d8415-706d-4d0f-9e68-1b08f7b4c724/banner.jpg",
   },
 ];
 
@@ -261,7 +261,7 @@ export function Carousel() {
   const OPTIONS: EmblaOptionsType = { loop: true };
   const slides = CarouselSlidesData.map((testimonial) => (
     <Link
-      to={`/story/${testimonial.id}`}
+      to={`dashboard/story/${testimonial.id}`}
       key={testimonial.id}
       className="w-full h-full flex relative cursor-grab border rounded-xl select-none"
     >
@@ -299,6 +299,7 @@ export function Carousel() {
           autoplay={true}
           showIndicators={true}
           showArrows={true}
+          autoplayDelay={4000}
           className="w-full min-h-[25rem] h-full"
         />
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden h-full w-1/5 bg-gradient-to-r from-white dark:from-black md:block"></div>

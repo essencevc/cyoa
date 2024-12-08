@@ -16,7 +16,7 @@ import { PlusCircleIcon } from "lucide-react";
 import { buttonVariants, Button } from "./ui/button";
 import useStories from "@/hooks/useStories";
 import { BeatLoader } from "react-spinners";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 type StoryDialogProps = {
   open: boolean;
@@ -27,6 +27,8 @@ const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { createStory, isCreatingStory, getRandomStory } = useStories();
+
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,7 +92,11 @@ const StoryDialog = ({ open, setOpen }: StoryDialogProps) => {
                 const story = await getRandomStory();
                 setTitle(story.title);
                 setDescription(story.description);
-                toast.success("Random Story Generated!");
+                toast({
+                  title: "Generated Random Story",
+                  description:
+                    "We've now generated a random story title and description for you. You can edit it and generate your own story.",
+                });
               }}
             >
               Surprise Me
