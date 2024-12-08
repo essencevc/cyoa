@@ -27,13 +27,13 @@ const SignInModal = ({ children, fallback, redirectUrl }: Props) => {
     return signIn.authenticateWithRedirect({
       //@ts-ignore
       strategy,
-      redirectUrl: "/sign-up/sso-callback",
+      redirectUrl: redirectUrl,
       redirectUrlComplete: redirectUrl,
     });
   };
   return (
     <Dialog>
-      <DialogTrigger>{fallback}</DialogTrigger>
+      <DialogTrigger className="h-full w-full">{fallback}</DialogTrigger>
       <DialogContent>
         <DialogTitle>Log In</DialogTitle>
         <DialogDescription>Please sign in to continue</DialogDescription>

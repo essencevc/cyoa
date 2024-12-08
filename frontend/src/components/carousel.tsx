@@ -12,6 +12,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { NextButton, PrevButton, useCarouselButtons } from "./carousel-button";
 import { CarouselIndicator, useCarouselIndicator } from "./carousel-indicator";
 import { Link } from "react-router-dom";
+import SignInModal from "./signin";
 
 type EmblaCarouselPropType = {
   className?: string;
@@ -26,6 +27,19 @@ type EmblaCarouselPropType = {
   showIndicators?: boolean;
   showArrows?: boolean;
 };
+
+interface SlideData {
+  id: string;
+  text: string;
+  name: string;
+  role: string;
+  image: string;
+}
+
+interface CarouselSlideProps {
+  data: SlideData;
+  isProtected?: boolean;
+}
 
 const TWEEN_FACTOR_BASE = 0.7;
 const MAX_ROTATE_X = 35;
@@ -257,37 +271,72 @@ const CarouselSlidesData = [
   },
 ];
 
-export function Carousel() {
-  const OPTIONS: EmblaOptionsType = { loop: true };
-  const slides = CarouselSlidesData.map((testimonial) => (
-    <Link
-      to={`dashboard/story/${testimonial.id}`}
-      key={testimonial.id}
-      className="w-full h-full flex relative cursor-grab border rounded-xl select-none"
-    >
+export const CarouselSlide: React.FC<CarouselSlideProps> = ({
+  data,
+  isProtected = true,
+}) => {
+  const SlideContent = () => (
+    <div className="w-full h-full flex relative cursor-grab border rounded-xl select-none">
       <div className="w-full h-full z-[1]">
         <div className="w-full h-full p-3.5 flex flex-col md:flex-row gap-x-10 items-start md:items-end justify-end md:justify-between text-content">
           <img
-            src={testimonial.image}
-            alt={testimonial.name}
+            src={data.image}
+            alt={data.name}
             className="w-full h-full object-cover absolute top-0 left-0 rounded-xl -z-10"
           />
           <div className="flex flex-col gap-y-2 w-full h-fit backdrop-blur-sm border border-neutral-200/50 rounded-xl p-5 text-white">
             <h2 className="text-base text-balance font-medium leading-6 text-left">
-              {testimonial.text}
+              {data.text}
             </h2>
             <div className="flex flex-col gap-y-0.5">
               <p className="text-balance text-sm font-semibold text-left">
-                {testimonial.name}
+                {data.name}
               </p>
               <p className="text-balance text-xs font-medium text-left">
-                {testimonial.role}
+                {data.role}
               </p>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  if (isProtected) {
+    return (
+      <SignInModal
+        fallback={<div className="w-full h-full">{<SlideContent />}</div>}
+        redirectUrl={`/dashboard/story/${data.id}`}
+      >
+        <Link
+          to={`/dashboard/story/${data.id}`}
+          key={data.id}
+          className="w-full h-full"
+        >
+          <SlideContent />
+        </Link>
+      </SignInModal>
+
+      // </SignInModal>
+    );
+  }
+
+  return (
+    <Link
+      to={`/dashboard/story/${data.id}`}
+      key={data.id}
+      className="w-full h-full"
+    >
+      <SlideContent />
     </Link>
+  );
+};
+
+export function Carousel() {
+  const OPTIONS: EmblaOptionsType = { loop: true };
+
+  const slides = CarouselSlidesData.map((testimonial) => (
+    <CarouselSlide key={testimonial.id} data={testimonial} isProtected={true} />
   ));
 
   return (
