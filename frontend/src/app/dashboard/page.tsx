@@ -1,36 +1,11 @@
+import { auth } from "@/auth";
 import StoryList from "@/components/dashboard/story-list";
 import { TerminalInput } from "@/components/dashboard/terminal-input";
+import { db } from "@/db/db";
+import { eq } from "drizzle-orm";
+import { storiesTable, usersTable } from "@/db/schema";
 import React from "react";
-
-const userStories = [
-  {
-    id: "1",
-    title: "The Dragon's Quest",
-    description:
-      "A tale of adventure and magic in the realm of dragons, where ancient prophecies come to life. The young hero, armed with nothing but courage and a mysterious amulet, must face fire-breathing behemoths and cunning sorcerers to save the kingdom from an eternal winter.",
-    timestamp: "Generated less than a minute ago",
-    image:
-      "https://huggingface.co/prithivMLmods/Retro-Pixel-Flux-LoRA/resolve/main/images/RP1.png",
-  },
-  {
-    id: "2",
-    title: "Cyberpunk Samurai",
-    description:
-      "A warrior from the past finds himself in a neon-lit future, where honor meets technology. Struggling to adapt to a world of AI, cybernetic enhancements, and corporate warfare, the samurai must find a way to uphold his ancient code while navigating the treacherous streets of Neo-Tokyo.",
-    timestamp: "Generated 2 hours ago",
-    image:
-      "https://huggingface.co/prithivMLmods/Retro-Pixel-Flux-LoRA/resolve/main/images/RP1.png",
-  },
-  {
-    id: "3",
-    title: "Space Pirates",
-    description:
-      "Adventures in the cosmic seas, where treasure and danger lurk among the stars. Captain Zara and her motley crew of aliens and humans sail their modified starship through wormholes and asteroid fields, always one step ahead of the Galactic Federation and rival pirate gangs.",
-    timestamp: "Generated yesterday",
-    image:
-      "https://huggingface.co/prithivMLmods/Retro-Pixel-Flux-LoRA/resolve/main/images/RP1.png",
-  },
-];
+import { UsernameInput } from "@/components/dashboard/username-input";
 
 const communityStories = [
   {
@@ -61,7 +36,33 @@ const communityStories = [
       "https://huggingface.co/prithivMLmods/Retro-Pixel-Flux-LoRA/resolve/main/images/RP1.png",
   },
 ];
-const Dashboard = () => {
+const Dashboard = async () => {
+  const session = await auth();
+
+  const dbUser = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, session?.user?.email!))
+    .get();
+
+  if (!dbUser?.username) {
+    return <UsernameInput />;
+  }
+
+  const userStories = await db
+    .select({
+      id: storiesTable.id,
+      title: storiesTable.title,
+      author: usersTable.username,
+      image: storiesTable.image,
+      description: storiesTable.description,
+      timestamp: storiesTable.timestamp,
+      public: storiesTable.public,
+    })
+    .from(storiesTable)
+    .where(eq(storiesTable.userId, dbUser.email))
+    .innerJoin(usersTable, eq(storiesTable.userId, usersTable.email));
+
   return (
     <div className="space-y-8 bg-black/50 rounded-lg p-4 border border-green-900/30">
       <TerminalInput />
@@ -74,7 +75,7 @@ const Dashboard = () => {
           },
           {
             logType: "SUCCESS",
-            message: "Found 3 stories in collection",
+            message: `Found ${userStories.length} stories in collection`,
           },
           {
             logType: "INFO",
@@ -92,7 +93,7 @@ const Dashboard = () => {
           },
           {
             logType: "SUCCESS",
-            message: "Found 5 stories in collection. Sorting by popularity...",
+            message: `Found ${communityStories.length} stories in collection. Sorting by popularity...`,
           },
           {
             logType: "INFO",

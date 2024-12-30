@@ -3,7 +3,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const usersTable = sqliteTable('users', {
   email: text('email').primaryKey(),
-  username: text('username').notNull(),
+  username: text('username').unique(),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;
@@ -16,6 +16,9 @@ export const storiesTable = sqliteTable('stories', {
     .references(() => usersTable.email, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description').notNull(),
+  timestamp: integer('timestamp').notNull().default(sql`(unix())`),
+  image: text('image'),
+  public: integer('public').notNull().default(0),
 });
 
 export type InsertStory = typeof storiesTable.$inferInsert;

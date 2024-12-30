@@ -6,9 +6,9 @@ import React, { useState } from "react";
 type Story = {
   id: string;
   title: string;
-  author?: string;
+  author?: string | null;
   description: string;
-  image: string;
+  image: string | null;
 };
 
 type StoryListProps = {
