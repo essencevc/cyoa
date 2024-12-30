@@ -1,6 +1,4 @@
 "use client"
-
-import { skip } from "node:test"
 import { useState, useEffect, useCallback } from "react"
 
 interface TypewriterOptions {

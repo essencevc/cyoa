@@ -2,7 +2,6 @@
 import React from "react";
 import { Choice, ChoiceNode } from "@/types/choice";
 import { buildTree, getPath } from "@/lib/tree";
-import { L } from "../ui/button";
 import Link from "next/link";
 
 interface StoryChoiceNodeProps {
@@ -41,7 +40,7 @@ const StoryChoiceNode = ({
           {hasChildren && (
             <span
               className="text-green-500 text-sm cursor-pointer"
-              onClick={(e) => {
+              onClick={() => {
                 setIsExpanded(!isExpanded);
               }}
             >
@@ -78,7 +77,7 @@ const StoryChoices = ({ choices }: { choices: Choice[] }) => {
   return (
     <div>
       <div className="mb-4 text-sm">
-        {selectedPath.map((choice: Choice, index: number, array: Choice[]) => (
+        {selectedPath.map((choice: Choice, index: number) => (
           <span key={choice.id}>
             {index > 0 && <span className="mx-2">→</span>}
             <span>{choice.title.toLowerCase().replace(/\s+/g, "_")}</span>
