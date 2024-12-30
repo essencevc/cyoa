@@ -9,11 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@radix-ui/react-progress": "^1.1.1",
     "@radix-ui/react-scroll-area": "^1.2.2",
     "@radix-ui/react-slot": "^1.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.3",
     "lucide-react": "^0.469.0",
     "motion": "^11.15.0",
     "next": "14.2.22",
@@ -27,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "drizzle-kit": "^0.30.1",
     "eslint": "^8",
     "eslint-config-next": "14.2.22",
     "postcss": "^8",
