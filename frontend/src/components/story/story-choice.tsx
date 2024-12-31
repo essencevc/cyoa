@@ -3,6 +3,7 @@ import React from "react";
 import { Choice, ChoiceNode } from "@/types/choice";
 import { buildTree, getPath } from "@/lib/tree";
 import Link from "next/link";
+import { SelectStoryChoice } from "@/db/schema";
 
 interface StoryChoiceNodeProps {
   node: ChoiceNode;
@@ -70,9 +71,19 @@ const StoryChoiceNode = ({
   );
 };
 
-const StoryChoices = ({ choices }: { choices: Choice[] }) => {
-  const tree = buildTree(choices);
+const StoryChoices = ({
+  choices,
+  storyId,
+}: {
+  choices: SelectStoryChoice[];
+  storyId: string;
+}) => {
+  // We only want to show choices that have been explored
+  const validChoices = choices.filter((choice) => choice.explored === 1);
+  const tree = buildTree(validChoices, "NULL");
+
   const [selectedId, setSelectedId] = React.useState<string>(tree[0].id);
+
   const selectedPath = getPath(choices, selectedId);
   return (
     <div>
@@ -84,6 +95,8 @@ const StoryChoices = ({ choices }: { choices: Choice[] }) => {
           </span>
         ))}
       </div>
+
+      <div className="py-1" />
       {tree.map((node: ChoiceNode) => (
         <StoryChoiceNode
           key={node.id}

@@ -3,10 +3,9 @@ import { Terminal } from "lucide-react";
 
 import SignOut from "@/components/header/sign-out";
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono">
-      {/* Header */}
       <header className="border-b border-green-400/20">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -15,7 +14,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               CYOA-OS v1.0
             </Link>
           </div>
-          <SignOut />
+          <div>
+            <SignOut />
+          </div>
         </div>
       </header>
       <div className="container mx-auto px-4 py-4">

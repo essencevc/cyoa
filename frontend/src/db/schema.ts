@@ -14,11 +14,15 @@ export const storiesTable = sqliteTable('stories', {
   userId: text('user_id')
     .notNull()
     .references(() => usersTable.email, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  timestamp: integer('timestamp').notNull().default(sql`(unix())`),
+  title: text('title'),
+  description: text('description'),
+  timestamp: integer('timestamp').notNull().default(Date.now()),
   image: text('image'),
   public: integer('public').notNull().default(0),
+  status: text('status', { enum: ['PROCESSING', 'GENERATED', 'ERROR'] })
+    .notNull()
+    .default('PROCESSING'),
+  errorMessage: text('error_message'),
 });
 
 export type InsertStory = typeof storiesTable.$inferInsert;
@@ -32,9 +36,11 @@ export const storyChoicesTable = sqliteTable('story_choices', {
   storyId: text('story_id')
     .notNull()
     .references(() => storiesTable.id, { onDelete: 'cascade' }),
+  parentId: text('parent_id'),
   title: text('title').notNull(),
   description: text('description').notNull(),
   isTerminal: integer('is_terminal').notNull().default(0),
+  explored: integer('explored').notNull().default(0),
 });
 
 export type InsertStoryChoice = typeof storyChoicesTable.$inferInsert;

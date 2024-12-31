@@ -1,14 +1,17 @@
 "use client";
+import { SelectStory } from "@/db/schema";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
 type Story = {
   id: string;
-  title: string;
+  title: string | null;
   author?: string | null;
-  description: string;
+  description: string | null;
   image: string | null;
+  status: SelectStory["status"];
+  errorMessage: string | null;
 };
 
 type StoryListProps = {
@@ -100,11 +103,13 @@ const StoryList = ({ command, logMessages, stories }: StoryListProps) => {
                 <div className="mt-2 pl-6 pr-2 py-2 bg-green-900/20 rounded">
                   <div className="flex items-center justify-between gap-4">
                     <div className="w-24 h-24 shrink-0">
-                      <img
-                        src={story.image}
-                        alt={story.title}
-                        className="w-full h-full object-cover rounded"
-                      />
+                      {story.image && (
+                        <img
+                          src={story.image}
+                          alt={story.title as string}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-green-400 text-sm mb-3">
