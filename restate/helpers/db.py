@@ -64,6 +64,14 @@ class DatabaseClient:
         conn.commit()
         return story_id
 
+    def mark_story_as_completed(self, story_id: str):
+        print(f"Marking story {story_id} as completed")
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        query = "UPDATE stories SET status = 'GENERATED' WHERE id = ?"
+        cursor.execute(query, (story_id,))
+        conn.commit()
+
     def insert_story_nodes(
         self, nodes: list[FinalStoryNode], story_id: str, user_id: str
     ):

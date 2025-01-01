@@ -1,21 +1,32 @@
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
-
-# Install Rust and cargo first
 RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
+    cmake \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Add cargo to PATH
+
 ENV PATH="/root/.cargo/bin:$PATH"
 
-# Copy the project into the image
-ADD . /app
 
-# Sync the project into a new environment, using the frozen lockfile
 WORKDIR /app
-RUN uv sync --frozen
 
-CMD ["uv", "run", "hypercorn", "-c", "./hypercorn-config.toml", "main:app"]
+# Copy all files to app directory
+COPY ./ /app
+
+RUN uv venv && uv venv activate
+
+RUN uv pip install -r pyproject.toml
+
+# Add hypercorn to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=INFO
+
+# Add this to ensure Python logs are sent to stdout/stderr
+ENV PYTHONIOENCODING=utf-8
+# Run the hypercorn server
+CMD ["hypercorn", "-c", "hypercorn-config.toml", "main:app"]
