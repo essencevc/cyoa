@@ -3,6 +3,8 @@ import { Terminal } from "lucide-react";
 
 import SignOut from "@/components/header/sign-out";
 
+export const dynamic = "force-dynamic";
+
 const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono">

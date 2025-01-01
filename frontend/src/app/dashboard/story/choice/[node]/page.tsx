@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import TerminalChoice from "@/components/node/terminal-choice";
 
+export const dynamic = "force-dynamic";
+
 const NodePage = async ({ params }: { params: { node: string } }) => {
   const choice = await db.query.storyChoicesTable.findFirst({
     where: eq(storyChoicesTable.id, params.node),

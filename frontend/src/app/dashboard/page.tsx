@@ -7,6 +7,8 @@ import { storiesTable, usersTable } from "@/db/schema";
 import React from "react";
 import { UsernameInput } from "@/components/dashboard/username-input";
 
+export const dynamic = "force-dynamic";
+
 const communityStories = [
   {
     id: "4",

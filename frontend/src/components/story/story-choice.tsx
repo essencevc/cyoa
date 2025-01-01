@@ -78,8 +78,8 @@ const StoryChoices = ({
   choices: SelectStoryChoice[];
   storyId: string;
 }) => {
-  // We only want to show choices that have been explored
   const validChoices = choices.filter((choice) => choice.explored === 1);
+
   const tree = buildTree(validChoices, "NULL");
 
   const [selectedId, setSelectedId] = React.useState<string>(tree[0].id);
