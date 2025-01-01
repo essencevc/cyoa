@@ -8,8 +8,6 @@ import React from "react";
 import { UsernameInput } from "@/components/dashboard/username-input";
 import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
 const Dashboard = async () => {
   const session = await auth();
 
