@@ -3,8 +3,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { Sparkles } from "lucide-react";
 import { useTypewriter } from "../../hooks/useTypewriter";
-import type { Story } from "../../types/story";
 import { Wrapper } from "../../components/wrapper";
+
+type Story = {
+  prompt: string;
+  description: string;
+  choices: string[];
+};
 
 interface StoryGeneratorProps {
   stories: Story[];

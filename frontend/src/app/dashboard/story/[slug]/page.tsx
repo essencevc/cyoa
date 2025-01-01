@@ -116,7 +116,7 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
         </span>
       </div>
 
-      <StoryChoices choices={story.choices} storyId={storyId} />
+      <StoryChoices choices={story.choices} />
     </div>
   );
 };

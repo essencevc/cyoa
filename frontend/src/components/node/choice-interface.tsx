@@ -32,7 +32,7 @@ const ChoiceInterface = ({
           router.push(`/dashboard/story/choice/${choices[selectedChoice].id}`);
           break;
         case "Escape":
-          router.push(`/dashboard/story/${choice.storyId}`);
+          router.push(`/dashboard/story/${choices[selectedChoice].storyId}`);
           break;
       }
     }

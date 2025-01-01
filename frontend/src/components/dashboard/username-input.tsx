@@ -1,6 +1,5 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { validateUsername } from "@/lib/user";

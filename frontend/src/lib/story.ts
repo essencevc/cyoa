@@ -3,7 +3,7 @@
 import { auth } from "@/auth"
 import { db } from "@/db/db"
 import { storiesTable, storyChoicesTable } from "@/db/schema"
-import { and, eq, isNotNull, not } from "drizzle-orm"
+import { and, eq, not } from "drizzle-orm"
 
 export async function resetStoryProgress(storyId:string) {
   const session = await auth()

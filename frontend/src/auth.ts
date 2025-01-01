@@ -7,7 +7,7 @@ import { db } from "./db/db";
 const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   callbacks: {
-    signIn: async ({ user, account }) => {
+    signIn: async ({ user }) => {
       // We always create a user in the database if the user doesn't exist
       const dbUser = await db.select().from(usersTable).where(eq(usersTable.email, user.email!));
       

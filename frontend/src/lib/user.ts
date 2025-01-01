@@ -26,6 +26,7 @@ export async function validateUsername(username: string) {
     console.log(`Username ${username} updated for user ${email}`);
     return { success: true, message: `Access granted: ${username}` };
   } catch (error) {
+    console.error(error);
     return {
       success: false,
       message: "Username is already taken. Please choose another one.",

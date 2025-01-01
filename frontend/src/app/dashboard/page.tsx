@@ -6,19 +6,24 @@ import { eq } from "drizzle-orm";
 import { storiesTable, usersTable } from "@/db/schema";
 import React from "react";
 import { UsernameInput } from "@/components/dashboard/username-input";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 const Dashboard = async () => {
   const session = await auth();
 
+  if (!session || !session.user || !session.user.email) {
+    return redirect("/");
+  }
+
   const dbUser = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.email, session?.user?.email!))
+    .where(eq(usersTable.email, session.user.email))
     .get();
 
-  if (!dbUser?.username) {
+  if (!dbUser || !dbUser.username) {
     return <UsernameInput />;
   }
 
@@ -59,7 +64,8 @@ const Dashboard = async () => {
         ]}
         stories={userStories}
       />
-      <StoryList
+      {/* TODO: Add Community Stories once we've generated more */}
+      {/* <StoryList
         command="cyoa list-stories --filter community-stories"
         logMessages={[
           {
@@ -76,7 +82,7 @@ const Dashboard = async () => {
           },
         ]}
         stories={[]}
-      />
+      /> */}
     </div>
   );
 };

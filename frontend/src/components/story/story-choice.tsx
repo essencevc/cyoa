@@ -1,9 +1,10 @@
 "use client";
 import React from "react";
-import { Choice, ChoiceNode } from "@/types/choice";
 import { buildTree, getPath } from "@/lib/tree";
 import Link from "next/link";
 import { SelectStoryChoice } from "@/db/schema";
+
+type ChoiceNode = SelectStoryChoice & { children: ChoiceNode[] };
 
 interface StoryChoiceNodeProps {
   node: ChoiceNode;
@@ -71,13 +72,7 @@ const StoryChoiceNode = ({
   );
 };
 
-const StoryChoices = ({
-  choices,
-  storyId,
-}: {
-  choices: SelectStoryChoice[];
-  storyId: string;
-}) => {
+const StoryChoices = ({ choices }: { choices: SelectStoryChoice[] }) => {
   const validChoices = choices.filter((choice) => choice.explored === 1);
 
   const tree = buildTree(validChoices, "NULL");
@@ -88,7 +83,7 @@ const StoryChoices = ({
   return (
     <div>
       <div className="mb-4 text-sm">
-        {selectedPath.map((choice: Choice, index: number) => (
+        {selectedPath.map((choice: SelectStoryChoice, index: number) => (
           <span key={choice.id}>
             {index > 0 && <span className="mx-2">→</span>}
             <span>{choice.title.toLowerCase().replace(/\s+/g, "_")}</span>
