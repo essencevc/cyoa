@@ -2,10 +2,18 @@ import Link from "next/link";
 import { Terminal } from "lucide-react";
 
 import SignOut from "@/components/header/sign-out";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
+  const session = await auth();
+
+  if (!session) {
+    return redirect("/");
+  }
+
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono">
       <header className="border-b border-green-400/20">
@@ -16,7 +24,13 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
               CYOA-OS v1.0
             </Link>
           </div>
-          <div>
+          <div className="flex items-center space-x-4">
+            <div className="flex flex-col items-end">
+              <div>{session.user?.username}</div>
+              <div className="text-sm text-green-400/60">
+                {session.user?.email}
+              </div>
+            </div>
             <SignOut />
           </div>
         </div>
