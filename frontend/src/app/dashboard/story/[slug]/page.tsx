@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
+import StoryAudio from "@/components/story/audio-player";
 
 const StoryPage = async ({ params }: { params: { slug: string } }) => {
   const storyId = params.slug;
@@ -69,20 +70,20 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
       {/* Main Content - Side by side on desktop, stacked on mobile */}
       <div className="flex flex-col md:flex-row gap-6">
         {/* Banner Image */}
-        <div className="w-full md:w-1/2">
-          <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden border border-green-500/20">
-            {story.image && (
+        <div className="w-full md:w-1/5">
+          <div className="flex h-full justify-center items-center">
+            <div className="relative w-64 h-64 rounded-lg overflow-hidden border border-green-500/20">
               <img
-                src={story.image}
+                src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                 alt={story.title || "Story Image"}
                 className="w-full h-full object-cover"
               />
-            )}
+            </div>
           </div>
         </div>
 
         {/* Story Content */}
-        <div className="w-full md:w-1/2 space-y-6 font-mono">
+        <div className="w-full md:w-4/5 space-y-6 font-mono">
           <div className="space-y-2">
             <div className="text-sm opacity-70">[INFO] Story ID: {storyId}</div>
             <p className="leading-relaxed text-green-300">
@@ -106,6 +107,9 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               {Math.round(storyProgress)}%
             </div>
           </div>
+
+          {/* Audio Player */}
+          <StoryAudio storyId={storyId} />
         </div>
       </div>
 

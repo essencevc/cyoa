@@ -32,7 +32,7 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-2/5 h-48 rounded overflow-hidden">
             <img
-              src="https://huggingface.co/prithivMLmods/Retro-Pixel-Flux-LoRA/resolve/main/images/RP1.png"
+              src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${choice.storyId}/${choice.id}.png`}
               alt="Story Ending"
               className="object-contain w-full h-full rounded-lg"
             />

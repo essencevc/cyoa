@@ -3,6 +3,7 @@ import React from "react";
 import { buildTree, getPath } from "@/lib/tree";
 import Link from "next/link";
 import { SelectStoryChoice } from "@/db/schema";
+import { useRouter } from "next/navigation";
 
 type ChoiceNode = SelectStoryChoice & { children: ChoiceNode[] };
 
@@ -10,7 +11,6 @@ interface StoryChoiceNodeProps {
   node: ChoiceNode;
   onSelect: (node: ChoiceNode) => void;
   selectedId: string | null;
-  prefix?: string;
   isLast?: boolean;
 }
 
@@ -18,16 +18,18 @@ const StoryChoiceNode = ({
   node,
   onSelect,
   selectedId,
-  prefix = "",
   isLast = true,
 }: StoryChoiceNodeProps) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const hasChildren = node.children.length > 0;
 
   return (
-    <div key={node.id} className="pl-4">
+    <div key={node.id} className="pl-8">
       <div className="flex items-center group">
-        <span className="font-mono text-gray-500">{prefix}</span>
+        <span />
+        <span className="font-mono text-gray-500">
+          {isLast ? "└── " : "└── "}
+        </span>
         <span
           onClick={() => {
             onSelect(node);
@@ -39,6 +41,7 @@ const StoryChoiceNode = ({
               : "group-hover:text-green-400"
           }`}
         >
+          {node.title}{" "}
           {hasChildren && (
             <span
               className="text-green-500 text-sm cursor-pointer"
@@ -46,10 +49,9 @@ const StoryChoiceNode = ({
                 setIsExpanded(!isExpanded);
               }}
             >
-              {isExpanded ? "-" : "+"}
+              {isExpanded ? "" : "+"}
             </span>
           )}
-          {node.title}
         </span>
       </div>
       {isExpanded && hasChildren && (
@@ -60,9 +62,6 @@ const StoryChoiceNode = ({
               node={child}
               onSelect={onSelect}
               selectedId={selectedId}
-              prefix={`${prefix}${isLast ? "    " : "│   "}${
-                index === node.children.length - 1 ? "└─ " : "├─ "
-              }`}
               isLast={index === node.children.length - 1}
             />
           ))}
@@ -80,6 +79,8 @@ const StoryChoices = ({ choices }: { choices: SelectStoryChoice[] }) => {
   const [selectedId, setSelectedId] = React.useState<string>(tree[0].id);
 
   const selectedPath = getPath(choices, selectedId);
+  const router = useRouter();
+
   return (
     <div>
       <div className="mb-4 text-sm">
@@ -97,6 +98,7 @@ const StoryChoices = ({ choices }: { choices: SelectStoryChoice[] }) => {
           key={node.id}
           node={node}
           onSelect={(node: ChoiceNode) => {
+            router.prefetch(`/dashboard/story/choice/${node.id}`);
             setSelectedId(node.id);
           }}
           selectedId={selectedId}

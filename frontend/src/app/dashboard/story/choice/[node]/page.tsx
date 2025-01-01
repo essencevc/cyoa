@@ -54,6 +54,8 @@ const NodePage = async ({ params }: { params: { node: string } }) => {
       title={choice.title}
       description={choice.description}
       choices={children}
+      choiceId={choice.id}
+      storyId={choice.storyId}
     />
   );
 };

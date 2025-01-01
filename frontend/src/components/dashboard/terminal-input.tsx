@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { generateStory } from "@/lib/story";
+import { useToast } from "@/hooks/use-toast";
 
 export function TerminalInput() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && input.trim()) {
@@ -14,6 +16,11 @@ export function TerminalInput() {
       try {
         await generateStory(input.trim());
         setInput(""); // Clear input after successful submission
+        toast({
+          title: "Success",
+          description:
+            "We've started generating your story. Once it's completed, you'll be able to play it in the story list below",
+        });
       } catch (error) {
         console.error("Error:", error);
         // Optionally handle error state here

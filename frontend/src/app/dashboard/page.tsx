@@ -7,9 +7,11 @@ import { storiesTable, usersTable } from "@/db/schema";
 import React from "react";
 import { UsernameInput } from "@/components/dashboard/username-input";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 const Dashboard = async () => {
   const session = await auth();
+  revalidatePath("/dashboard", "page");
 
   if (!session || !session.user || !session.user.email) {
     return redirect("/");
@@ -42,7 +44,7 @@ const Dashboard = async () => {
     .innerJoin(usersTable, eq(storiesTable.userId, usersTable.email));
 
   return (
-    <div className="space-y-8 bg-black/50 rounded-lg p-4 border border-green-900/30">
+    <div className="space-y-8 bg-black/50 max-w-5xl mx-auto rounded-lg p-4">
       <TerminalInput />
       <StoryList
         command="cyoa list-stories --filter user-stories"
@@ -62,25 +64,6 @@ const Dashboard = async () => {
         ]}
         stories={userStories}
       />
-      {/* TODO: Add Community Stories once we've generated more */}
-      {/* <StoryList
-        command="cyoa list-stories --filter community-stories"
-        logMessages={[
-          {
-            logType: "INFO",
-            message: "Fetching stories with community filter",
-          },
-          {
-            logType: "SUCCESS",
-            message: `Found ${communityStories.length} stories in collection. Sorting by popularity...`,
-          },
-          {
-            logType: "INFO",
-            message: "Formatting output...",
-          },
-        ]}
-        stories={[]}
-      /> */}
     </div>
   );
 };

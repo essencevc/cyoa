@@ -1,6 +1,6 @@
 "use client";
 import { SelectStory } from "@/db/schema";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import React, { useState } from "react";
 
@@ -49,13 +49,72 @@ const CommandLogger = ({
   );
 };
 
-const StoryList = ({ command, logMessages, stories }: StoryListProps) => {
+const StoryCard = ({ story }: { story: Story }) => {
+  return (
+    <div>
+      <div className="flex gap-8">
+        <div className="w-1/5">
+          <img
+            src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${story.id}/banner.png`}
+            alt={story.title as string}
+            className="w-32 h-32 object-cover rounded"
+          />
+        </div>
+        <div className="w-4/5">
+          <p className="text-green-400/80">{story.description}</p>
+        </div>
+      </div>
+      <div className="py-2" />
+      <div className="flex justify-end items-center gap-2">
+        <Link
+          href={`/dashboard/story/${story.id}`}
+          className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"
+          tabIndex={0}
+        >
+          Start Playthrough
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const StoryList = ({
+  command,
+  logMessages,
+  stories: initialStories,
+}: StoryListProps) => {
   const [selectedStory, setSelectedStory] = useState<number | null>(null);
+
+  const { data: stories } = useQuery({
+    queryKey: ["stories"],
+    queryFn: async () => {
+      const response = await fetch("/api/stories");
+      if (!response.ok) {
+        throw new Error("Failed to fetch stories");
+      }
+      return response.json();
+    },
+    refetchInterval: 60000, // Refetch every 60 seconds
+    initialData: initialStories, // Use prop stories as initial data
+  });
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setSelectedStory(selectedStory === index ? null : index);
+    }
+  };
+
+  const getStatusIcon = (status: Story["status"]) => {
+    switch (status) {
+      case "GENERATED":
+        return "●";
+      case "PROCESSING":
+        return "○";
+      case "ERROR":
+        return "⨂";
+      default:
+        throw new Error("Invalid story status");
     }
   };
 
@@ -75,59 +134,86 @@ const StoryList = ({ command, logMessages, stories }: StoryListProps) => {
             />
           ))}
         </div>
-        <div className="mt-4">
-          {stories.map((story, index) => (
+        <div className="py-4" />
+        <div className="border border-green-500 p-4">
+          <div className="flex flex-col gap-4">USER STORIES</div>
+          {stories.map((story: Story, index: number) => (
             <div key={index}>
               <div
                 onClick={() =>
                   setSelectedStory(selectedStory === index ? null : index)
                 }
                 tabIndex={0}
-                className="text-[#39FF14] text-sm pl-2 py-1 focus:outline-none focus:bg-green-900/30 rounded transition-colors cursor-pointer"
+                className="text-[#39FF14] text-sm pl-2 py-1 focus:outline-none focus:underline rounded transition-colors cursor-pointer"
                 onKeyDown={(e) => handleKeyDown(e, index)}
               >
-                <div className="flex items-center">
-                  {selectedStory === index ? (
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 mr-1" />
-                  )}
-                  <span>{story.title}</span>
-                </div>
-
-                <div className="pl-4 text-green-500 line-clamp-1">
-                  {story.description}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#39FF14]">{story.title}</span>
+                  {getStatusIcon(story.status)}
                 </div>
               </div>
-              {selectedStory === index && (
-                <div className="mt-2 pl-6 pr-2 py-2 bg-green-900/20 rounded">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="w-24 h-24 shrink-0">
-                      {story.image && (
-                        <img
-                          src={story.image}
-                          alt={story.title as string}
-                          className="w-full h-full object-cover rounded"
-                        />
-                      )}
+            </div>
+          ))}
+          {selectedStory !== null && (
+            <div className="max-w-2xl mx-auto">
+              <div className="mt-4 py-8 bg-green-900/30 text-sm">
+                <div className="mx-12">
+                  <StoryCard story={stories[selectedStory]} />
+                </div>
+              </div>
+            </div>
+          )}
+          {/* {selectedStory !== null && (
+            <div className="max-w-2xl mx-auto">
+              <div className="mt-4 py-8 bg-green-900/30 text-sm">
+                <div className="mx-12">
+                  <div className="flex gap-8">
+                    <div className="w-1/5">
+                      <img
+                        src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${stories[selectedStory].id}/banner.png`}
+                        alt={stories[selectedStory].title as string}
+                        className="w-32 h-32 object-cover rounded image-rendering-pixelated"
+                        style={{ imageRendering: "pixelated" }}
+                      />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-green-400 text-sm mb-3">
-                        {story.description}
+                    <div className="w-4/5">
+                      <p className="text-green-400/80">
+                        {stories[selectedStory].description}
                       </p>
+                    </div>
+                  </div>
+                  <div className="py-2" />
 
+                  <div className="flex justify-end items-center gap-2">
+                    {stories[selectedStory].status === "GENERATED" && (
                       <Link
-                        href={`/dashboard/story/${story.id}`}
-                        className="bg-green-900/30 hover:bg-green-900/50 text-[#39FF14] px-4 py-2 rounded transition-colors"
+                        href={`/dashboard/story/${stories[selectedStory].id}`}
+                        className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"
+                        tabIndex={0}
                       >
                         Start Playthrough
                       </Link>
-                    </div>
+                    )}
+
+                    {stories[selectedStory].status === "ERROR" && (
+                      <div className="text-red-500 text-sm flex items-center">
+                        {stories[selectedStory].errorMessage}
+                      </div>
+                    )}
+
+                    {stories[selectedStory].status === "PROCESSING" && (
+                      <div className="rounded border border-yellow-400/30 px-6 py-2 text-sm cursor-not-allowed flex items-center">
+                        Processing...
+                      </div>
+                    )}
+                    <button className="rounded border border-red-400/30 px-6 py-2 text-sm text-red-400 hover:bg-red-950/30">
+                      Delete Story
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          ))}
+          )} */}
         </div>
       </div>
     </div>
