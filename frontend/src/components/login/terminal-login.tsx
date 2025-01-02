@@ -1,9 +1,9 @@
 "use client";
 
 import { useTypewriter } from "@/hooks/useTypewriter";
-import { Fingerprint, Sparkles, X } from "lucide-react";
+import { Fingerprint, Loader2, Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { signInWithGoogle } from "@/lib/login-server";
 import { Button } from "../ui/button";
 import Link from "next/link";
@@ -91,6 +91,7 @@ const TerminalLine = ({
 };
 
 const TerminalLogin = () => {
+  const [isPending, startTransition] = useTransition();
   const terminalLines: TerminalLineConfig[] = [
     {
       text: "User login attempt detected",
@@ -153,11 +154,21 @@ const TerminalLogin = () => {
               >
                 <Button
                   variant="outline"
-                  onClick={() => signInWithGoogle()}
+                  disabled={isPending}
+                  onClick={() => startTransition(() => signInWithGoogle())}
                   className="bg-transparent border-green-400/20 text-green-400/80 hover:bg-green-400/20 hover:text-green-400 transition-colors duration-300 font-mono tracking-wider w-full relative group overflow-hidden mt-4"
                 >
-                  <span className="relative z-10">Sign in with Google</span>
-                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(74,222,128,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-shine" />
+                  {isPending ? (
+                    <>
+                      Loading
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative z-10">Sign in with Google</span>
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(74,222,128,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-shine" />
+                    </>
+                  )}
                 </Button>
               </motion.div>
             )}
