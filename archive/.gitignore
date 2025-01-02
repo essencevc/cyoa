@@ -1,0 +1,10 @@
+.vscode
+.env
+node_modules
+backend/venv
+backend/restate-data
+restate-config.yaml
+__pycache__
+
+frontend/build
+frontend/node_modules

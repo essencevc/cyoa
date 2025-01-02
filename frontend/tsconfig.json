@@ -1,36 +1,26 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
-    "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": false,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "noFallthroughCasesInSwitch": true,
-    "jsx": "react-jsx",
-    "types": [
-      "vite/client",
-      "vite-plugin-svgr/client"
-    ]
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
