@@ -10,7 +10,7 @@ export default auth((req) => {
     }
 
     // Throw 401 if user is not authenticated and trying to access API routes
-    if (req.nextUrl.pathname.startsWith("/api")) {
+    if (req.nextUrl.pathname.startsWith("/api/stories")) {
       return new Response(null, {
         status: 401,
         statusText: "Unauthorized",
