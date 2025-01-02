@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db/db";
 import Credentials from "next-auth/providers/credentials";
 
-const isPreview = true;
+const isProduction = process.env.VERCEL_ENV === "production";
 
 const mockGoogleProvider = Credentials({
   id: "google",
@@ -23,7 +23,7 @@ const mockGoogleProvider = Credentials({
 });
 
 const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [isPreview ? mockGoogleProvider : Google],
+  providers: [isProduction ? Google : mockGoogleProvider],
   callbacks: {
     signIn: async ({ user }) => {
       // We always create a user in the database if the user doesn't exist

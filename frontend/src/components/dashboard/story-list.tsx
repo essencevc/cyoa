@@ -2,7 +2,19 @@
 import { SelectStory } from "@/db/schema";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { deleteStory } from "@/lib/story";
+import { Loader2 } from "lucide-react";
 
 type Story = {
   id: string;
@@ -50,6 +62,17 @@ const CommandLogger = ({
 };
 
 const StoryCard = ({ story }: { story: Story }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleting, startDeletion] = useTransition();
+
+  if (story.status === "PROCESSING") {
+    return <div>Processing...</div>;
+  }
+
+  if (story.status === "ERROR") {
+    return <div className="text-red-400">{story.errorMessage}</div>;
+  }
+
   return (
     <div>
       <div className="flex gap-8">
@@ -66,6 +89,55 @@ const StoryCard = ({ story }: { story: Story }) => {
       </div>
       <div className="py-2" />
       <div className="flex justify-end items-center gap-2">
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="border-red-400/20 text-red-400/60 hover:bg-red-950/30 hover:text-red-400 bg-transparent"
+            >
+              Delete
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-black/90 border border-red-400/20">
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Delete Story</DialogTitle>
+              <DialogDescription className="text-red-400/60">
+                Are you sure you want to delete this story? This action cannot
+                be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-green-400/20 text-green-400/60 hover:bg-green-400/20 hover:text-green-400 bg-transparent transition-colors"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                onClick={() => {
+                  startDeletion(() => {
+                    deleteStory(story.id);
+                    setIsDialogOpen(false);
+                  });
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Deleting
+                  </>
+                ) : (
+                  "Delete Story"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Link
           href={`/dashboard/story/${story.id}`}
           className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"

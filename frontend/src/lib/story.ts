@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import { db } from "@/db/db";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { and, eq, not } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function resetStoryProgress(storyId: string) {
   const session = await auth();
@@ -70,4 +72,10 @@ export async function generateStory(prompt: string) {
     console.error("Error submitting prompt:", error);
     throw new Error("Failed to submit prompt");
   }
+}
+
+export async function deleteStory(storyId: string) {
+  await db.delete(storiesTable).where(eq(storiesTable.id, storyId));
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
