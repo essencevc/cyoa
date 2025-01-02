@@ -13,9 +13,11 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
   const router = useRouter();
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        router.push(`/dashboard/story/${choice.storyId}`);
+        router.push(
+          `/dashboard/story/${choice.storyId}?prev_node=${choice.id}`
+        );
       }
     };
 

@@ -6,27 +6,25 @@ import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
 import StoryAudio from "@/components/story/audio-player";
-import { unstable_cache } from "next/cache";
+import { unstable_noStore as noStore } from "next/cache";
 
 const getStory = async (storyId: string) => {
-  const getStoryData = unstable_cache(
-    async () => {
-      return {
-        ...(await db
-          .select()
-          .from(storiesTable)
-          .where(eq(storiesTable.id, storyId))
-          .get()),
-        choices: await db
-          .select()
-          .from(storyChoicesTable)
-          .where(eq(storyChoicesTable.storyId, storyId))
-          .all(),
-      };
-    },
-    [`story-${storyId}`],
-    { revalidate: 1 } // Force revalidation on every request
-  );
+  noStore();
+  const getStoryData = async () => {
+    noStore();
+    return {
+      ...(await db
+        .select()
+        .from(storiesTable)
+        .where(eq(storiesTable.id, storyId))
+        .get()),
+      choices: await db
+        .select()
+        .from(storyChoicesTable)
+        .where(eq(storyChoicesTable.storyId, storyId))
+        .all(),
+    };
+  };
 
   return getStoryData();
 };
