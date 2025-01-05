@@ -5,34 +5,49 @@
       "height": 1024,
       "batch_size": 1
     },
-    "class_type": "EmptyLatentImage"
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
   },
   "6": {
     "inputs": {
       "text": "The camera focuses tightly on the linguist’s face, eyes wide with fascination, as the symbols glow softly in the dim, cavernous chamber. The room is ancient, its stone walls covered in intricate carvings, reminiscent of the labyrinthine designs seen in Indiana Jones and the Last Crusade. The faint hum of the symbols fills the air, adding to the palpable tension. In the center of the room, the symbols suddenly shimmer and rearrange, forming a glowing, cryptic message. The air seems to pulse as the explorers, silhouetted against the eerie light, exchange nervous glances, the weight of the revelation heavy on their shoulders.",
       "clip": ["11", 0]
     },
-    "class_type": "CLIPTextEncode"
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
   },
   "8": {
     "inputs": {
       "samples": ["13", 0],
       "vae": ["10", 0]
     },
-    "class_type": "VAEDecode"
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
   },
   "9": {
     "inputs": {
       "filename_prefix": "ComfyUI",
       "images": ["28", 0]
     },
-    "class_type": "SaveImage"
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
   },
   "10": {
     "inputs": {
       "vae_name": "ae.safetensors"
     },
-    "class_type": "VAELoader"
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
   },
   "11": {
     "inputs": {
@@ -40,14 +55,10 @@
       "clip_name2": "clip_l.safetensors",
       "type": "flux"
     },
-    "class_type": "DualCLIPLoader"
-  },
-  "12": {
-    "inputs": {
-      "unet_name": "flux1-dev.safetensors",
-      "weight_dtype": "fp8_e4m3fn"
-    },
-    "class_type": "UNETLoader"
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
   },
   "13": {
     "inputs": {
@@ -57,41 +68,59 @@
       "sigmas": ["17", 0],
       "latent_image": ["5", 0]
     },
-    "class_type": "SamplerCustomAdvanced"
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
   },
   "16": {
     "inputs": {
       "sampler_name": "euler"
     },
-    "class_type": "KSamplerSelect"
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
   },
   "17": {
     "inputs": {
       "scheduler": "simple",
       "steps": 10,
       "denoise": 1,
-      "model": ["12", 0]
+      "model": ["29", 0]
     },
-    "class_type": "BasicScheduler"
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
   },
   "22": {
     "inputs": {
-      "model": ["12", 0],
+      "model": ["29", 0],
       "conditioning": ["6", 0]
     },
-    "class_type": "BasicGuider"
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "BasicGuider"
+    }
   },
   "25": {
     "inputs": {
-      "noise_seed": 655600603056267
+      "noise_seed": 100743429905359
     },
-    "class_type": "RandomNoise"
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
   },
   "27": {
     "inputs": {
       "images": ["8", 0]
     },
-    "class_type": "PreviewImage"
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
   },
   "28": {
     "inputs": {
@@ -103,6 +132,18 @@
       "resize_height": 600,
       "image": ["8", 0]
     },
-    "class_type": "Image Resize"
+    "class_type": "Image Resize",
+    "_meta": {
+      "title": "Image Resize"
+    }
+  },
+  "29": {
+    "inputs": {
+      "unet_name": "flux1-dev-Q5_K_S.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Unet Loader (GGUF)"
+    }
   }
 }

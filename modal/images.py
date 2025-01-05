@@ -11,12 +11,10 @@ image = (
     .apt_install("git")
     .pip_install("comfy-cli==1.2.7", "requests", "boto3")
     .run_commands("comfy --skip-prompt install --nvidia")
-)
-
-image = image.run_commands(
-    "comfy node install was-node-suite-comfyui"
-).run_commands(  # needs to be empty for Volume mount to work
-    "rm -rf /root/comfy/ComfyUI/models"
+    .run_commands("comfy node install was-node-suite-comfyui ComfyUI-GGUF")
+    .run_commands(  # needs to be empty for Volume mount to work
+        "rm -rf /root/comfy/ComfyUI/models"
+    )
 )
 
 app = modal.App(name="comfyui-api", image=image)
@@ -34,6 +32,7 @@ vol = modal.Volume.from_name("comfyui-models", create_if_missing=True)
         ),
     ],
     secrets=[modal.Secret.from_name("aws-secret")],
+    concurrency_limit=5,
 )
 class ComfyUI:
     @modal.enter()
@@ -59,7 +58,7 @@ class ComfyUI:
             if f.name.startswith(file_prefix):
                 return f.read_bytes()
 
-    @modal.web_endpoint(method="POST", concurrency_limit=5)
+    @modal.web_endpoint(method="POST")
     def api(self, node: Dict):
         import boto3
         import os
@@ -68,7 +67,7 @@ class ComfyUI:
 
         # Update workflow with node prompt
         workflow_data["6"]["inputs"]["text"] = f"""
-        8-bit pixel art, limited color palette, dramatic lighting, atmospheric depth, particle effects, industrial aesthetics, contrast between light and shadow. pixels clearly visible. 
+        8-bit pixel art, limited color palette, dramatic lighting, atmospheric depth, particle effects, industrial aesthetics, contrast between light and shadow. pixels clearly visible.
 
         {node["prompt"]}
         """

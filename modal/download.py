@@ -42,6 +42,11 @@ def download_models():
             "unet",
         ),
         (
+            "city96/FLUX.1-dev-gguf",
+            "flux1-dev-Q5_K_S.gguf",
+            "unet",
+        ),
+        (
             "comfyanonymous/flux_text_encoders",
             "t5xxl_fp8_e4m3fn.safetensors",
             "clip",
