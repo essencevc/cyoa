@@ -1,12 +1,13 @@
 from helpers.db import DatabaseClient
+from helpers.s3 import get_story_images
 from helpers.story import (
     generate_images,
-    generate_music,
     generate_story,
     StoryOutline,
     StoryNodes,
     generate_story_choices,
 )
+from datetime import timedelta
 from rich import print
 import restate
 from restate import Workflow, WorkflowContext
@@ -39,6 +40,7 @@ def wrap_async_call(coro_fn, *args, **kwargs):
 async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     print(f"Recieved request: {req}")
     db = DatabaseClient()
+
     # This will take in a story prompt and then generate a story
     try:
         story: StoryOutline = await ctx.run(
@@ -53,7 +55,7 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     try:
         story_id = await ctx.run(
             "Insert Story",
-            lambda: db.insert_story(story, req.user_email),
+            lambda: db.insert_story(story, req.user_email, req.prompt),
         )
     except Exception as e:
         print(e)
@@ -79,38 +81,32 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
         raise TerminalError("Failed to insert story choices")
 
     try:
-        music_promise_name, music_promise = ctx.awakeable()
-        await ctx.run(
-            "trigger task",
-            lambda: generate_music(story.melody, story_id, music_promise_name),
-        )
-    except Exception as e:
-        print(e)
-        raise TerminalError("Failed to generate music")
-
-    try:
-        image_promise_name, image_promise = ctx.awakeable()
         await ctx.run(
             "trigger task",
             wrap_async_call(
-                generate_images,
-                choices.nodes,
-                story_id,
-                image_promise_name,
-                story.banner_image,
+                generate_images, choices.nodes, story_id, story.banner_image
             ),
         )
     except Exception as e:
         print(e)
         raise TerminalError("Failed to generate images")
 
-    print(f"Awaiting music promise {music_promise_name}")
-    payload = await music_promise
-    print(f"Music Promise resolved: {payload}")
+    iterations = 0
+    while True:
+        # We poll our S3 bucket and wait to see if all the images are there.
+        images = get_story_images(story_id)
+        node_ids = set([node.id for node in choices.nodes])
+        remaining_nodes = node_ids - set(images)
+        if len(remaining_nodes) == 0:
+            break
 
-    print(f"Awaiting image promise {image_promise_name}")
-    payload = await image_promise
-    print(f"Image Promise resolved: {payload}")
+        print(f"Waiting for {len(remaining_nodes)} images to be uploaded")
+        for node in remaining_nodes:
+            print(f"- Node {node} is missing")
+
+        await ctx.sleep(delta=timedelta(seconds=60))
+        iterations += 1
+        print(f"Iteration {iterations} : {remaining_nodes} images remaining")
 
     try:
         await ctx.run(

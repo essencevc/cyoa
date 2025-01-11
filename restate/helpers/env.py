@@ -9,6 +9,9 @@ class Env(BaseSettings):
     IMAGE_ENDPOINT: str
     RESTATE_ENDPOINT: str
     RESTATE_TOKEN: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_REGION: str
 
     class Config:
         env_file = ".env"

@@ -63,14 +63,11 @@ class ComfyUI:
         import boto3
         import os
 
+        print(f"Recieved request: {node}")
         workflow_data = json.loads(Path("/root/flux.json").read_text())
 
         # Update workflow with node prompt
-        workflow_data["6"]["inputs"]["text"] = f"""
-        8-bit pixel art, limited color palette, dramatic lighting, atmospheric depth, particle effects, industrial aesthetics, contrast between light and shadow. pixels clearly visible.
-
-        {node["prompt"]}
-        """
+        workflow_data["6"]["inputs"]["text"] = node["prompt"]
 
         # Set unique filename prefix
         client_id = uuid.uuid4().hex
@@ -90,12 +87,3 @@ class ComfyUI:
             Key=f"{node['story_id']}/{node['node_id']}.png",
             Body=img_bytes,
         )
-
-        # Make callback request if callback info is provided
-        if "callback_url" in node and "callback_token" in node:
-            import requests
-
-            headers = {"Authorization": f"Bearer {node['callback_token']}"}
-            requests.post(node["callback_url"], headers=headers)
-
-        return {"status": "success"}

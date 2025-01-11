@@ -40,7 +40,7 @@ class DatabaseClient:
             logger.error(f"Query execution failed: {str(e)}")
             raise
 
-    def insert_story(self, story: StoryOutline, user_email: str):
+    def insert_story(self, story: StoryOutline, user_email: str, story_prompt: str):
         import uuid
 
         story_id = str(uuid.uuid4())
@@ -48,9 +48,9 @@ class DatabaseClient:
         cursor = conn.cursor()
 
         query = """INSERT INTO stories 
-            (id, user_id, title, description, image, status, timestamp) 
+            (id, user_id, title, description, image, status, timestamp, story_prompt) 
             VALUES 
-            (?, ?, ?, ?, ?, 'PROCESSING', ?)"""
+            (?, ?, ?, ?, ?, 'PROCESSING', ?, ?)"""
         params = (
             story_id,
             user_email,
@@ -58,6 +58,7 @@ class DatabaseClient:
             story.description,
             "",
             int(datetime.now().timestamp()),
+            story_prompt,
         )
         print(f"Executing query: {query} with params: {params}")
         cursor.execute(query, params)
@@ -79,9 +80,9 @@ class DatabaseClient:
         cursor = conn.cursor()
 
         query = """INSERT INTO story_choices 
-            (id, user_id, parent_id, story_id, title, description, is_terminal, explored) 
+            (id, user_id, parent_id, story_id, title, description, choice_title, is_terminal, explored, image_prompt) 
             VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?)"""
+            (?, ?, ?, ?, ?, ?, ?, ?, ?,?)"""
 
         try:
             for node in nodes:
@@ -92,8 +93,10 @@ class DatabaseClient:
                     story_id,
                     node.title,
                     node.description,
+                    node.choice_title,
                     1 if node.is_terminal else 0,
                     1 if node.parent_id is None else 0,
+                    node.image_description,
                 )
                 cursor.execute(query, params)
 

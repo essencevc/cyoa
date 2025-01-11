@@ -5,7 +5,6 @@ import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
-import StoryAudio from "@/components/story/audio-player";
 import { unstable_noStore as noStore } from "next/cache";
 
 const getStory = async (storyId: string) => {
@@ -118,9 +117,6 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               {Math.round(storyProgress)}%
             </div>
           </div>
-
-          {/* Audio Player */}
-          <StoryAudio storyId={storyId} />
         </div>
       </div>
 

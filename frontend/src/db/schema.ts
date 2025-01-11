@@ -27,6 +27,7 @@ export const storiesTable = sqliteTable("stories", {
     .notNull()
     .default("PROCESSING"),
   errorMessage: text("error_message"),
+  story_prompt: text("story_prompt").notNull(),
 });
 
 export type InsertStory = typeof storiesTable.$inferInsert;
@@ -43,8 +44,16 @@ export const storyChoicesTable = sqliteTable("story_choices", {
     .notNull()
     .references(() => storiesTable.id, { onDelete: "cascade" }),
   parentId: text("parent_id"),
+  // The title and description the user sees after making the choice
   title: text("title").notNull(),
   description: text("description").notNull(),
+
+  // The title and description the user sees before making the choice
+  choice_title: text("choice_title").notNull(),
+
+  // Image Prompt
+  image_prompt: text("image_prompt").notNull(),
+
   isTerminal: integer("is_terminal").notNull().default(0),
   explored: integer("explored").notNull().default(0),
 });
