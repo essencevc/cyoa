@@ -5,7 +5,7 @@ export const usersTable = sqliteTable("users", {
   email: text("email").primaryKey(),
   username: text("username").unique(),
   credits: integer("credits").notNull().default(2),
-  isAdmin: integer("is_admin").notNull().default(0),
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;

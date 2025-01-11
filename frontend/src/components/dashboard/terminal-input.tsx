@@ -5,16 +5,19 @@ import { Input } from "@/components/ui/input";
 import { generateStory } from "@/lib/story";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 export function TerminalInput() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("Unable to generate story");
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && input.trim()) {
+      setErrorMessage("");
       setIsLoading(true);
       try {
         await generateStory(input.trim());
@@ -24,10 +27,12 @@ export function TerminalInput() {
           description:
             "We've started generating your story. Once it's completed, you'll be able to play it in the story list below",
         });
-        const userCredits =
-          queryClient.getQueryData<number>(["userCredits"]) ?? 0;
+        if (!session?.user.isAdmin) {
+          const userCredits =
+            queryClient.getQueryData<number>(["userCredits"]) ?? 0;
 
-        queryClient.setQueryData(["userCredits"], userCredits - 1);
+          queryClient.setQueryData(["userCredits"], userCredits - 1);
+        }
       } catch (error) {
         // Optionally handle error state here
         setErrorMessage(

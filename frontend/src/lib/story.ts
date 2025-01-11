@@ -46,11 +46,12 @@ export async function generateStory(prompt: string) {
   const remainingCredits = await db.query.usersTable.findFirst({
     where: eq(usersTable.email, session.user.email),
     columns: {
+      isAdmin: true,
       credits: true,
     },
   });
 
-  if (remainingCredits?.credits === 0) {
+  if (remainingCredits?.credits === 0 && !remainingCredits?.isAdmin) {
     throw new Error("You have no credits left");
   }
 
@@ -79,14 +80,15 @@ export async function generateStory(prompt: string) {
 
     const data = await response.json();
 
-    // Decrement user credits by 1
-    await db
-      .update(usersTable)
-      .set({
-        credits: remainingCredits?.credits ? remainingCredits.credits - 1 : 0,
-      })
-      .where(eq(usersTable.email, session.user.email));
-
+    if (!remainingCredits?.isAdmin) {
+      // Decrement user credits by 1
+      await db
+        .update(usersTable)
+        .set({
+          credits: remainingCredits?.credits ? remainingCredits.credits - 1 : 0,
+        })
+        .where(eq(usersTable.email, session.user.email));
+    }
     return data;
   } catch (error) {
     console.error("Error submitting prompt:", error);
