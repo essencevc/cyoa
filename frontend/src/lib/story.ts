@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { db } from "@/db/db";
-import { storiesTable, storyChoicesTable } from "@/db/schema";
+import { storiesTable, storyChoicesTable, usersTable } from "@/db/schema";
 import { and, eq, not } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -43,6 +43,18 @@ export async function generateStory(prompt: string) {
     throw new Error("You must be signed in to submit prompts");
   }
 
+  const remainingCredits = await db.query.usersTable.findFirst({
+    where: eq(usersTable.email, session.user.email),
+    columns: {
+      isAdmin: true,
+      credits: true,
+    },
+  });
+
+  if (remainingCredits?.credits === 0 && !remainingCredits?.isAdmin) {
+    throw new Error("You have no credits left");
+  }
+
   try {
     const uuid = crypto.randomUUID();
 
@@ -67,6 +79,16 @@ export async function generateStory(prompt: string) {
     }
 
     const data = await response.json();
+
+    if (!remainingCredits?.isAdmin) {
+      // Decrement user credits by 1
+      await db
+        .update(usersTable)
+        .set({
+          credits: remainingCredits?.credits ? remainingCredits.credits - 1 : 0,
+        })
+        .where(eq(usersTable.email, session.user.email));
+    }
     return data;
   } catch (error) {
     console.error("Error submitting prompt:", error);
