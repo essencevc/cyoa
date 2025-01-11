@@ -5,6 +5,7 @@ import SignOut from "@/components/header/sign-out";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import UserInfo from "@/components/header/user-info";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex flex-col items-end">
-                <div>{session.user?.username}</div>
-                <div className="text-sm text-green-400/60">
-                  {session.user?.email}
-                </div>
-              </div>
+              <UserInfo session={session} />
               <SignOut />
             </div>
           </div>

@@ -57,6 +57,7 @@ const { handlers, signIn, signOut, auth } = NextAuth({
 
       // It will be '' the first time the user logs in and set in the database thereafter once we prompt the user
       session.user.username = user.username || "";
+      session.user.credits = user.credits || 0;
       return session;
     },
   },
