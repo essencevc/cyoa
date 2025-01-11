@@ -233,8 +233,10 @@ async def generate_story_choices(story: StoryOutline):
         genai.GenerativeModel("gemini-2.0-flash-exp"), use_async=True
     )
     final_nodes = await generate_choices(
-        client, story.title, story.description, [], 3, sem, None, "Our Story Begins"
+        client, story.title, story.description, [], 2, sem, None, "Our Story Begins"
     )
+
+    print(f"Final Nodes: {len(final_nodes)}")
 
     return StoryNodes(nodes=final_nodes)
 
@@ -242,12 +244,8 @@ async def generate_story_choices(story: StoryOutline):
 async def generate_images(
     choices: list[FinalStoryNode],
     story_id: str,
-    image_promise_name: str,
     banner_image_description: str,
 ):
-    callback_url = (
-        f"{Env().RESTATE_ENDPOINT}/restate/awakeables/{image_promise_name}/resolve"
-    )
     try:
         import asyncio
         import aiohttp
@@ -270,8 +268,6 @@ async def generate_images(
                 "prompt": node.image_description,
                 "node_id": node.id,
                 "story_id": story_id,
-                "callback_url": callback_url,
-                "callback_token": Env().RESTATE_TOKEN,
             }
             for node in choices
         ]
@@ -282,8 +278,6 @@ async def generate_images(
                 "story_id": story_id,
                 "node_id": "banner",
                 "prompt": banner_image_description,
-                "callback_url": callback_url,
-                "callback_token": Env().RESTATE_TOKEN,
             }
         )
 
@@ -292,7 +286,7 @@ async def generate_images(
             tasks = [send_request(session, data) for data in requests_data]
             await asyncio.gather(*tasks)
 
-        return callback_url
+        return "Success"
 
     except Exception as e:
         print(e)
