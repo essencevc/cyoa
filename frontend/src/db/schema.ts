@@ -45,6 +45,10 @@ export const storyChoicesTable = sqliteTable("story_choices", {
   parentId: text("parent_id"),
   title: text("title").notNull(),
   description: text("description").notNull(),
+
+  // The title and description the user sees before making the choice
+  choice_title: text("choice_title"),
+
   isTerminal: integer("is_terminal").notNull().default(0),
   explored: integer("explored").notNull().default(0),
 });
