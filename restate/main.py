@@ -1,7 +1,6 @@
 from helpers.db import DatabaseClient
 from helpers.story import (
     generate_images,
-    generate_music,
     generate_story,
     StoryOutline,
     StoryNodes,
@@ -53,7 +52,7 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     try:
         story_id = await ctx.run(
             "Insert Story",
-            lambda: db.insert_story(story, req.user_email),
+            lambda: db.insert_story(story, req.user_email, req.prompt),
         )
     except Exception as e:
         print(e)
@@ -78,39 +77,25 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
         print(e)
         raise TerminalError("Failed to insert story choices")
 
-    try:
-        music_promise_name, music_promise = ctx.awakeable()
-        await ctx.run(
-            "trigger task",
-            lambda: generate_music(story.melody, story_id, music_promise_name),
-        )
-    except Exception as e:
-        print(e)
-        raise TerminalError("Failed to generate music")
+    # try:
+    #     image_promise_name, image_promise = ctx.awakeable()
+    #     await ctx.run(
+    #         "trigger task",
+    #         wrap_async_call(
+    #             generate_images,
+    #             choices.nodes,
+    #             story_id,
+    #             image_promise_name,
+    #             story.banner_image,
+    #         ),
+    #     )
+    # except Exception as e:
+    #     print(e)
+    #     raise TerminalError("Failed to generate images")
 
-    try:
-        image_promise_name, image_promise = ctx.awakeable()
-        await ctx.run(
-            "trigger task",
-            wrap_async_call(
-                generate_images,
-                choices.nodes,
-                story_id,
-                image_promise_name,
-                story.banner_image,
-            ),
-        )
-    except Exception as e:
-        print(e)
-        raise TerminalError("Failed to generate images")
-
-    print(f"Awaiting music promise {music_promise_name}")
-    payload = await music_promise
-    print(f"Music Promise resolved: {payload}")
-
-    print(f"Awaiting image promise {image_promise_name}")
-    payload = await image_promise
-    print(f"Image Promise resolved: {payload}")
+    # print(f"Awaiting image promise {image_promise_name}")
+    # payload = await image_promise
+    # print(f"Image Promise resolved: {payload}")
 
     try:
         await ctx.run(

@@ -2,9 +2,8 @@
 import { SelectStoryChoice } from "@/db/schema";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import StoryAudio from "../story/audio-player";
 
 type ChoiceInterfaceProps = {
   title: string;
@@ -71,9 +70,6 @@ const ChoiceInterface = ({
               {description}
             </p>
             <div className="flex justify-between items-center gap-4 border-t border-green-900/30 pt-4">
-              <div className="flex-1">
-                <StoryAudio storyId={choices[0].storyId} />
-              </div>
               <div className="text-green-400/80 space-y-1 font-mono text-sm pt-4 flex-1">
                 <p>↵ ENTER to confirm selection</p>
                 <p>↑↓ ARROWS to navigate choices</p>
@@ -100,9 +96,6 @@ const ChoiceInterface = ({
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-green-500 font-mono">{`${
-                        index + 1
-                      }`}</span>
                       <h3
                         className={`font-mono transition-colors duration-300 ${
                           selectedChoice === index
@@ -110,23 +103,9 @@ const ChoiceInterface = ({
                             : "text-green-300"
                         }`}
                       >
-                        {choice.title}
+                        {choice.choice_title}
                       </h3>
                     </div>
-                    <AnimatePresence initial={false}>
-                      {selectedChoice === index && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
-                        >
-                          <p className="text-sm text-green-400/80 font-mono pl-6 mt-2">
-                            {choice.description}
-                          </p>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </motion.div>
                 </Link>
               ))}
