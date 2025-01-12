@@ -101,7 +101,7 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
             break
 
         iterations += 1
-        print(f"Iteration {iterations} : {remaining_nodes} images remaining")
+        print(f"Iteration {iterations} : {len(remaining_nodes)} images remaining")
 
         await ctx.sleep(delta=timedelta(seconds=60))
 
