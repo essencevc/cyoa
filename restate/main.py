@@ -94,19 +94,16 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     iterations = 0
     while True:
         # We poll our S3 bucket and wait to see if all the images are there.
-        images = get_story_images(story_id)
+        images = await ctx.run("Get Story Images", lambda: get_story_images(story_id))
         node_ids = set([node.id for node in choices.nodes])
         remaining_nodes = node_ids - set(images)
         if len(remaining_nodes) == 0:
             break
 
-        print(f"Waiting for {len(remaining_nodes)} images to be uploaded")
-        for node in remaining_nodes:
-            print(f"- Node {node} is missing")
+        iterations += 1
+        print(f"Iteration {iterations} : {len(remaining_nodes)} images remaining")
 
         await ctx.sleep(delta=timedelta(seconds=60))
-        iterations += 1
-        print(f"Iteration {iterations} : {remaining_nodes} images remaining")
 
     try:
         await ctx.run(
@@ -120,4 +117,4 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     return "success"
 
 
-app = restate.app([story_workflow])
+app = restate.app([story_workflow], "bidi")
