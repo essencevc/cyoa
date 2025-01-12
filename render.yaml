@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: cyoa
-    env: docker
-    rootDirectory: ./restate
-    dockerfilePath: Dockerfile

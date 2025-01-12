@@ -233,7 +233,7 @@ async def generate_story_choices(story: StoryOutline):
         genai.GenerativeModel("gemini-2.0-flash-exp"), use_async=True
     )
     final_nodes = await generate_choices(
-        client, story.title, story.description, [], 3, sem, None, "Our Story Begins"
+        client, story.title, story.description, [], 4, sem, None, "Our Story Begins"
     )
 
     print(f"Final Nodes: {len(final_nodes)}")

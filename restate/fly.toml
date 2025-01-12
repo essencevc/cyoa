@@ -12,12 +12,24 @@ primary_region = 'sin'
 [http_service]
   internal_port = 9080
   force_https = true
-  auto_stop_machines = 'off'
-  auto_start_machines = true
+  auto_stop_machines = false
+  auto_start_machines = false
   min_machines_running = 1
   processes = ['app']
 
-[[vm]]
-  memory = '2gb'
-  cpu_kind = 'shared'
-  cpus = 2
+[[http_service.ports]]
+  handlers = ["http"]
+  port = 80
+  force_https = true
+
+[[http_service.ports]]
+  handlers = ["tls", "http"]
+  port = 443
+
+[http_service.tls_options]
+  alpn = ["h2", "http/1.1"]
+
+[vm]
+  cpu_kind = "shared"
+  cpu_cores = 2
+  memory_mb = 2048
