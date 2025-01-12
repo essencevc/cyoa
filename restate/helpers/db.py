@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-import libsql_experimental as libsql
+from libsql_client import create_client_sync
 from helpers.env import Env
 from helpers.story import StoryOutline, FinalStoryNode
 
@@ -20,7 +20,7 @@ class DatabaseClient:
     def get_connection(self):
         try:
             if not self._connection:
-                self._connection = libsql.connect(
+                self._connection = create_client_sync(
                     self._settings.DB_URL,
                     auth_token=self._settings.DB_TOKEN,
                 )
@@ -66,12 +66,16 @@ class DatabaseClient:
         return story_id
 
     def mark_story_as_completed(self, story_id: str):
-        print(f"Marking story {story_id} as completed")
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        query = "UPDATE stories SET status = 'GENERATED' WHERE id = ?"
-        cursor.execute(query, (story_id,))
-        conn.commit()
+        try:
+            print(f"Marking story {story_id} as completed")
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            query = "UPDATE stories SET status = 'GENERATED' WHERE id = ?"
+            cursor.execute(query, (story_id,))
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Failed to mark story {story_id} as completed: {str(e)}")
+            raise
 
     def insert_story_nodes(
         self, nodes: list[FinalStoryNode], story_id: str, user_id: str

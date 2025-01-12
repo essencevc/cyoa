@@ -8,7 +8,7 @@ dependencies = [
     "boto3>=1.35.97",
     "hypercorn>=0.17.3",
     "instructor[google-generativeai]>=1.7.2",
-    "libsql-experimental>=0.0.41",
+    "libsql-client>=0.3.1",
     "pydantic-settings>=2.7.0",
     "restate-sdk>=0.4.1",
 ]
