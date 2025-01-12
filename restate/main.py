@@ -117,4 +117,8 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
     return "success"
 
 
-app = restate.app([story_workflow], "bidi")
+app = restate.app(
+    [story_workflow],
+    "bidi",
+    identity_keys=["publickeyv1_GTKUcX5ZHNBG3MX9wk7JGwA6VALTGr5UNYika3kyf63e"],
+)
