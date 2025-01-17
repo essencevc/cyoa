@@ -36,7 +36,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
             </div>
           </header>
           <div className="container mx-auto px-4 py-4">
-            <div className="min-h-[calc(100vh-200px)]">{children}</div>
+            <div className="min-h-[calc(100vh-250px)]">{children}</div>
           </div>
 
           {/* Footer */}

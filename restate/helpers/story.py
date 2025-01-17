@@ -291,3 +291,48 @@ async def generate_images(
     except Exception as e:
         print(e)
         raise e
+
+
+async def generate_tts(
+    nodes: list[FinalStoryNode], story_id: str, story_description: str
+):
+    import asyncio
+    import aiohttp
+
+    async def send_request(session, request_data):
+        try:
+            async with session.post(
+                Env().KOKORO_ENDPOINT, json=request_data, timeout=1.0
+            ) as response:
+                return await response.text()
+        except asyncio.TimeoutError:
+            return None
+        except Exception as e:
+            print(f"Failed to send request: {e}")
+            return None
+
+    # Prepare requests for each node and banner
+    requests_data = [
+        {
+            "prompt": node.description,
+            "node_id": node.id,
+            "story_id": story_id,
+        }
+        for node in nodes
+    ]
+
+    # Add banner request
+    requests_data.append(
+        {
+            "story_id": story_id,
+            "node_id": "theme",
+            "prompt": story_description,
+        }
+    )
+
+    # Send all requests concurrently
+    async with aiohttp.ClientSession() as session:
+        tasks = [send_request(session, data) for data in requests_data]
+        await asyncio.gather(*tasks)
+
+    return "Success"

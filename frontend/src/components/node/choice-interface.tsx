@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import AutoAudioPlayer from "./audio-player";
 
 type ChoiceInterfaceProps = {
   title: string;
@@ -70,6 +71,7 @@ const ChoiceInterface = ({
               {description}
             </p>
             <div className="flex justify-between items-center gap-4 border-t border-green-900/30 pt-4">
+              <AutoAudioPlayer story_id={storyId} node_id={choiceId} />
               <div className="text-green-400/80 space-y-1 font-mono text-sm pt-4 flex-1">
                 <p>↵ ENTER to confirm selection</p>
                 <p>↑↓ ARROWS to navigate choices</p>
@@ -78,7 +80,7 @@ const ChoiceInterface = ({
             </div>
           </div>
         </div>
-        <div className="border-t border-green-900/30 overflow-hidden h-[300px]">
+        <div className="border-t border-green-900/30 overflow-hidden h-[150px]">
           <div className="h-full overflow-y-auto p-6">
             <div className="space-y-4">
               {choices.map((choice, index) => (
@@ -92,7 +94,7 @@ const ChoiceInterface = ({
                     onClick={() => setSelectedChoice(index)}
                     layout
                     transition={{
-                      layout: { duration: 0.3, ease: "easeInOut" },
+                      layout: { duration: 0.2, ease: "easeInOut" },
                     }}
                   >
                     <div className="flex items-center gap-2">

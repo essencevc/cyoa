@@ -3,7 +3,7 @@ from botocore.exceptions import ClientError
 from helpers.env import Env
 
 
-def get_story_images(story_id: str) -> list[str]:
+def get_story_items(story_id: str) -> list[str]:
     """
     Get list of image filenames for a given story ID from S3 bucket
 
@@ -24,12 +24,23 @@ def get_story_images(story_id: str) -> list[str]:
         response = s3.list_objects_v2(Bucket="restate-story", Prefix=f"{story_id}/")
 
         if "Contents" not in response:
-            return []
+            return {
+                "images": [],
+                "audio": [],
+            }
 
-        return [
-            obj["Key"].replace(f"{story_id}/", "").replace(".png", "")
-            for obj in response["Contents"]
-        ]
+        return {
+            "images": [
+                obj["Key"].replace(f"{story_id}/", "").replace(".png", "")
+                for obj in response["Contents"]
+                if obj["Key"].endswith(".png")
+            ],
+            "audio": [
+                obj["Key"].replace(f"{story_id}/", "").replace(".wav", "")
+                for obj in response["Contents"]
+                if obj["Key"].endswith(".wav")
+            ],
+        }
 
     except ClientError as e:
         print(f"Error accessing S3: {e}")
