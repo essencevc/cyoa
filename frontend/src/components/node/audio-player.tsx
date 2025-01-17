@@ -21,7 +21,6 @@ const RetroAudioPlayer = ({
   const [muted, setMuted] = useState(initialMuted);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -45,7 +44,6 @@ const RetroAudioPlayer = ({
   // Handle first interaction
   useEffect(() => {
     const handleInteraction = async () => {
-      setHasInteracted(true);
       const audio = audioRef.current;
       if (audio && duration > 0 && !isPlaying) {
         try {
