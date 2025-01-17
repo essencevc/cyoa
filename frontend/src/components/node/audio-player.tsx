@@ -29,15 +29,21 @@ const RetroAudioPlayer = ({
     const handleLoadedMetadata = () => setDuration(audio.duration);
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => setIsPlaying(false);
+    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
 
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("play", handlePlay);
 
     return () => {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("play", handlePlay);
     };
   }, []);
 
@@ -48,7 +54,6 @@ const RetroAudioPlayer = ({
       if (audio && duration > 0 && !isPlaying) {
         try {
           await audio.play();
-          setIsPlaying(true);
         } catch (error) {
           console.error("Autoplay failed:", error);
         }
@@ -69,12 +74,11 @@ const RetroAudioPlayer = ({
     if (!audio) return;
 
     try {
-      if (isPlaying) {
-        audio.pause();
-      } else {
+      if (audio.paused) {
         await audio.play();
+      } else {
+        audio.pause();
       }
-      setIsPlaying(!isPlaying);
     } catch (error) {
       console.error("Playback failed:", error);
     }
@@ -86,6 +90,18 @@ const RetroAudioPlayer = ({
     audio.muted = !muted;
     setMuted(!muted);
   };
+
+  // Ensure audio playback state matches component state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying && audio.paused) {
+      audio.play().catch((error) => console.error("Playback failed:", error));
+    } else if (!isPlaying && !audio.paused) {
+      audio.pause();
+    }
+  }, [isPlaying]);
 
   return (
     <div className="font-mono text-green-500 bg-black/80 p-4 rounded-lg border border-green-500/30 w-[200px]">
