@@ -41,7 +41,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
 
           {/* Footer */}
           <footer className="border-t border-green-400/20">
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-2">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center space-x-2">
                   <Terminal className="w-5 h-5" />

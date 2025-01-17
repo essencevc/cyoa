@@ -6,6 +6,7 @@ class Env(BaseSettings):
     DB_URL: str
     DB_TOKEN: str
     IMAGE_ENDPOINT: str
+    KOKORO_ENDPOINT: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_ACCESS_KEY_ID: str
     AWS_REGION: str

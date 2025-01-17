@@ -1,11 +1,12 @@
 from helpers.db import DatabaseClient
-from helpers.s3 import get_story_images
+from helpers.s3 import get_story_items
 from helpers.story import (
     generate_images,
     generate_story,
     StoryOutline,
     StoryNodes,
     generate_story_choices,
+    generate_tts,
 )
 from datetime import timedelta
 from rich import print
@@ -91,17 +92,40 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
         print(e)
         raise TerminalError("Failed to generate images")
 
+    try:
+        await ctx.run(
+            "trigger task",
+            wrap_async_call(generate_tts, choices.nodes, story_id, story.description),
+        )
+    except Exception as e:
+        print(e)
+        raise TerminalError("Failed to generate images")
+
     iterations = 0
+
+    expected_images = set([node.id for node in choices.nodes] + ["banner"])
+    expected_audio = set([node.id for node in choices.nodes] + ["theme"])
+
     while True:
         # We poll our S3 bucket and wait to see if all the images are there.
-        images = await ctx.run("Get Story Images", lambda: get_story_images(story_id))
-        node_ids = set([node.id for node in choices.nodes])
-        remaining_nodes = node_ids - set(images)
-        if len(remaining_nodes) == 0:
+        images_and_audio = await ctx.run(
+            "Get Story Images", lambda: get_story_items(story_id)
+        )
+
+        remaining_images = expected_images - set(images_and_audio["images"])
+        remaining_audio = expected_audio - set(images_and_audio["audio"])
+
+        if len(remaining_images) == 0 and len(remaining_audio) == 0:
             break
 
         iterations += 1
-        print(f"Iteration {iterations} : {len(remaining_nodes)} images remaining")
+        print(
+            f"Iteration {iterations} : {len(remaining_images)} images and {len(remaining_audio)} audio remaining"
+        )
+
+        # We wait for at most 10 minutes. If the story is not ready, then we just give up.
+        if iterations > 10:
+            break
 
         await ctx.sleep(delta=timedelta(seconds=60))
 
@@ -120,5 +144,8 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
 app = restate.app(
     [story_workflow],
     "bidi",
-    identity_keys=["publickeyv1_GTKUcX5ZHNBG3MX9wk7JGwA6VALTGr5UNYika3kyf63e"],
+    identity_keys=[
+        "publickeyv1_GTKUcX5ZHNBG3MX9wk7JGwA6VALTGr5UNYika3kyf63e",
+        "publickeyv1_wqWhnpRDLYsvBc7d2A9zFhLDfE2iWkukM6ThqZdJ87N",
+    ],
 )

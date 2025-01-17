@@ -6,6 +6,7 @@ import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
 import { unstable_noStore as noStore } from "next/cache";
+import AutoAudioPlayer from "@/components/node/audio-player";
 
 const getStory = async (storyId: string) => {
   noStore();
@@ -117,6 +118,8 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               {Math.round(storyProgress)}%
             </div>
           </div>
+
+          <AutoAudioPlayer story_id={storyId} node_id={"theme"} />
         </div>
       </div>
 
