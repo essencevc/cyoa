@@ -103,17 +103,17 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
 
     iterations = 0
 
+    expected_images = set([node.id for node in choices.nodes] + ["banner"])
+    expected_audio = set([node.id for node in choices.nodes] + ["theme"])
+
     while True:
         # We poll our S3 bucket and wait to see if all the images are there.
         images_and_audio = await ctx.run(
             "Get Story Images", lambda: get_story_items(story_id)
         )
 
-        print(images_and_audio)
-
-        node_ids = set([node.id for node in choices.nodes])
-        remaining_images = node_ids - set(images_and_audio["images"])
-        remaining_audio = node_ids - set(images_and_audio["audio"])
+        remaining_images = expected_images - set(images_and_audio["images"])
+        remaining_audio = expected_audio - set(images_and_audio["audio"])
 
         if len(remaining_images) == 0 and len(remaining_audio) == 0:
             break
@@ -122,6 +122,10 @@ async def run(ctx: WorkflowContext, req: StoryInput) -> str:
         print(
             f"Iteration {iterations} : {len(remaining_images)} images and {len(remaining_audio)} audio remaining"
         )
+
+        # We wait for at most 10 minutes. If the story is not ready, then we just give up.
+        if iterations > 10:
+            break
 
         await ctx.sleep(delta=timedelta(seconds=60))
 

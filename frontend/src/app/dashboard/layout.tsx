@@ -36,12 +36,12 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
             </div>
           </header>
           <div className="container mx-auto px-4 py-4">
-            <div className="min-h-[calc(100vh-250px)]">{children}</div>
+            <div className="min-h-[calc(100vh-200px)]">{children}</div>
           </div>
 
           {/* Footer */}
           <footer className="border-t border-green-400/20">
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-2">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center space-x-2">
                   <Terminal className="w-5 h-5" />
