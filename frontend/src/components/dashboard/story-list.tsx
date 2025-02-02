@@ -1,8 +1,8 @@
 "use client";
 import { SelectStory } from "@/db/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import React, { useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -64,13 +64,80 @@ const CommandLogger = ({
 const StoryCard = ({ story }: { story: Story }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleting, startDeletion] = useTransition();
+  const queryClient = useQueryClient();
+
+  const DeleteDialog = () => (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="border-red-400/20 text-red-400/60 hover:bg-red-950/30 hover:text-red-400 bg-transparent"
+        >
+          Delete
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-black/90 border border-red-400/20">
+        <DialogHeader>
+          <DialogTitle className="text-red-400">Delete Story</DialogTitle>
+          <DialogDescription className="text-red-400/60">
+            Are you sure you want to delete this story? This action cannot be
+            undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex gap-2">
+          <Button
+            variant="outline"
+            className="border-green-400/20 text-green-400/60 hover:bg-green-400/20 hover:text-green-400 bg-transparent transition-colors"
+            onClick={() => setIsDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            className="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+            onClick={() => {
+              startDeletion(() => {
+                deleteStory(story.id);
+                queryClient.setQueryData(["stories"], (oldData: Story[]) =>
+                  oldData.filter((s) => s.id !== story.id)
+                );
+                queryClient.invalidateQueries({ queryKey: ["stories"] });
+                setIsDialogOpen(false);
+              });
+            }}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Deleting
+              </>
+            ) : (
+              "Delete Story"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   if (story.status === "PROCESSING") {
-    return <div>Processing...</div>;
+    return (
+      <div className="flex justify-between items-center">
+        <div>Processing...</div>
+        <DeleteDialog />
+      </div>
+    );
   }
 
   if (story.status === "ERROR") {
-    return <div className="text-red-400">{story.errorMessage}</div>;
+    return (
+      <div className="flex justify-between items-center">
+        <div className="text-red-400">{story.errorMessage}</div>
+        <DeleteDialog />
+      </div>
+    );
   }
 
   return (
@@ -89,55 +156,7 @@ const StoryCard = ({ story }: { story: Story }) => {
       </div>
       <div className="py-2" />
       <div className="flex justify-end items-center gap-2">
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              className="border-red-400/20 text-red-400/60 hover:bg-red-950/30 hover:text-red-400 bg-transparent"
-            >
-              Delete
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-black/90 border border-red-400/20">
-            <DialogHeader>
-              <DialogTitle className="text-red-400">Delete Story</DialogTitle>
-              <DialogDescription className="text-red-400/60">
-                Are you sure you want to delete this story? This action cannot
-                be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2">
-              <Button
-                variant="outline"
-                className="border-green-400/20 text-green-400/60 hover:bg-green-400/20 hover:text-green-400 bg-transparent transition-colors"
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-                onClick={() => {
-                  startDeletion(() => {
-                    deleteStory(story.id);
-                    setIsDialogOpen(false);
-                  });
-                }}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Deleting
-                  </>
-                ) : (
-                  "Delete Story"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeleteDialog />
         <Link
           href={`/dashboard/story/${story.id}`}
           className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"
@@ -169,6 +188,10 @@ const StoryList = ({
     refetchInterval: 60000, // Refetch every 60 seconds
     initialData: initialStories, // Use prop stories as initial data
   });
+
+  useEffect(() => {
+    setSelectedStory(null);
+  }, [stories]);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -209,6 +232,15 @@ const StoryList = ({
         <div className="py-4" />
         <div className="border border-green-500 p-4">
           <div className="flex flex-col gap-4">USER STORIES</div>
+          {selectedStory !== null && (
+            <div className="max-w-2xl mx-auto">
+              <div className="mt-4 mb-4 py-8 bg-green-900/30 text-sm">
+                <div className="mx-12">
+                  <StoryCard story={stories[selectedStory]} />
+                </div>
+              </div>
+            </div>
+          )}
           {stories.map((story: Story, index: number) => (
             <div key={index}>
               <div
@@ -226,66 +258,6 @@ const StoryList = ({
               </div>
             </div>
           ))}
-          {selectedStory !== null && (
-            <div className="max-w-2xl mx-auto">
-              <div className="mt-4 py-8 bg-green-900/30 text-sm">
-                <div className="mx-12">
-                  <StoryCard story={stories[selectedStory]} />
-                </div>
-              </div>
-            </div>
-          )}
-          {/* {selectedStory !== null && (
-            <div className="max-w-2xl mx-auto">
-              <div className="mt-4 py-8 bg-green-900/30 text-sm">
-                <div className="mx-12">
-                  <div className="flex gap-8">
-                    <div className="w-1/5">
-                      <img
-                        src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${stories[selectedStory].id}/banner.png`}
-                        alt={stories[selectedStory].title as string}
-                        className="w-32 h-32 object-cover rounded image-rendering-pixelated"
-                        style={{ imageRendering: "pixelated" }}
-                      />
-                    </div>
-                    <div className="w-4/5">
-                      <p className="text-green-400/80">
-                        {stories[selectedStory].description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="py-2" />
-
-                  <div className="flex justify-end items-center gap-2">
-                    {stories[selectedStory].status === "GENERATED" && (
-                      <Link
-                        href={`/dashboard/story/${stories[selectedStory].id}`}
-                        className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"
-                        tabIndex={0}
-                      >
-                        Start Playthrough
-                      </Link>
-                    )}
-
-                    {stories[selectedStory].status === "ERROR" && (
-                      <div className="text-red-500 text-sm flex items-center">
-                        {stories[selectedStory].errorMessage}
-                      </div>
-                    )}
-
-                    {stories[selectedStory].status === "PROCESSING" && (
-                      <div className="rounded border border-yellow-400/30 px-6 py-2 text-sm cursor-not-allowed flex items-center">
-                        Processing...
-                      </div>
-                    )}
-                    <button className="rounded border border-red-400/30 px-6 py-2 text-sm text-red-400 hover:bg-red-950/30">
-                      Delete Story
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )} */}
         </div>
       </div>
     </div>
