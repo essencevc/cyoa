@@ -28,9 +28,9 @@ export function TerminalInput() {
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + "px";
+      (textareaRef.current as HTMLTextAreaElement).style.height = "auto";
+      (textareaRef.current as HTMLTextAreaElement).style.height =
+        (textareaRef.current as HTMLTextAreaElement).scrollHeight + "px";
     }
   }, [input]);
 
