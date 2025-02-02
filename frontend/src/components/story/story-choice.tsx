@@ -71,7 +71,13 @@ const StoryChoiceNode = ({
   );
 };
 
-const StoryChoices = ({ choices }: { choices: SelectStoryChoice[] }) => {
+const StoryChoices = ({
+  choices,
+  isUserStory,
+}: {
+  choices: SelectStoryChoice[];
+  isUserStory: boolean;
+}) => {
   const validChoices = choices.filter((choice) => choice.explored === 1);
 
   const tree = buildTree(validChoices, "NULL");
@@ -80,6 +86,22 @@ const StoryChoices = ({ choices }: { choices: SelectStoryChoice[] }) => {
 
   const selectedPath = getPath(choices, selectedId);
   const router = useRouter();
+
+  if (!isUserStory) {
+    return (
+      <div className="my-4 text-center">
+        <p className="mt-2 text-red-600 font-bold">
+          WARNING: This is a publicly shared story, progress is not saved
+        </p>
+        <Link
+          href={`/dashboard/story/choice/${selectedPath.at(-1)?.id}`}
+          className="mt-10 px-4 py-2 bg-green-950 text-green-400 rounded hover:bg-green-900 transition-colors inline-block"
+        >
+          START HERE
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>

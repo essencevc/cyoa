@@ -1,0 +1,17 @@
+export const STORY_PROMPTS = [
+  "Write a story about a disgraced samurai seeking redemption by challenging the empire's greatest warriors",
+  "Tell a tale of a young martial artist who discovers an ancient scroll containing forbidden fighting techniques",
+  "Create a story about a knight who must win a grand tournament to save their kingdom from invasion",
+  "Write about a wandering swordmaster who travels between dojos teaching lost sword arts",
+  "Tell a story of rival martial arts schools competing for an ancient artifact of immense power",
+  "Create a tale about a retired knight called back for one final quest to train the next generation",
+  "Write about a tournament fighter working their way up through increasingly difficult opponents",
+  "Tell a story of a martial arts prodigy who must master multiple fighting styles to defeat a tyrant",
+  "Create a tale about knights of different kingdoms forming an elite fighting unit",
+  "Write about a legendary sword that can only be wielded by the most skilled warrior",
+  "Tell a story of an aging master defending their dojo from corrupt warriors",
+  "Create a tale about a knight errant helping villages by challenging local warlords",
+  "Write about martial artists from competing schools joining forces against a common enemy",
+  "Tell a story of a disgraced knight working to restore honor to their fallen order",
+  "Create a tale about the last surviving master of an ancient fighting style seeking an apprentice",
+];

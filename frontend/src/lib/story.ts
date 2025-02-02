@@ -101,3 +101,16 @@ export async function deleteStory(storyId: string) {
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
+
+export async function toggleStoryVisibility(
+  storyId: string,
+  isPublic: boolean
+) {
+  await db
+    .update(storiesTable)
+    .set({ public: isPublic ? 0 : 1 })
+    .where(eq(storiesTable.id, storyId));
+
+  revalidatePath(`/dashboard/story/${storyId}`);
+  redirect(`/dashboard/story/${storyId}`);
+}

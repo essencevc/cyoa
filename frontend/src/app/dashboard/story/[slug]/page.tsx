@@ -7,6 +7,9 @@ import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
 import { unstable_noStore as noStore } from "next/cache";
 import AutoAudioPlayer from "@/components/node/audio-player";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import StoryVisibilityToggle from "@/components/story/story-visibility-toggle";
 
 const getStory = async (storyId: string) => {
   noStore();
@@ -60,6 +63,22 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
   const totalChoices = story.choices.length - 1;
   const storyProgress = (exploredChoices / totalChoices) * 100;
 
+  const userObject = await auth();
+
+  if (!userObject) {
+    return redirect("/");
+  }
+
+  const userId = userObject["user"]["email"];
+  const isUserStory = userId === story.userId;
+  const isPublicStory = story.public == 1;
+
+  if (!isUserStory && !isPublicStory) {
+    return redirect("/");
+  }
+
+  console.log(isUserStory, isPublicStory);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <Link
@@ -101,12 +120,21 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               {story?.description}
             </p>
           </div>
+          <div className="flex items-start justify-between">
+            {isUserStory && (
+              <StoryVisibilityToggle
+                storyId={storyId}
+                isPublic={isPublicStory}
+              />
+            )}
+            <AutoAudioPlayer story_id={storyId} node_id={"theme"} />
+          </div>
 
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="text-sm opacity-70">[STATUS] Story Progress</div>
-              <ResetStory storyId={storyId} />
+              {isUserStory && <ResetStory storyId={storyId} />}
             </div>
             <div className="h-2 rounded border border-green-500/20">
               <div
@@ -118,8 +146,6 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               {Math.round(storyProgress)}%
             </div>
           </div>
-
-          <AutoAudioPlayer story_id={storyId} node_id={"theme"} />
         </div>
       </div>
 
@@ -130,7 +156,7 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
         </span>
       </div>
 
-      <StoryChoices choices={story.choices} />
+      <StoryChoices choices={story.choices} isUserStory={isUserStory} />
     </div>
   );
 };
