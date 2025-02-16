@@ -32,7 +32,7 @@ const Dashboard = async () => {
       id: storiesTable.id,
       title: storiesTable.title,
       author: usersTable.username,
-      image: storiesTable.image,
+      image: storiesTable.image_prompt,
       description: storiesTable.description,
       timestamp: storiesTable.timestamp,
       public: storiesTable.public,

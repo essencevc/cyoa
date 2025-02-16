@@ -66,6 +66,10 @@ const StoryCard = ({ story }: { story: Story }) => {
   const [isDeleting, startDeletion] = useTransition();
   const queryClient = useQueryClient();
 
+  if (!story) {
+    return null;
+  }
+
   const DeleteDialog = () => (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>

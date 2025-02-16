@@ -72,11 +72,12 @@ const NodePage = async ({ params }: { params: { node: string } }) => {
 
   return (
     <ChoiceInterface
-      title={choice.title}
+      title={choice.choice_title}
       description={choice.description}
       choices={children}
       choiceId={choice.id}
       storyId={choice.storyId}
+      imagePrompt={choice.image_prompt}
     />
   );
 };

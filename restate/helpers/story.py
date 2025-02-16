@@ -16,11 +16,16 @@ class StoryOutline(BaseModel):
     banner_image: str
 
 
+class UserChoice(BaseModel):
+    choice_title: str
+    choice_description: str
+
+
 class StoryNode(BaseModel):
     title: str
     story_description: str
     banner_image_description: str
-    user_choices: list[str]
+    user_choices: list[UserChoice]
 
     @field_validator("user_choices")
     def validate_user_choices(cls, v, info: ValidationInfo):
@@ -40,9 +45,17 @@ class FinalStoryNode(BaseModel):
     id: str
     parent_id: str | None
     title: str
+
+    # This is the description of the story that we will show to the user after they have chosen this choice
     description: str
+
+    # This is the description of the banner image that we will use to generate the image
     image_description: str
+
+    # These are the choice title and description that we will show to the user
     choice_title: str
+    choice_description: str
+
     is_terminal: bool
 
 
@@ -69,6 +82,10 @@ def generate_story(prompt: str) -> str:
                 - A title for the story that's between 3-6 words
                 - A description for the story that's between 3-5 sentences. In this description, you must introduce the main character and set the scene. Make sure to mention the main character's name and what's at stake for them here in this existing situation implicitly.
                 - A short 1 sentence  description for a banner image . This should be a description of a pixel art image that's suitable for the story as cover art. Be specific about the colors, style of the image, individual components of the image and the background.
+
+                For instance, Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance is not a great description because it includes the character's name which isn't useful for image generation. But A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky. is a great description because it's specific, includes details about the desired image and doesn't reference the character's name.
+
+                Make sure to provide specific details about the image, the colours, the style and the individual components of the image. We want something that has a strong 8 bit pixel art style.
                 """,
             },
             {"role": "user", "content": prompt},
@@ -84,95 +101,60 @@ async def generate_choices(
     max_depth: int,
     semaphore: Semaphore,
     parent_id: str | None,
-    choice_title: str,
 ) -> list[FinalStoryNode]:
     async with semaphore:
-        STATE = ""
+        is_terminal = max_depth - len(user_choices) == 0
 
-        if len(user_choices) == 0:
-            STATE = "INITIAL"
-        elif len(user_choices) < max_depth:
-            STATE = "INTERIM"
-        else:
-            STATE = "CONCLUSION"
-
-        choices = await client.chat.completions.create(
+        choices: StoryNode = await client.chat.completions.create(
             response_model=StoryNode,
             messages=[
                 {
                     "role": "system",
                     "content": """
-                    {% if state == "INITIAL" %}
-Here's a story outline that we've generated previously based on a user prompt
+Continue the story where we last left off. You'll be given the outline of the story, previous choices made by the user and the remaining turns.
 
-<outline>
-Title: {{ story_title }}
-Description: {{ story_description }}
-</outline>
+<story>
+<title>
+{{ story_title }}
+</title>
+<description>
+{{ story_description }}
+</description>
 
-Based on the outline above, generate the following:
+</story>
 
-- A description and title of a new chapter in the story that picks off where the description below ends. This should be a continuation of the story above and between 4-6 sentences.
-- Two choices that the user can make at that point in time to advance the story. These titles should be between 3-6 words.
-- A banner image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.
-                    {% endif %}
-                    
-                    {% if state == "INTERIM" %}
-Here's a story outline that we've generated previously based on a user prompt
-
-<outline>
-Title: {{ story_title }}
-Description: {{ story_description }}
-</outline>
-
-Based on the outline above, generate the following:
-
-- A description and title of a new chapter in the story that picks off where the description below ends. This should be a continuation of the story above and between 3-5 sentences.
-- Two choices that the user can make at that point in time to advance the story. These titles should be between 3-6 words. Make sure to reference specific elements mentioned in the generated description of the story chapter.
-- A banner image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.
-
-{% if previous_choices | length >= 1 %}
-Here are the previous choices made by the main character leading up to this point in the story. Read them carefully and make sure to reference specific elements mentioned in the generated description of the new story chapter.
-{% endif %}
-
+These are the previous choices made by the user:
 <previous choices>
-    {% for choice in previous_choices %}
-    <choice {{loop.index}}>
-    Choice Context: {{ choice.context }}
-    Options: {{ choice.options }}
-    User Chose: {{ choice.user_choice }}
-    </choice>
+{% for choice in previous_choices %}
+<choice {{loop.index}}>
+Choice Context: {{ choice.story_context }}
+Options: {% for option in choice.choices %}
+    <option {{loop.index}}>
+    Title: {{ option.title }}
+    Description: {{ option.description }}
+    </option>
 {% endfor %}
-<previous choices>
-                    {% endif %}
-
-                    {% if state == "CONCLUSION" %}
-Here's a story outline that we've generated previously based on a user prompt
-
-<outline>
-Title: {{ story_title }}
-Description: {{ story_description }}
-</outline>
-
-Here are the previous choices made by the main character leading up to this point in the story. Read them carefully and make sure to reference specific elements mentioned in your generated description of the story ending.
-
-<previous choices>
-    {% for choice in previous_choices %}
-    <choice {{loop.index}}>
-    Choice Context: {{ choice.context }}
-    Choice Options: {{ choice.options }}
-    User Chose: {{ choice.user_choice }}
-    </choice>
+User Chose: {{ choice.choice.choice_title }}
+</choice>
 {% endfor %}
-<previous choices>
+</previous choices>
 
+{% if remaining_turns == 0 %}
 Based on the outline above, generate the following:
 
-- A description of the final chapter of the story that's between 3-5 sentences. This should be a conclusion of the story and tie up all loose ends.
+- A conclusion of the story that's between 3-5 sentences. Make sure to tie up all loose ends where possible and provide a satisfying conclusion to the story. This should not be too far off in the future from the previous choices made by the user. 
 - There should be no choices for the user to make at this point in the story.
-- A banner image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.                
-                    
-                    {% endif %}
+- A banner image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.
+
+{% else %}
+Based on the outline above, generate the following:
+- A 3-4 sentence description of what happens next in the story based off previous user choices. If there are no previous user choices, make sure that you set the scene for the first choice explicitly and introduce the main character.
+- Two distinct choices for the user to make that will meaningfully impact how the story continues. Each choice title must be distinct from each other.
+- The choice title should be a single sentence that describes the user's choice. The description of the choice here should be around 2 sentences.
+- A description for an image that's suitable for this story at this point. Make sure to mention specific details of the image in the description.
+
+For instance, Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance is not a great description because it includes the character's name which isn't useful for image generation. But A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky. is a great description because it's specific, includes details about the desired image and doesn't reference the character's name.
+{% endif %}
                     """,
                 },
             ],
@@ -181,7 +163,6 @@ Based on the outline above, generate the following:
                 "story_description": description,
                 "previous_choices": user_choices,
                 "remaining_turns": max_depth - len(user_choices),
-                "state": STATE,
             },
         )
 
@@ -192,12 +173,17 @@ Based on the outline above, generate the following:
                 title=choices.title,
                 description=choices.story_description,
                 image_description=choices.banner_image_description,
-                is_terminal=STATE == "CONCLUSION",
-                choice_title=choice_title,
+                is_terminal=is_terminal,
+                choice_title="Start"
+                if len(user_choices) == 0
+                else user_choices[-1]["choice"].choice_title,
+                choice_description="Start the story"
+                if len(user_choices) == 0
+                else user_choices[-1]["choice"].choice_description,
             )
         ]
 
-        if STATE == "CONCLUSION":
+        if is_terminal:
             return res
 
         coros = [
@@ -208,15 +194,20 @@ Based on the outline above, generate the following:
                 user_choices
                 + [
                     {
-                        "user_choice": choice,
-                        "options": " or ".join(choices.user_choices),
+                        "choice": choice,
+                        "options": [
+                            {
+                                "title": choice.choice_title,
+                                "description": choice.choice_description,
+                            }
+                            for choice in choices.user_choices
+                        ],
                         "context": choices.story_description,
                     }
                 ],
                 max_depth,
                 semaphore,
                 parent_id=res[0].id,
-                choice_title=choice,
             )
             for choice in choices.user_choices
         ]
@@ -233,7 +224,7 @@ async def generate_story_choices(story: StoryOutline):
         genai.GenerativeModel("gemini-2.0-flash-exp"), use_async=True
     )
     final_nodes = await generate_choices(
-        client, story.title, story.description, [], 4, sem, None, "Our Story Begins"
+        client, story.title, story.description, [], 3, sem, None
     )
 
     print(f"Final Nodes: {len(final_nodes)}")

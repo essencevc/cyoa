@@ -55,17 +55,18 @@ class DatabaseClient:
 
         with self.get_connection() as conn:
             query = """INSERT INTO stories 
-            (id, user_id, title, description, image, status, timestamp, story_prompt) 
+            (id, user_id, title, description, status, timestamp, story_prompt, image_prompt) 
             VALUES 
-            (?, ?, ?, ?, ?, 'PROCESSING', ?, ?)"""
+            (?, ?, ?, ?, ?, ?, ?, ?)"""
             params = (
                 story_id,
                 user_email,
                 story.title,
                 story.description,
-                "",
+                "PROCESSING",
                 int(datetime.now().timestamp()),
                 story_prompt,
+                story.banner_image,
             )
             print(f"Executing query: {query} with params: {params}")
             conn.execute(query, params)
@@ -88,7 +89,7 @@ class DatabaseClient:
     ):
         with self.get_connection() as conn:
             query = """INSERT INTO story_choices 
-                (id, user_id, parent_id, story_id, title, description, choice_title, is_terminal, explored, image_prompt) 
+                (id, user_id, parent_id, story_id, description, choice_title, choice_description, is_terminal, explored, image_prompt) 
                 VALUES 
                 (?, ?, ?, ?, ?, ?, ?, ?, ?,?)"""
 
@@ -99,9 +100,9 @@ class DatabaseClient:
                         user_id,
                         "NULL" if node.parent_id is None else node.parent_id,
                         story_id,
-                        node.title,
                         node.description,
                         node.choice_title,
+                        node.choice_description,
                         1 if node.is_terminal else 0,
                         1 if node.parent_id is None else 0,
                         node.image_description,
