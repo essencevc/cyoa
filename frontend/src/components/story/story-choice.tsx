@@ -41,7 +41,7 @@ const StoryChoiceNode = ({
               : "group-hover:text-green-400"
           }`}
         >
-          {node.title}{" "}
+          {node.choice_title}{" "}
           {hasChildren && (
             <span
               className="text-green-500 text-sm cursor-pointer"
@@ -109,7 +109,9 @@ const StoryChoices = ({
         {selectedPath.map((choice: SelectStoryChoice, index: number) => (
           <span key={choice.id}>
             {index > 0 && <span className="mx-2">→</span>}
-            <span>{choice.title.toLowerCase().replace(/\s+/g, "_")}</span>
+            <span>
+              {choice.choice_title.toLowerCase().replace(/\s+/g, "_")}
+            </span>
           </span>
         ))}
       </div>

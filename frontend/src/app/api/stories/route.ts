@@ -12,7 +12,7 @@ export async function GET() {
       id: storiesTable.id,
       title: storiesTable.title,
       author: usersTable.username,
-      image: storiesTable.image,
+      image_prompt: storiesTable.image_prompt,
       description: storiesTable.description,
       status: storiesTable.status,
       errorMessage: storiesTable.errorMessage,

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AutoAudioPlayer from "./audio-player";
+import { HoverCard } from "@radix-ui/react-hover-card";
+import { HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 
 type TerminalChoiceProps = {
   choice: SelectStoryChoice;
@@ -33,16 +35,28 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
           END OF STORY
         </div>
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-2/5 h-48 rounded overflow-hidden">
-            <img
-              src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${choice.storyId}/${choice.id}.png`}
-              alt="Story Ending"
-              className="object-contain w-full h-full rounded-lg"
-            />
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="w-full md:w-2/5 h-48 rounded overflow-hidden relative">
+                <img
+                  src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${choice.storyId}/${choice.id}.png`}
+                  alt="Story Banner"
+                  className="object-contain w-full h-full"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100 text-center">
+                  Hover to see image prompt
+                </div>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-black/90 border border-green-500/20 p-4">
+              <p className="text-sm text-green-400 font-mono leading-relaxed">
+                {choice.image_prompt}
+              </p>
+            </HoverCardContent>
+          </HoverCard>
 
           <div className="flex-1 font-mono space-y-4">
-            <h2 className="text-2xl text-green-400">{choice.title}</h2>
+            <h2 className="text-2xl text-green-400">{choice.choice_title}</h2>
             <p className="text-[#00FF00]/90 whitespace-pre-line text-sm leading-relaxed ">
               {choice.description}
             </p>

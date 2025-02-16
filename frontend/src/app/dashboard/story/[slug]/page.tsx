@@ -10,6 +10,11 @@ import AutoAudioPlayer from "@/components/node/audio-player";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import StoryVisibilityToggle from "@/components/story/story-visibility-toggle";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const getStory = async (storyId: string) => {
   noStore();
@@ -88,6 +93,7 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
         <span className="mr-1">←</span>
         <span>Back to Dashboard</span>
       </Link>
+
       <div className="flex items-center justify-between border-b border-green-900/30 pb-2">
         <div className="flex items-center gap-2">
           <span className="text-white">root@cyoa-os:~$</span>
@@ -103,11 +109,25 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
         <div className="w-full md:w-1/5">
           <div className="flex h-full justify-center items-center">
             <div className="relative w-64 h-64 rounded-lg overflow-hidden border border-green-500/20">
-              <img
-                src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
-                alt={story.title || "Story Image"}
-                className="w-full h-full object-cover"
-              />
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
+                    <img
+                      src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
+                      alt={story.title || "Story Image"}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
+                      Hover to see image prompt
+                    </div>
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 bg-black/90 border border-green-500/20 p-4">
+                  <p className="text-sm text-green-400 font-mono leading-relaxed">
+                    {story.image_prompt}
+                  </p>
+                </HoverCardContent>
+              </HoverCard>
             </div>
           </div>
         </div>
@@ -148,6 +168,15 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
           </div>
         </div>
       </div>
+
+      <div className="flex items-center justify-between border-b border-green-900/30 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-white">root@cyoa-os:~$</span>
+          <span className="text-[#39FF14]">cyoa list-story --prompt</span>
+        </div>
+      </div>
+
+      <div className="text-green-300">{story.story_prompt}</div>
 
       <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">
         <span className="text-white">root@cyoa-os:~$</span>

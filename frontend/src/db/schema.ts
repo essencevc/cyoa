@@ -21,12 +21,13 @@ export const storiesTable = sqliteTable("stories", {
   title: text("title"),
   description: text("description"),
   timestamp: integer("timestamp").notNull().default(Date.now()),
-  image: text("image"),
   public: integer("public").notNull().default(0),
   status: text("status", { enum: ["PROCESSING", "GENERATED", "ERROR"] })
     .notNull()
     .default("PROCESSING"),
   errorMessage: text("error_message"),
+
+  image_prompt: text("image_prompt").notNull(),
   story_prompt: text("story_prompt").notNull(),
 });
 
@@ -44,12 +45,13 @@ export const storyChoicesTable = sqliteTable("story_choices", {
     .notNull()
     .references(() => storiesTable.id, { onDelete: "cascade" }),
   parentId: text("parent_id"),
+
   // The title and description the user sees after making the choice
-  title: text("title").notNull(),
   description: text("description").notNull(),
 
   // The title and description the user sees before making the choice
   choice_title: text("choice_title").notNull(),
+  choice_description: text("choice_description").notNull(),
 
   // Image Prompt
   image_prompt: text("image_prompt").notNull(),
