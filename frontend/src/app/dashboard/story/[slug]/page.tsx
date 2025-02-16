@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import StoryChoices from "@/components/story/story-choice";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";

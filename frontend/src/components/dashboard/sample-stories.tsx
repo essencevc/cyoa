@@ -7,7 +7,6 @@ type props = {
 };
 
 const SampleStories = ({ stories }: props) => {
-  console.log(stories);
   return (
     <div className="font-mono">
       <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">

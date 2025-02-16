@@ -224,7 +224,7 @@ const StoryList = ({
         <span className="text-[#39FF14]">{command}</span>
       </div>
       <div className="py-2 space-y-0.5">
-        {/* <div className="text-sm space-y-1">
+        <div className="text-sm space-y-1">
           {logMessages.map((logMessage, index) => (
             <CommandLogger
               key={index}
@@ -232,7 +232,7 @@ const StoryList = ({
               message={logMessage.message}
             />
           ))}
-        </div> */}
+        </div>
         <div className="py-4" />
         <div className="border border-green-500 p-4">
           <div className="flex flex-col gap-4">USER STORIES</div>
