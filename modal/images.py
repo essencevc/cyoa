@@ -32,7 +32,7 @@ vol = modal.Volume.from_name("comfyui-models", create_if_missing=True)
         ),
     ],
     secrets=[modal.Secret.from_name("aws-secret")],
-    concurrency_limit=5,
+    concurrency_limit=45,
 )
 class ComfyUI:
     @modal.enter()
