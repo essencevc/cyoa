@@ -83,7 +83,23 @@ def generate_story(prompt: str) -> str:
                 - A description for the story that's between 3-5 sentences. In this description, you must introduce the main character and set the scene. Make sure to mention the main character's name and what's at stake for them here in this existing situation implicitly.
                 - A short 1 sentence  description for a banner image . This should be a description of a pixel art image that's suitable for the story as cover art. Be specific about the colors, style of the image, individual components of the image and the background.
 
-                For instance, Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance is not a great description because it includes the character's name which isn't useful for image generation. But A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky. is a great description because it's specific, includes details about the desired image and doesn't reference the character's name.
+                <bad example>
+                Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance.
+                </bad example>
+
+                <good example>
+                A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky.
+
+                A brave knight faces a towering dragon, 8-bit pixel art, vibrant blues and greens with dark castle silhouette in background.
+
+                A mysterious wizard casting spells in a moonlit forest clearing, pixel art style with purple and blue color palette, glowing magical particles.
+
+                A space explorer on an alien planet with two suns, retro pixel art, teal and pink landscape with strange crystalline formations.
+
+                A pirate ship sailing through a storm, 8-bit pixel art, deep blues and whites with lightning flashes illuminating the choppy waves.
+                </good example>
+
+                A good description will be specific, include details about how the image should look like in terms of just pure visual elements. Examples of these are the style, the colors, individual components of the image and the background.
 
                 Make sure to provide specific details about the image, the colours, the style and the individual components of the image. We want something that has a strong 8 bit pixel art style.
                 """,
@@ -144,7 +160,7 @@ Based on the outline above, generate the following:
 
 - A conclusion of the story that's between 3-5 sentences. Make sure to tie up all loose ends where possible and provide a satisfying conclusion to the story. This should not be too far off in the future from the previous choices made by the user. 
 - There should be no choices for the user to make at this point in the story.
-- A banner image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.
+- A image description of about 15 words that's suitable for the story as cover art. This should be in a pixel art and retro 8-bit style. Mention specific details of the image in the description.
 
 {% else %}
 Based on the outline above, generate the following:
@@ -152,9 +168,27 @@ Based on the outline above, generate the following:
 - Two distinct choices for the user to make that will meaningfully impact how the story continues. Each choice title must be distinct from each other.
 - The choice title should be a single sentence that describes the user's choice. The description of the choice here should be around 2 sentences.
 - A description for an image that's suitable for this story at this point. Make sure to mention specific details of the image in the description.
-
-For instance, Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance is not a great description because it includes the character's name which isn't useful for image generation. But A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky. is a great description because it's specific, includes details about the desired image and doesn't reference the character's name.
 {% endif %}
+
+<bad image description>
+Pixel art of Kai walking through a dense forest, looking weary, with a village in the distance.
+</bad image description>
+
+<good image description>
+A lone martial artist stands silhouetted against a fiery sunset, pixel art style, orange and red hues dominate the sky.
+
+A brave knight faces a towering dragon, 8-bit pixel art, vibrant blues and greens with dark castle silhouette in background.
+
+A mysterious wizard casting spells in a moonlit forest clearing, pixel art style with purple and blue color palette, glowing magical particles.
+
+A space explorer on an alien planet with two suns, retro pixel art, teal and pink landscape with strange crystalline formations.
+
+A pirate ship sailing through a storm, 8-bit pixel art, deep blues and whites with lightning flashes illuminating the choppy waves.
+</good image description>
+
+A good description will be specific, include details about how the image should look like in terms of just pure visual elements. Examples of these are the style, the colors, individual components of the image and the background.
+
+Make sure to provide specific details about the image, the colours, the style and the individual components of the image. We want something that has a strong 8 bit pixel art style.
                     """,
                 },
             ],
