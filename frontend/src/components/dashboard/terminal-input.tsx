@@ -77,7 +77,7 @@ export function TerminalInput() {
             value={input}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent border-none text-[#5dff3f] placeholder:text-green-800/50 focus-visible:ring-0 p-0 resize-none min-h-[24px] pl-[160px] focus:outline-none"
+            className="w-full bg-transparent border-none text-[#5dff3f] placeholder:text-green-800/50 focus-visible:ring-0 p-0 resize-none min-h-[24px] pl-[160px] focus:outline-none text-sm"
             disabled={isLoading}
             rows={1}
             style={{
@@ -98,8 +98,8 @@ export function TerminalInput() {
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
           <span>
-            Type your prompt and press Enter. Example: "A man goes to fight the
-            dragon that has been plaguing his village"
+            Type your prompt and press Enter. Example: &quot;A man goes to fight
+            the dragon that has been plaguing his village&quot;
           </span>
         </div>
         <Button
