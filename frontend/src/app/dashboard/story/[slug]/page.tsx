@@ -15,6 +15,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { NavigationLink } from "@/components/navigation/navigation-link";
+import Image from "next/image";
 
 // Loading component for Suspense
 const StoryLoading = () => (
@@ -152,11 +153,13 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
-                    <img
+                    <Image
                       src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                       alt={story.title || "Story Image"}
+                      width={256}
+                      height={256}
                       className="w-full h-full object-cover"
-                      loading="eager" // Eagerly load the image
+                      priority
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
                       Hover to see image prompt
@@ -173,11 +176,13 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
 
             {/* For mobile screens - show image and prompt directly */}
             <div className="md:hidden flex flex-col">
-              <img
+              <Image
                 src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                 alt={story.title || "Story Image"}
+                width={224}
+                height={224}
                 className="w-full h-full object-cover"
-                loading="eager" // Eagerly load the image
+                priority
               />
               <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
                 <p className="text-xs text-green-400 font-mono leading-relaxed">

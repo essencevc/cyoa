@@ -8,6 +8,7 @@ import { HoverCard } from "@radix-ui/react-hover-card";
 import { HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 import { NavigationLink } from "../navigation/navigation-link";
 import { useNavigationProgress } from "../navigation/navigation-progress-provider";
+import Image from "next/image";
 
 type ChoiceInterfaceProps = {
   title: string;
@@ -66,11 +67,14 @@ const ChoiceInterface = ({
           <div className="hidden md:block">
             <HoverCard>
               <HoverCardTrigger asChild>
-                <div className="max-w-[200px] h-48 rounded overflow-hidden relative">
-                  <img
+                <div className="w-[200px] h-[192px] rounded overflow-hidden relative">
+                  <Image
                     src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/${choiceId}.png`}
                     alt="Story Banner"
-                    className="object-contain w-full h-full"
+                    width={200}
+                    height={192}
+                    className="object-cover"
+                    priority
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100 text-center">
                     Hover to see image prompt
@@ -87,11 +91,14 @@ const ChoiceInterface = ({
 
           {/* For mobile screens - show image and prompt directly */}
           <div className="md:hidden flex flex-col gap-2 w-full">
-            <div className="w-full h-36 sm:h-48 rounded overflow-hidden">
-              <img
+            <div className="w-full h-[144px] sm:h-[192px] rounded overflow-hidden">
+              <Image
                 src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/${choiceId}.png`}
                 alt="Story Banner"
-                className="object-contain w-full h-full"
+                width={400}
+                height={192}
+                className="object-cover w-full h-full"
+                priority
               />
             </div>
             <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-1">
