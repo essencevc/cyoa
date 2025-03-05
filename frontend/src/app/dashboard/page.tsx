@@ -9,7 +9,9 @@ import { UsernameInput } from "@/components/dashboard/username-input";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import SampleStories from "@/components/dashboard/sample-stories";
-import { unstable_noStore as noStore } from "next/cache";
+
+// Add revalidation time for Incremental Static Regeneration (ISR)
+export const revalidate = 30; // Revalidate every 30 seconds
 
 // Loading components for Suspense
 const SampleStoriesLoading = () => (
@@ -36,7 +38,7 @@ const UserStoriesLoading = () => (
 
 // Function to get sample stories
 const getSampleStories = async () => {
-  noStore(); // Opt out of caching for this data fetch
+  // Remove noStore() to enable caching
 
   const storyIds = process.env.NEXT_PUBLIC_EXAMPLE_STORIES?.split(",");
   if (!storyIds) {
@@ -51,7 +53,8 @@ const getSampleStories = async () => {
 
 // Function to get user stories
 const getUserStories = async (userEmail: string) => {
-  noStore(); // Opt out of caching for this data fetch
+  // Remove noStore() to enable caching
+  // User stories can be cached briefly as they don't change frequently
 
   return db
     .select({
@@ -103,18 +106,27 @@ const UserStoriesSection = async ({ userEmail }: { userEmail: string }) => {
 };
 
 const Dashboard = async () => {
-  const session = await auth();
+  // Start auth check immediately but don't await it yet
+  const sessionPromise = auth();
+
+  // Immediately check if we need to revalidate
   revalidatePath("/dashboard", "page");
 
+  // Now await the session
+  const session = await sessionPromise;
   if (!session || !session.user || !session.user.email) {
     return redirect("/");
   }
 
-  const dbUser = await db
+  // Start fetching user data immediately
+  const dbUserPromise = db
     .select()
     .from(usersTable)
     .where(eq(usersTable.email, session.user.email))
     .get();
+
+  // Await the user data
+  const dbUser = await dbUserPromise;
 
   if (!dbUser || !dbUser.username) {
     return <UsernameInput />;

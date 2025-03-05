@@ -1,7 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { NavigationSpinner } from "./navigation-spinner";
 
 type NavigationProgressContextType = {
@@ -26,14 +32,21 @@ export function NavigationProgressProvider({
 }) {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
+  const initialized = useRef(false);
 
   // Reset navigation state when pathname changes
   useEffect(() => {
     setIsNavigating(false);
   }, [pathname]);
 
-  // Listen for navigation events
+  // Listen for navigation events - but only after initial render
   useEffect(() => {
+    // Skip event listener setup on first render to improve initial load time
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
+
     const handleStart = () => {
       setIsNavigating(true);
     };
@@ -52,7 +65,7 @@ export function NavigationProgressProvider({
       document.removeEventListener("navigationStart", handleStart);
       document.removeEventListener("navigationComplete", handleComplete);
     };
-  }, []);
+  }, [initialized.current]);
 
   const startNavigation = () => {
     setIsNavigating(true);

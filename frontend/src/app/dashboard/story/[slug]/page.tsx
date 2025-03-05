@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
-import { unstable_noStore as noStore } from "next/cache";
 import AutoAudioPlayer from "@/components/node/audio-player";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -16,6 +15,10 @@ import {
 } from "@/components/ui/hover-card";
 import { NavigationLink } from "@/components/navigation/navigation-link";
 import Image from "next/image";
+
+// Add revalidation time for Incremental Static Regeneration (ISR)
+// This will cache the page for 60 seconds before revalidating
+export const revalidate = 60;
 
 // Loading component for Suspense
 const StoryLoading = () => (
@@ -45,20 +48,23 @@ const StoryLoading = () => (
 
 // Function to get story data
 const getStory = async (storyId: string) => {
-  noStore(); // Opt out of caching for this data fetch
+  // Remove noStore() to enable caching
+  // Use revalidate option instead for controlled caching
 
   const getStoryData = async () => {
-    return {
-      ...(await db
-        .select()
-        .from(storiesTable)
-        .where(eq(storiesTable.id, storyId))
-        .get({ cache: "no-store" })),
-      choices: await db
+    // Fetch story and choices in parallel for better performance
+    const [story, choices] = await Promise.all([
+      db.select().from(storiesTable).where(eq(storiesTable.id, storyId)).get(),
+      db
         .select()
         .from(storyChoicesTable)
         .where(eq(storyChoicesTable.storyId, storyId))
-        .all({ cache: "no-store" }),
+        .all(),
+    ]);
+
+    return {
+      ...story,
+      choices,
     };
   };
 
@@ -77,7 +83,17 @@ export async function generateStaticParams() {
 
 // Story content component to be wrapped in Suspense
 const StoryContent = async ({ storyId }: { storyId: string }) => {
-  const story = await getStory(storyId);
+  // Start fetching story data immediately, before auth check
+  const storyPromise = getStory(storyId);
+
+  // Perform auth check in parallel with data fetching
+  const userObject = await auth();
+  if (!userObject) {
+    return redirect("/");
+  }
+
+  // Now await the story data that was already being fetched
+  const story = await storyPromise;
 
   if (!story) {
     return (
@@ -109,12 +125,6 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
     story.choices.filter((choice) => choice.explored === 1).length - 1;
   const totalChoices = story.choices.length - 1;
   const storyProgress = (exploredChoices / totalChoices) * 100;
-
-  const userObject = await auth();
-
-  if (!userObject) {
-    return redirect("/");
-  }
 
   const userId = userObject["user"]["email"];
   const isUserStory = userId === story.userId;
@@ -160,6 +170,8 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
                       height={256}
                       className="w-full h-full object-cover"
                       priority
+                      quality={80}
+                      sizes="(max-width: 768px) 224px, 256px"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
                       Hover to see image prompt
@@ -183,6 +195,8 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
                 height={224}
                 className="w-full h-full object-cover"
                 priority
+                quality={80}
+                sizes="224px"
               />
               <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
                 <p className="text-xs text-green-400 font-mono leading-relaxed">
@@ -268,12 +282,8 @@ const StoryContent = async ({ storyId }: { storyId: string }) => {
 
 const StoryPage = async ({ params }: { params: { slug: string } }) => {
   const storyId = params.slug;
-  const userObject = await auth();
 
-  if (!userObject) {
-    return redirect("/");
-  }
-
+  // Move auth check inside the Suspense boundary so the loading skeleton appears immediately
   return (
     <Suspense fallback={<StoryLoading />}>
       <StoryContent storyId={storyId} />

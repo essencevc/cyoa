@@ -6,11 +6,24 @@ import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 import { NavigationLink } from "@/components/navigation/navigation-link";
 import TerminalChoice from "@/components/node/terminal-choice";
 
-export const dynamic = "force-dynamic";
+// Replace force-dynamic with controlled revalidation
+// export const dynamic = "force-dynamic";
+export const revalidate = 30; // Revalidate every 30 seconds
+
+// Server action to mark choice as explored
+// This separates the data mutation from the rendering path
+async function markChoiceAsExplored(nodeId: string) {
+  "use server";
+
+  await db
+    .update(storyChoicesTable)
+    .set({ explored: 1 })
+    .where(eq(storyChoicesTable.id, nodeId))
+    .execute();
+}
 
 // Loading component for Suspense
 const ChoiceLoading = () => (
@@ -29,7 +42,7 @@ const ChoiceLoading = () => (
 
 // Function to get choice data
 const getChoiceData = async (nodeId: string) => {
-  noStore(); // Opt out of caching for this data fetch
+  // Remove noStore() to enable caching
 
   const choice = await db.query.storyChoicesTable.findFirst({
     where: eq(storyChoicesTable.id, nodeId),
@@ -39,6 +52,7 @@ const getChoiceData = async (nodeId: string) => {
     return { choice: null, story: null, children: [] };
   }
 
+  // Fetch story and children in parallel for better performance
   const [story, children] = await Promise.all([
     db.query.storiesTable.findFirst({
       where: eq(storiesTable.id, choice.storyId as string),
@@ -53,7 +67,17 @@ const getChoiceData = async (nodeId: string) => {
 
 // Choice content component to be wrapped in Suspense
 const ChoiceContent = async ({ nodeId }: { nodeId: string }) => {
-  const { choice, story, children } = await getChoiceData(nodeId);
+  // Start fetching choice data immediately, before auth check
+  const choiceDataPromise = getChoiceData(nodeId);
+
+  // Perform auth check in parallel
+  const userObject = await auth();
+  if (!userObject) {
+    return redirect("/");
+  }
+
+  // Now await the choice data that was already being fetched
+  const { choice, story, children } = await choiceDataPromise;
 
   if (!choice || !story) {
     return (
@@ -81,12 +105,6 @@ const ChoiceContent = async ({ nodeId }: { nodeId: string }) => {
     );
   }
 
-  // Mark choice as explored if user owns the story
-  const userObject = await auth();
-  if (!userObject) {
-    return redirect("/");
-  }
-
   const userId = userObject["user"]["email"];
   const isUserStory = userId === story.userId;
   const isPublicStory = story.public;
@@ -95,12 +113,10 @@ const ChoiceContent = async ({ nodeId }: { nodeId: string }) => {
     return redirect("/");
   }
 
+  // Use the server action to mark the choice as explored
+  // This happens in parallel with rendering
   if (isUserStory) {
-    await db
-      .update(storyChoicesTable)
-      .set({ explored: 1 })
-      .where(eq(storyChoicesTable.id, nodeId))
-      .execute();
+    markChoiceAsExplored(nodeId);
   }
 
   if (choice.isTerminal) {
