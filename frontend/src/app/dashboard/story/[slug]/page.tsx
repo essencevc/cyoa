@@ -44,18 +44,23 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
 
   if (!story) {
     return (
-      <div className="font-mono max-w-6xl mx-auto p-4">
-        <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">
-          <span className="text-white">root@cyoa-os:~$</span>
-          <span className="text-[#39FF14]">
+      <div className="font-mono max-w-6xl mx-auto p-3 sm:p-4">
+        <div className="flex items-center gap-2 border-b border-green-900/30 pb-2 overflow-x-auto">
+          <span className="text-white text-sm sm:text-base whitespace-nowrap">
+            root@cyoa-os:~$
+          </span>
+          <span className="text-[#39FF14] text-sm sm:text-base break-all">
             cyoa story --id {storyId} --metadata
           </span>
         </div>
-        <div className="mt-4 text-red-400">
+        <div className="mt-4 text-red-400 text-sm sm:text-base">
           [ERROR] Story not found in database
         </div>
         <div className="mt-4">
-          <Link href="/dashboard" className="text-[#39FF14] hover:underline">
+          <Link
+            href="/dashboard"
+            className="text-[#39FF14] hover:underline text-sm sm:text-base"
+          >
             ← Back to dashboard
           </Link>
         </div>
@@ -85,30 +90,31 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
   console.log(isUserStory, isPublicStory);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4">
       <Link
         href="/dashboard"
-        className="text-green-400 hover:underline inline-flex items-center transition-transform duration-200 hover:-translate-x-1"
+        className="text-green-400 hover:underline inline-flex items-center transition-transform duration-200 hover:-translate-x-1 text-sm sm:text-base mt-2"
       >
         <span className="mr-1">←</span>
         <span>Back to Dashboard</span>
       </Link>
 
-      <div className="flex items-center justify-between border-b border-green-900/30 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-white">root@cyoa-os:~$</span>
+      <div className="border-b border-green-900/30 pb-2">
+        <p className="text-sm sm:text-base ">
+          <span className="text-white whitespace-nowrap">root@cyoa-os:~$ </span>
           <span className="text-[#39FF14]">
             cyoa list-story --id {storyId} --metadata
           </span>
-        </div>
+        </p>
       </div>
 
       {/* Main Content - Side by side on desktop, stacked on mobile */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
         {/* Banner Image */}
-        <div className="w-full md:w-1/5">
-          <div className="flex h-full justify-center items-center">
-            <div className="relative w-64 h-64 rounded-lg overflow-hidden border border-green-500/20">
+        <div className="w-full md:w-1/5 flex justify-center md:justify-start">
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg overflow-hidden ">
+            {/* For larger screens - use HoverCard */}
+            <div className="hidden md:block">
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
@@ -122,25 +128,44 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
                     </div>
                   </div>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-80 bg-black/90 border border-green-500/20 p-4">
-                  <p className="text-sm text-green-400 font-mono leading-relaxed">
+                <HoverCardContent className="w-72 sm:w-80 bg-black/90 p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-green-400 font-mono leading-relaxed">
                     {story.image_prompt}
                   </p>
                 </HoverCardContent>
               </HoverCard>
             </div>
+
+            {/* For mobile screens - show image and prompt directly */}
+            <div className="md:hidden flex flex-col">
+              <img
+                src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
+                alt={story.title || "Story Image"}
+                className="w-full h-full object-cover"
+              />
+              <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
+                <p className="text-xs text-green-400 font-mono leading-relaxed">
+                  <span className="text-green-500 font-bold">
+                    Image Prompt:
+                  </span>{" "}
+                  {story.image_prompt}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Story Content */}
-        <div className="w-full md:w-4/5 space-y-6 font-mono">
+        <div className="w-full md:w-4/5 space-y-4 sm:space-y-6 font-mono">
           <div className="space-y-2">
-            <div className="text-sm opacity-70">[INFO] Story ID: {storyId}</div>
-            <p className="leading-relaxed text-green-300">
+            <div className="text-xs sm:text-sm opacity-70">
+              [INFO] Story ID: {storyId}
+            </div>
+            <p className="leading-relaxed text-green-300 text-sm sm:text-base">
               {story?.description}
             </p>
           </div>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
             {isUserStory && (
               <StoryVisibilityToggle
                 storyId={storyId}
@@ -153,7 +178,9 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-sm opacity-70">[STATUS] Story Progress</div>
+              <div className="text-xs sm:text-sm opacity-70">
+                [STATUS] Story Progress
+              </div>
               {isUserStory && <ResetStory storyId={storyId} />}
             </div>
             <div className="h-2 rounded border border-green-500/20">
@@ -162,27 +189,35 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
                 style={{ width: `${storyProgress}%` }}
               />
             </div>
-            <div className="text-sm text-right opacity-70">
+            <div className="text-xs sm:text-sm text-right opacity-70">
               {Math.round(storyProgress)}%
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-b border-green-900/30 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-white">root@cyoa-os:~$</span>
-          <span className="text-[#39FF14]">cyoa list-story --prompt</span>
+      <div className="flex items-center justify-between border-b border-green-900/30 pb-2 overflow-x-auto">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+          <span className="text-white text-sm sm:text-base whitespace-nowrap">
+            root@cyoa-os:~$
+          </span>
+          <span className="text-[#39FF14] text-sm sm:text-base break-all">
+            cyoa list-story --prompt
+          </span>
         </div>
       </div>
 
-      <div className="text-green-300">{story.story_prompt}</div>
+      <div className="text-green-300 text-sm sm:text-base">
+        {story.story_prompt}
+      </div>
 
-      <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">
-        <span className="text-white">root@cyoa-os:~$</span>
-        <span className="text-[#39FF14]">
-          cyoa list-story --id {storyId} --choices
-        </span>
+      <div className="flex items-center gap-1 sm:gap-2 border-b border-green-900/30 pb-2 overflow-x-auto">
+        <p className="text-sm sm:text-base ">
+          <span className="text-white whitespace-nowrap">root@cyoa-os:~$ </span>
+          <span className="text-[#39FF14]">
+            cyoa list-story --id {storyId} --choices
+          </span>
+        </p>
       </div>
 
       <StoryChoices choices={story.choices} isUserStory={isUserStory} />

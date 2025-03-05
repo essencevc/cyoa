@@ -26,18 +26,23 @@ const NodePage = async ({ params }: { params: { node: string } }) => {
 
   if (!choice || !story) {
     return (
-      <div className="font-mono max-w-6xl mx-auto p-4">
-        <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">
-          <span className="text-white">root@cyoa-os:~$</span>
-          <span className="text-[#39FF14]">
+      <div className="font-mono w-full max-w-6xl mx-auto p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2 border-b border-green-900/30 pb-2">
+          <span className="text-white text-sm sm:text-base">
+            root@cyoa-os:~$
+          </span>
+          <span className="text-[#39FF14] text-sm sm:text-base break-all">
             cyoa make-choice --id {params.node} --metadata
           </span>
         </div>
-        <div className="mt-4 text-red-400">
+        <div className="mt-3 sm:mt-4 text-red-400 text-sm sm:text-base">
           [ERROR] Story not found in database
         </div>
-        <div className="mt-4">
-          <Link href="/dashboard" className="text-[#39FF14] hover:underline">
+        <div className="mt-3 sm:mt-4">
+          <Link
+            href="/dashboard"
+            className="text-[#39FF14] hover:underline text-sm sm:text-base"
+          >
             ← Back to dashboard
           </Link>
         </div>
