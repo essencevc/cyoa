@@ -4,6 +4,7 @@ import { buildTree, getPath } from "@/lib/tree";
 import Link from "next/link";
 import { SelectStoryChoice } from "@/db/schema";
 import { useRouter } from "next/navigation";
+import { NavigationLink } from "../navigation/navigation-link";
 
 type ChoiceNode = SelectStoryChoice & { children: ChoiceNode[] };
 
@@ -94,12 +95,12 @@ const StoryChoices = ({
         <p className="mt-2 text-red-600 font-bold text-sm sm:text-base">
           WARNING: This is a publicly shared story, progress is not saved
         </p>
-        <Link
+        <NavigationLink
           href={`/dashboard/story/choice/${selectedPath.at(-1)?.id}`}
           className="mt-6 sm:mt-10 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-950 text-green-400 rounded hover:bg-green-900 transition-colors inline-block text-sm sm:text-base"
         >
           START HERE
-        </Link>
+        </NavigationLink>
       </div>
     );
   }
@@ -135,12 +136,12 @@ const StoryChoices = ({
         {selectedPath.at(-1)?.description}
       </div>
       <div className="my-4">
-        <Link
+        <NavigationLink
           href={`/dashboard/story/choice/${selectedPath.at(-1)?.id}`}
           className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-950 text-green-400 rounded hover:bg-green-900 transition-colors text-sm sm:text-base"
         >
           Start Here
-        </Link>
+        </NavigationLink>
       </div>
     </div>
   );

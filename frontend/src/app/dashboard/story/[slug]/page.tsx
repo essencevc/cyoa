@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import StoryChoices from "@/components/story/story-choice";
 import { eq } from "drizzle-orm";
@@ -15,31 +15,68 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { NavigationLink } from "@/components/navigation/navigation-link";
 
+// Loading component for Suspense
+const StoryLoading = () => (
+  <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4 animate-pulse">
+    <div className="h-6 w-32 bg-green-900/30 rounded"></div>
+    <div className="border-b border-green-900/30 pb-2">
+      <div className="h-5 w-full bg-green-900/30 rounded"></div>
+    </div>
+    <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+      <div className="w-full md:w-1/5 flex justify-center md:justify-start">
+        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg bg-green-900/30"></div>
+      </div>
+      <div className="w-full md:w-4/5 space-y-4 sm:space-y-6">
+        <div className="space-y-2">
+          <div className="h-4 w-32 bg-green-900/30 rounded"></div>
+          <div className="h-20 w-full bg-green-900/30 rounded"></div>
+        </div>
+        <div className="h-8 w-40 bg-green-900/30 rounded"></div>
+        <div className="space-y-2">
+          <div className="h-4 w-full bg-green-900/30 rounded"></div>
+          <div className="h-2 w-full bg-green-900/30 rounded"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Function to get story data
 const getStory = async (storyId: string) => {
-  noStore();
+  noStore(); // Opt out of caching for this data fetch
+
   const getStoryData = async () => {
-    noStore();
     return {
       ...(await db
         .select()
         .from(storiesTable)
         .where(eq(storiesTable.id, storyId))
-        .get()),
+        .get({ cache: "no-store" })),
       choices: await db
         .select()
         .from(storyChoicesTable)
         .where(eq(storyChoicesTable.storyId, storyId))
-        .all(),
+        .all({ cache: "no-store" }),
     };
   };
 
   return getStoryData();
 };
 
-const StoryPage = async ({ params }: { params: { slug: string } }) => {
-  const storyId = params.slug;
+// Generate static params for common stories to preload
+export async function generateStaticParams() {
+  // Get sample story IDs from env
+  const storyIds = process.env.NEXT_PUBLIC_EXAMPLE_STORIES?.split(",") || [];
 
+  return storyIds.map((slug) => ({
+    slug,
+  }));
+}
+
+// Story content component to be wrapped in Suspense
+const StoryContent = async ({ storyId }: { storyId: string }) => {
   const story = await getStory(storyId);
 
   if (!story) {
@@ -57,12 +94,12 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
           [ERROR] Story not found in database
         </div>
         <div className="mt-4">
-          <Link
+          <NavigationLink
             href="/dashboard"
             className="text-[#39FF14] hover:underline text-sm sm:text-base"
           >
             ← Back to dashboard
-          </Link>
+          </NavigationLink>
         </div>
       </div>
     );
@@ -87,17 +124,15 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
     return redirect("/");
   }
 
-  console.log(isUserStory, isPublicStory);
-
   return (
     <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4">
-      <Link
+      <NavigationLink
         href="/dashboard"
         className="text-green-400 hover:underline inline-flex items-center transition-transform duration-200 hover:-translate-x-1 text-sm sm:text-base mt-2"
       >
         <span className="mr-1">←</span>
         <span>Back to Dashboard</span>
-      </Link>
+      </NavigationLink>
 
       <div className="border-b border-green-900/30 pb-2">
         <p className="text-sm sm:text-base ">
@@ -122,6 +157,7 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
                       src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                       alt={story.title || "Story Image"}
                       className="w-full h-full object-cover"
+                      loading="eager" // Eagerly load the image
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
                       Hover to see image prompt
@@ -142,6 +178,7 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
                 src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                 alt={story.title || "Story Image"}
                 className="w-full h-full object-cover"
+                loading="eager" // Eagerly load the image
               />
               <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
                 <p className="text-xs text-green-400 font-mono leading-relaxed">
@@ -222,6 +259,21 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
 
       <StoryChoices choices={story.choices} isUserStory={isUserStory} />
     </div>
+  );
+};
+
+const StoryPage = async ({ params }: { params: { slug: string } }) => {
+  const storyId = params.slug;
+  const userObject = await auth();
+
+  if (!userObject) {
+    return redirect("/");
+  }
+
+  return (
+    <Suspense fallback={<StoryLoading />}>
+      <StoryContent storyId={storyId} />
+    </Suspense>
   );
 };
 

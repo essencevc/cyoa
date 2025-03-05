@@ -7,6 +7,8 @@ import Link from "next/link";
 import AutoAudioPlayer from "./audio-player";
 import { HoverCard } from "@radix-ui/react-hover-card";
 import { HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
+import { NavigationLink } from "../navigation/navigation-link";
+import { useNavigationProgress } from "../navigation/navigation-progress-provider";
 
 type ChoiceInterfaceProps = {
   title: string;
@@ -27,12 +29,13 @@ const ChoiceInterface = ({
 }: ChoiceInterfaceProps) => {
   const [selectedChoice, setSelectedChoice] = useState(0);
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       switch (e.key) {
         case "ArrowUp":
           setSelectedChoice((prev) => (prev > 0 ? prev - 1 : prev));
-
           break;
         case "ArrowDown":
           setSelectedChoice((prev) =>
@@ -40,9 +43,11 @@ const ChoiceInterface = ({
           );
           break;
         case "Enter":
+          startNavigation();
           router.push(`/dashboard/story/choice/${choices[selectedChoice].id}`);
           break;
         case "Escape":
+          startNavigation();
           router.push(
             `/dashboard/story/${choices[selectedChoice].storyId}?node=${choices[selectedChoice].id}`
           );
@@ -52,7 +57,7 @@ const ChoiceInterface = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedChoice]);
+  }, [selectedChoice, router, choices, startNavigation]);
 
   return (
     <div className="flex items-center justify-center bg-black p-2 sm:p-4">
@@ -62,7 +67,7 @@ const ChoiceInterface = ({
           <div className="hidden md:block">
             <HoverCard>
               <HoverCardTrigger asChild>
-                <div className="w-full h-48 rounded overflow-hidden relative">
+                <div className="max-w-[200px] h-48 rounded overflow-hidden relative">
                   <img
                     src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/${choiceId}.png`}
                     alt="Story Banner"
@@ -120,7 +125,10 @@ const ChoiceInterface = ({
           <div className="h-full overflow-y-auto p-3 sm:p-6">
             <div className="space-y-3 sm:space-y-4">
               {choices.map((choice, index) => (
-                <Link key={index} href={`/dashboard/story/choice/${choice.id}`}>
+                <NavigationLink
+                  key={index}
+                  href={`/dashboard/story/choice/${choice.id}`}
+                >
                   <motion.div
                     className={`p-3 sm:p-4 rounded-lg cursor-pointer ${
                       selectedChoice === index
@@ -149,7 +157,7 @@ const ChoiceInterface = ({
                       </span>
                     </div>
                   </motion.div>
-                </Link>
+                </NavigationLink>
               ))}
             </div>
           </div>

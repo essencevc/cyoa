@@ -1,7 +1,6 @@
 "use client";
 import { SelectStory } from "@/db/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import React, { useEffect, useState, useTransition } from "react";
 import { Button } from "../ui/button";
 import {
@@ -15,6 +14,9 @@ import {
 } from "../ui/dialog";
 import { deleteStory } from "@/lib/story";
 import { Loader2 } from "lucide-react";
+import { NavigationLink } from "../navigation/navigation-link";
+import { useNavigationProgress } from "../navigation/navigation-progress-provider";
+import { useRouter } from "next/navigation";
 
 type Story = {
   id: string;
@@ -65,10 +67,17 @@ const StoryCard = ({ story }: { story: Story }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleting, startDeletion] = useTransition();
   const queryClient = useQueryClient();
+  const { startNavigation } = useNavigationProgress();
+  const router = useRouter();
 
   if (!story) {
     return null;
   }
+
+  const handleStartPlaythrough = () => {
+    startNavigation();
+    router.push(`/dashboard/story/${story.id}`);
+  };
 
   const DeleteDialog = () => (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -163,13 +172,12 @@ const StoryCard = ({ story }: { story: Story }) => {
       <div className="py-2" />
       <div className="flex flex-col sm:flex-row justify-center sm:justify-end items-center gap-2">
         <DeleteDialog />
-        <Link
-          href={`/dashboard/story/${story.id}`}
-          className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30 w-full sm:w-auto text-center"
-          tabIndex={0}
+        <Button
+          className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30 w-full sm:w-auto text-center bg-transparent text-green-400"
+          onClick={handleStartPlaythrough}
         >
           Start Playthrough
-        </Link>
+        </Button>
       </div>
     </div>
   );
@@ -181,6 +189,8 @@ const StoryList = ({
   stories: initialStories,
 }: StoryListProps) => {
   const [selectedStory, setSelectedStory] = useState<number | null>(null);
+  const { startNavigation } = useNavigationProgress();
+  const router = useRouter();
 
   const { data: stories } = useQuery({
     queryKey: ["stories"],
@@ -202,7 +212,23 @@ const StoryList = ({
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setSelectedStory(selectedStory === index ? null : index);
+      if (selectedStory !== index) {
+        setSelectedStory(index);
+      } else {
+        // Navigate to the story when pressing Enter on an already selected story
+        startNavigation();
+        router.push(`/dashboard/story/${stories[index].id}`);
+      }
+    }
+  };
+
+  const handleStoryClick = (index: number) => {
+    if (selectedStory === index) {
+      // Navigate to the story when clicking on an already selected story
+      startNavigation();
+      router.push(`/dashboard/story/${stories[index].id}`);
+    } else {
+      setSelectedStory(index);
     }
   };
 
@@ -250,11 +276,9 @@ const StoryList = ({
           {stories.map((story: Story, index: number) => (
             <div key={index}>
               <div
-                onClick={() =>
-                  setSelectedStory(selectedStory === index ? null : index)
-                }
+                onClick={() => handleStoryClick(index)}
                 tabIndex={0}
-                className="text-[#39FF14] text-sm pl-2 py-1 focus:outline-none focus:underline rounded transition-colors cursor-pointer"
+                className="text-[#39FF14] text-sm pl-2 py-1 focus:outline-none focus:underline rounded transition-colors cursor-pointer hover:bg-green-900/20"
                 onKeyDown={(e) => handleKeyDown(e, index)}
               >
                 <div className="flex items-center gap-2">

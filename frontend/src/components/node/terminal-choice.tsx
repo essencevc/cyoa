@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import AutoAudioPlayer from "./audio-player";
 import { HoverCard } from "@radix-ui/react-hover-card";
 import { HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
+import { useNavigationProgress } from "../navigation/navigation-progress-provider";
 
 type TerminalChoiceProps = {
   choice: SelectStoryChoice;
@@ -13,21 +14,24 @@ type TerminalChoiceProps = {
 
 const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
   const router = useRouter();
+  const { startNavigation } = useNavigationProgress();
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        startNavigation();
         router.push(
           `/dashboard/story/${choice.storyId}?prev_node=${choice.id}`
         );
       } else if (e.key === "Backspace") {
+        startNavigation();
         router.push("/dashboard");
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [router, choice.storyId, choice.id]);
+  }, [router, choice.storyId, choice.id, startNavigation]);
 
   return (
     <div className="flex items-center justify-center bg-black p-2 sm:p-4">
@@ -40,7 +44,7 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
           <div className="hidden md:block">
             <HoverCard>
               <HoverCardTrigger asChild>
-                <div className="w-full h-48 rounded overflow-hidden relative">
+                <div className="max-w-[200px] h-48 rounded overflow-hidden relative">
                   <img
                     src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${choice.storyId}/${choice.id}.png`}
                     alt="Story Banner"
@@ -90,11 +94,12 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
         <div className="mt-6 sm:mt-8 flex flex-col items-start justify-start space-y-3">
           <div
             className="flex items-center gap-2 group cursor-pointer"
-            onClick={() =>
+            onClick={() => {
+              startNavigation();
               router.push(
                 `/dashboard/story/${choice.storyId}?prev_node=${choice.id}`
-              )
-            }
+              );
+            }}
           >
             <kbd className="px-3 py-1 bg-black border border-green-500/40 rounded text-green-400 font-mono text-xs relative overflow-hidden min-w-[60px] text-center">
               <span className="relative z-10 flex items-center justify-center">
@@ -112,7 +117,10 @@ const TerminalChoice = ({ choice }: TerminalChoiceProps) => {
 
           <div
             className="flex items-center gap-2 group cursor-pointer"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => {
+              startNavigation();
+              router.push("/dashboard");
+            }}
           >
             <kbd className="px-3 py-1 bg-black border border-green-500/40 rounded text-green-400 font-mono text-xs relative overflow-hidden min-w-[60px] text-center">
               <span className="relative z-10 flex items-center justify-center">
