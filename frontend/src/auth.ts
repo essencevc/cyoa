@@ -36,6 +36,7 @@ const { handlers, signIn, signOut, auth } = NextAuth({
         // No Username for now
         await db.insert(usersTable).values({
           email: user.email!,
+          credits: 3,
         });
       }
       return true;

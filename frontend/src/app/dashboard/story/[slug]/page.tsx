@@ -1,11 +1,9 @@
-import React from "react";
-import Link from "next/link";
+import React, { Suspense } from "react";
 import StoryChoices from "@/components/story/story-choice";
 import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";
 import { db } from "@/db/db";
 import ResetStory from "@/components/story/reset-story";
-import { unstable_noStore as noStore } from "next/cache";
 import AutoAudioPlayer from "@/components/node/audio-player";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -15,32 +13,87 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { NavigationLink } from "@/components/navigation/navigation-link";
+import Image from "next/image";
 
+// Add revalidation time for Incremental Static Regeneration (ISR)
+// This will cache the page for 60 seconds before revalidating
+export const revalidate = 60;
+
+// Loading component for Suspense
+const StoryLoading = () => (
+  <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4 animate-pulse">
+    <div className="h-6 w-32 bg-green-900/30 rounded"></div>
+    <div className="border-b border-green-900/30 pb-2">
+      <div className="h-5 w-full bg-green-900/30 rounded"></div>
+    </div>
+    <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+      <div className="w-full md:w-1/5 flex justify-center md:justify-start">
+        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg bg-green-900/30"></div>
+      </div>
+      <div className="w-full md:w-4/5 space-y-4 sm:space-y-6">
+        <div className="space-y-2">
+          <div className="h-4 w-32 bg-green-900/30 rounded"></div>
+          <div className="h-20 w-full bg-green-900/30 rounded"></div>
+        </div>
+        <div className="h-8 w-40 bg-green-900/30 rounded"></div>
+        <div className="space-y-2">
+          <div className="h-4 w-full bg-green-900/30 rounded"></div>
+          <div className="h-2 w-full bg-green-900/30 rounded"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Function to get story data
 const getStory = async (storyId: string) => {
-  noStore();
+  // Remove noStore() to enable caching
+  // Use revalidate option instead for controlled caching
+
   const getStoryData = async () => {
-    noStore();
-    return {
-      ...(await db
-        .select()
-        .from(storiesTable)
-        .where(eq(storiesTable.id, storyId))
-        .get()),
-      choices: await db
+    // Fetch story and choices in parallel for better performance
+    const [story, choices] = await Promise.all([
+      db.select().from(storiesTable).where(eq(storiesTable.id, storyId)).get(),
+      db
         .select()
         .from(storyChoicesTable)
         .where(eq(storyChoicesTable.storyId, storyId))
         .all(),
+    ]);
+
+    return {
+      ...story,
+      choices,
     };
   };
 
   return getStoryData();
 };
 
-const StoryPage = async ({ params }: { params: { slug: string } }) => {
-  const storyId = params.slug;
+// Generate static params for common stories to preload
+export async function generateStaticParams() {
+  // Get sample story IDs from env
+  const storyIds = process.env.NEXT_PUBLIC_EXAMPLE_STORIES?.split(",") || [];
 
-  const story = await getStory(storyId);
+  return storyIds.map((slug) => ({
+    slug,
+  }));
+}
+
+// Story content component to be wrapped in Suspense
+const StoryContent = async ({ storyId }: { storyId: string }) => {
+  // Start fetching story data immediately, before auth check
+  const storyPromise = getStory(storyId);
+
+  // Perform auth check in parallel with data fetching
+  const userObject = await auth();
+  if (!userObject) {
+    return redirect("/");
+  }
+
+  // Now await the story data that was already being fetched
+  const story = await storyPromise;
 
   if (!story) {
     return (
@@ -57,12 +110,12 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
           [ERROR] Story not found in database
         </div>
         <div className="mt-4">
-          <Link
+          <NavigationLink
             href="/dashboard"
             className="text-[#39FF14] hover:underline text-sm sm:text-base"
           >
             ← Back to dashboard
-          </Link>
+          </NavigationLink>
         </div>
       </div>
     );
@@ -73,12 +126,6 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
   const totalChoices = story.choices.length - 1;
   const storyProgress = (exploredChoices / totalChoices) * 100;
 
-  const userObject = await auth();
-
-  if (!userObject) {
-    return redirect("/");
-  }
-
   const userId = userObject["user"]["email"];
   const isUserStory = userId === story.userId;
   const isPublicStory = story.public == 1;
@@ -87,17 +134,15 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
     return redirect("/");
   }
 
-  console.log(isUserStory, isPublicStory);
-
   return (
     <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-4">
-      <Link
+      <NavigationLink
         href="/dashboard"
         className="text-green-400 hover:underline inline-flex items-center transition-transform duration-200 hover:-translate-x-1 text-sm sm:text-base mt-2"
       >
         <span className="mr-1">←</span>
         <span>Back to Dashboard</span>
-      </Link>
+      </NavigationLink>
 
       <div className="border-b border-green-900/30 pb-2">
         <p className="text-sm sm:text-base ">
@@ -118,10 +163,15 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
-                    <img
+                    <Image
                       src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                       alt={story.title || "Story Image"}
+                      width={256}
+                      height={256}
                       className="w-full h-full object-cover"
+                      priority
+                      quality={80}
+                      sizes="(max-width: 768px) 224px, 256px"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
                       Hover to see image prompt
@@ -138,10 +188,15 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
 
             {/* For mobile screens - show image and prompt directly */}
             <div className="md:hidden flex flex-col">
-              <img
+              <Image
                 src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
                 alt={story.title || "Story Image"}
+                width={224}
+                height={224}
                 className="w-full h-full object-cover"
+                priority
+                quality={80}
+                sizes="224px"
               />
               <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
                 <p className="text-xs text-green-400 font-mono leading-relaxed">
@@ -222,6 +277,17 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
 
       <StoryChoices choices={story.choices} isUserStory={isUserStory} />
     </div>
+  );
+};
+
+const StoryPage = async ({ params }: { params: { slug: string } }) => {
+  const storyId = params.slug;
+
+  // Move auth check inside the Suspense boundary so the loading skeleton appears immediately
+  return (
+    <Suspense fallback={<StoryLoading />}>
+      <StoryContent storyId={storyId} />
+    </Suspense>
   );
 };
 

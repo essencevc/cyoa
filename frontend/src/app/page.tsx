@@ -1,9 +1,9 @@
 "use client";
-import Link from "next/link";
 import { Terminal } from "lucide-react";
 import TerminalAnimation from "@/components/landing-page/terminal";
 import stories from "@/constants/stories.json";
 import Features from "@/components/landing-page/features";
+import { NavigationLink } from "@/components/navigation/navigation-link";
 
 export default function LandingPage() {
   return (
@@ -15,12 +15,12 @@ export default function LandingPage() {
             <Terminal className="w-5 h-5 sm:w-6 sm:h-6" />
             <span className="text-lg sm:text-xl font-bold">CYOA-OS v1.0</span>
           </div>
-          <Link
+          <NavigationLink
             href="/dashboard"
             className="bg-green-400 text-black hover:bg-green-500 px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg"
           >
             Go to App
-          </Link>
+          </NavigationLink>
         </div>
       </header>
 
@@ -42,12 +42,12 @@ export default function LandingPage() {
             journeys.
           </p>
           <div className="pt-2 sm:pt-4 md:pt-6">
-            <Link
+            <NavigationLink
               href="/dashboard"
               className="w-full sm:w-auto inline-flex justify-center items-center bg-[#4ade80]/10 hover:bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/20 px-4 py-3 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base transition-all duration-200 hover:border-[#4ade80]/40 hover:shadow-[0_0_20px_rgba(74,222,128,0.1)] active:transform active:scale-95"
             >
               Start Your Adventure
-            </Link>
+            </NavigationLink>
           </div>
         </div>
       </section>

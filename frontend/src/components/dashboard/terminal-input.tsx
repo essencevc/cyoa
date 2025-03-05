@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Info } from "lucide-react";
+import { Sparkles, Info, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,23 @@ export function TerminalInput() {
   const queryClient = useQueryClient();
   const textareaRef = useRef(null);
 
+  // Check if story generation is disabled via environment variable
+  const isGenerationDisabled =
+    process.env.NEXT_PUBLIC_DISABLE_GENERATION === "true";
+
+  // Show a message if generation is disabled - only once when component mounts
+  useEffect(() => {
+    if (isGenerationDisabled && logs.length === 0) {
+      setLogs([
+        {
+          message:
+            "Story generation is currently disabled by the administrator. Please try again later.",
+          type: "error",
+        },
+      ]);
+    }
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
@@ -35,6 +52,25 @@ export function TerminalInput() {
   }, [input]);
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Don't process if generation is disabled
+    if (isGenerationDisabled) {
+      e.preventDefault();
+      // Only add the log if it's not already present
+      if (
+        !logs.some(
+          (log) =>
+            log.message ===
+            "Story generation is currently disabled by the administrator."
+        )
+      ) {
+        addLog(
+          "Story generation is currently disabled by the administrator.",
+          "error"
+        );
+      }
+      return;
+    }
+
     if (e.key === "Enter" && input.trim()) {
       setLogs([]);
       addLog("Submitting prompt to backend", "info");
@@ -70,6 +106,21 @@ export function TerminalInput() {
 
   return (
     <div className="flex flex-col gap-2">
+      {isGenerationDisabled && (
+        <div className="bg-red-900/20 border border-red-500/30 rounded-md p-3 mb-2">
+          <div className="flex items-center gap-2 text-red-400">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">
+              Story generation is currently disabled
+            </span>
+          </div>
+          <p className="text-sm text-gray-300 mt-1 ml-7">
+            The administrator has temporarily disabled story generation. You can
+            still play existing stories.
+          </p>
+        </div>
+      )}
+
       <div className="relative w-full font-mono">
         <div className="flex flex-col sm:flex-row items-start">
           <div className="text-white select-none pointer-events-none text-xs sm:text-sm whitespace-nowrap mb-1 sm:mb-0">
@@ -81,8 +132,11 @@ export function TerminalInput() {
               value={input}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent border-none text-[#5dff3f] placeholder:text-green-800/50 focus-visible:ring-0 p-0 resize-none min-h-[24px] focus:outline-none text-xs sm:text-sm"
-              disabled={isLoading}
+              className={cn(
+                "w-full bg-transparent border-none text-[#5dff3f] placeholder:text-green-800/50 focus-visible:ring-0 p-0 resize-none min-h-[24px] focus:outline-none text-xs sm:text-sm",
+                isGenerationDisabled && "opacity-50 cursor-not-allowed"
+              )}
+              disabled={isLoading || isGenerationDisabled}
               rows={1}
               style={{
                 height: "auto",
@@ -91,6 +145,9 @@ export function TerminalInput() {
                 lineHeight: "1.5",
                 letterSpacing: "0.01em",
               }}
+              placeholder={
+                isGenerationDisabled ? "Story generation is disabled" : ""
+              }
             />
           </div>
         </div>
@@ -100,19 +157,31 @@ export function TerminalInput() {
         <div className="flex items-start sm:items-center gap-2 text-xs text-gray-400">
           <Info className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5 sm:mt-0" />
           <span>
-            Type your prompt and press Enter. Example: &quot;A man goes to fight
-            the dragon that has been plaguing his village&quot;
+            {isGenerationDisabled
+              ? "Story generation is currently disabled by the administrator."
+              : 'Type your prompt and press Enter. Example: "A man goes to fight the dragon that has been plaguing his village"'}
           </span>
         </div>
         <Button
           onClick={() => {
-            setInput(
-              STORY_PROMPTS[Math.floor(Math.random() * STORY_PROMPTS.length)]
-            );
+            if (!isGenerationDisabled) {
+              setInput(
+                STORY_PROMPTS[Math.floor(Math.random() * STORY_PROMPTS.length)]
+              );
+            }
           }}
           variant="ghost"
-          className="text-[#39FF14] hover:text-[#39FF14] hover:bg-[#39FF14]/10 transition-transform duration-200 hover:scale-105 flex items-center gap-2 px-3 py-1 h-auto text-xs self-end sm:self-auto"
-          title="Generate Random Story"
+          className={cn(
+            "text-[#39FF14] hover:text-[#39FF14] hover:bg-[#39FF14]/10 transition-transform duration-200 hover:scale-105 flex items-center gap-2 px-3 py-1 h-auto text-xs self-end sm:self-auto",
+            isGenerationDisabled &&
+              "opacity-50 cursor-not-allowed pointer-events-none"
+          )}
+          disabled={isGenerationDisabled}
+          title={
+            isGenerationDisabled
+              ? "Story generation is disabled"
+              : "Generate Random Story"
+          }
         >
           <Sparkles className="h-3 w-3" /> Random Prompt
         </Button>

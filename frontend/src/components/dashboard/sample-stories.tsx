@@ -1,12 +1,23 @@
+"use client";
+
 import React from "react";
 import { SelectStory } from "@/db/schema";
-import Link from "next/link";
+import { useNavigationProgress } from "../navigation/navigation-progress-provider";
+import { useRouter } from "next/navigation";
 
 type props = {
   stories: SelectStory[];
 };
 
 const SampleStories = ({ stories }: props) => {
+  const { startNavigation } = useNavigationProgress();
+  const router = useRouter();
+
+  const handleStoryClick = (storyId: string) => {
+    startNavigation();
+    router.push(`/dashboard/story/${storyId}`);
+  };
+
   return (
     <div className="font-mono">
       <div className="flex items-center gap-2 border-b border-green-900/30 pb-2">
@@ -21,10 +32,10 @@ const SampleStories = ({ stories }: props) => {
             Showing {stories?.length} sample stories
           </div>
           {stories?.map((story) => (
-            <Link
-              href={`/dashboard/story/${story.id}`}
+            <div
               key={story.id}
               className="block border border-green-500/30 px-4 py-2 mt-4 cursor-pointer hover:scale-[1.02] transition-transform duration-200 ease-in-out"
+              onClick={() => handleStoryClick(story.id)}
             >
               <div className="flex gap-4">
                 <div className="w-1/6">
@@ -41,7 +52,7 @@ const SampleStories = ({ stories }: props) => {
                   </p>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
