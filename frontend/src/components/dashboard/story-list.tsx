@@ -75,12 +75,12 @@ const StoryCard = ({ story }: { story: Story }) => {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="border-red-400/20 text-red-400/60 hover:bg-red-950/30 hover:text-red-400 bg-transparent"
+          className="border-red-400/20 text-red-400 hover:bg-red-950/30 hover:text-red-400 bg-transparent w-full sm:w-auto px-6 py-2"
         >
           Delete
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-black/90 border border-red-400/20">
+      <DialogContent className="bg-black/90 border border-red-400/20 w-[95%] max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="text-red-400">Delete Story</DialogTitle>
           <DialogDescription className="text-red-400/60">
@@ -88,10 +88,10 @@ const StoryCard = ({ story }: { story: Story }) => {
             undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
           <Button
             variant="outline"
-            className="border-green-400/20 text-green-400/60 hover:bg-green-400/20 hover:text-green-400 bg-transparent transition-colors"
+            className="border-green-400/20 text-green-400/60 hover:bg-green-400/20 hover:text-green-400 bg-transparent transition-colors w-full sm:w-auto"
             onClick={() => setIsDialogOpen(false)}
             disabled={isDeleting}
           >
@@ -99,7 +99,7 @@ const StoryCard = ({ story }: { story: Story }) => {
           </Button>
           <Button
             variant="destructive"
-            className="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+            className="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors w-full sm:w-auto"
             onClick={() => {
               startDeletion(() => {
                 deleteStory(story.id);
@@ -114,7 +114,7 @@ const StoryCard = ({ story }: { story: Story }) => {
           >
             {isDeleting ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 Deleting
               </>
             ) : (
@@ -128,7 +128,7 @@ const StoryCard = ({ story }: { story: Story }) => {
 
   if (story.status === "PROCESSING") {
     return (
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
         <div>Processing...</div>
         <DeleteDialog />
       </div>
@@ -137,7 +137,7 @@ const StoryCard = ({ story }: { story: Story }) => {
 
   if (story.status === "ERROR") {
     return (
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
         <div className="text-red-400">{story.errorMessage}</div>
         <DeleteDialog />
       </div>
@@ -146,24 +146,26 @@ const StoryCard = ({ story }: { story: Story }) => {
 
   return (
     <div>
-      <div className="flex gap-8">
-        <div className="w-1/5">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+        <div className="w-full md:w-1/5 flex justify-center md:justify-start">
           <img
             src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${story.id}/banner.png`}
             alt={story.title as string}
-            className="w-32 h-32 object-cover rounded"
+            className="w-full max-w-[200px] md:w-32 md:h-32 object-cover rounded"
           />
         </div>
-        <div className="w-4/5">
-          <p className="text-green-400/80">{story.description}</p>
+        <div className="w-full md:w-4/5">
+          <p className="text-green-400/80 text-center md:text-left">
+            {story.description}
+          </p>
         </div>
       </div>
       <div className="py-2" />
-      <div className="flex justify-end items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-center sm:justify-end items-center gap-2">
         <DeleteDialog />
         <Link
           href={`/dashboard/story/${story.id}`}
-          className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30"
+          className="rounded border border-green-400/30 px-6 py-2 text-sm hover:bg-green-950/30 w-full sm:w-auto text-center"
           tabIndex={0}
         >
           Start Playthrough
@@ -234,12 +236,12 @@ const StoryList = ({
           ))}
         </div>
         <div className="py-4" />
-        <div className="border border-green-500 p-4">
+        <div className="border border-green-500 p-2 sm:p-4">
           <div className="flex flex-col gap-4">USER STORIES</div>
           {selectedStory !== null && (
             <div className="max-w-2xl mx-auto">
-              <div className="mt-4 mb-4 py-8 bg-green-900/30 text-sm">
-                <div className="mx-12">
+              <div className="mt-4 mb-4 py-4 sm:py-8 bg-green-900/30 text-sm">
+                <div className="mx-4 sm:mx-12">
                   <StoryCard story={stories[selectedStory]} />
                 </div>
               </div>
@@ -256,7 +258,9 @@ const StoryList = ({
                 onKeyDown={(e) => handleKeyDown(e, index)}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[#39FF14]">{story.title}</span>
+                  <span className="text-[#39FF14] break-all">
+                    {story.title}
+                  </span>
                   {getStatusIcon(story.status)}
                 </div>
               </div>
