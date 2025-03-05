@@ -1,7 +1,6 @@
 "use client";
 
 import { SelectStoryChoice } from "@/db/schema";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AutoAudioPlayer from "./audio-player";
