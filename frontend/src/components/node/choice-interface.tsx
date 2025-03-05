@@ -3,7 +3,6 @@ import { SelectStoryChoice } from "@/db/schema";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import AutoAudioPlayer from "./audio-player";
 import { HoverCard } from "@radix-ui/react-hover-card";
 import { HoverCardContent, HoverCardTrigger } from "../ui/hover-card";

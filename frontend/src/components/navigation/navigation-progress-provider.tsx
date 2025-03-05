@@ -26,7 +26,6 @@ export function NavigationProgressProvider({
 }) {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   // Reset navigation state when pathname changes
   useEffect(() => {

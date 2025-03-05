@@ -1,5 +1,4 @@
 import React, { Suspense } from "react";
-import Link from "next/link";
 import StoryChoices from "@/components/story/story-choice";
 import { eq } from "drizzle-orm";
 import { storiesTable, storyChoicesTable } from "@/db/schema";

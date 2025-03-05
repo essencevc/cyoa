@@ -2,7 +2,6 @@
 
 import React from "react";
 import { SelectStory } from "@/db/schema";
-import { NavigationLink } from "../navigation/navigation-link";
 import { useNavigationProgress } from "../navigation/navigation-progress-provider";
 import { useRouter } from "next/navigation";
 

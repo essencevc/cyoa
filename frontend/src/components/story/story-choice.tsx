@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { buildTree, getPath } from "@/lib/tree";
-import Link from "next/link";
 import { SelectStoryChoice } from "@/db/schema";
 import { useRouter } from "next/navigation";
 import { NavigationLink } from "../navigation/navigation-link";
