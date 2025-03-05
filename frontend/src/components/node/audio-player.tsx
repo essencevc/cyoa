@@ -107,35 +107,35 @@ const RetroAudioPlayer = ({
   }, [isPlaying]);
 
   return (
-    <div className="font-mono text-green-500 bg-black/80 p-4 rounded-lg border border-green-500/30 w-[200px]">
+    <div className="font-mono text-green-500 bg-black/80 p-2 sm:p-3 md:p-4 rounded-lg border border-green-500/30 w-full sm:w-[200px]">
       <audio
         ref={audioRef}
         src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${story_id}/${node_id}.wav`}
         preload="auto"
       />
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
         <button
           onClick={togglePlayPause}
-          className="hover:text-green-400 transition-colors"
+          className="hover:text-green-400 transition-colors flex-shrink-0"
           aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? (
-            <Pause className="w-5 h-5" />
+            <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
-            <Play className="w-5 h-5" />
+            <Play className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
 
         <button
           onClick={toggleMute}
-          className="hover:text-green-400 transition-colors"
+          className="hover:text-green-400 transition-colors flex-shrink-0"
           aria-label={muted ? "Unmute" : "Mute"}
         >
           {muted ? (
-            <VolumeX className="w-5 h-5" />
+            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
-            <Volume2 className="w-5 h-5" />
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
 
@@ -150,8 +150,7 @@ const RetroAudioPlayer = ({
           }}
           className={cn(
             "flex-1",
-            "[&_[role=slider]]:h-4",
-            "[&_[role=slider]]:w-4",
+            "[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 sm:[&_[role=slider]]:h-4 sm:[&_[role=slider]]:w-4",
             "[&_[role=slider]]:border-green-500",
             "[&_[role=slider]]:bg-green-500",
             "[&_[role=slider]]:focus:ring-green-500/50",
