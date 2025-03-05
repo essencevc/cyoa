@@ -14,7 +14,6 @@ import {
 } from "../ui/dialog";
 import { deleteStory } from "@/lib/story";
 import { Loader2 } from "lucide-react";
-import { NavigationLink } from "../navigation/navigation-link";
 import { useNavigationProgress } from "../navigation/navigation-progress-provider";
 import { useRouter } from "next/navigation";
 
