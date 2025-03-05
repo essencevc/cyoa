@@ -4,7 +4,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 export const usersTable = sqliteTable("users", {
   email: text("email").primaryKey(),
   username: text("username").unique(),
-  credits: integer("credits").notNull().default(2),
+  credits: integer("credits").notNull().default(3),
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
 });
 
