@@ -48,11 +48,11 @@ const TerminalLine = ({
 
   return (
     <div className="w-full">
-      <div className="flex">
-        <span className="text-white whitespace-nowrap shrink-0 mr-2">
+      <div className="flex flex-wrap">
+        <span className="text-white whitespace-nowrap shrink-0 mr-2 text-sm sm:text-base">
           root@cyoa-os:~$
         </span>
-        <span className="text-green-400/80">
+        <span className="text-green-400/80 text-sm sm:text-base">
           {renderText}
           <span className="animate-pulse"> ▋</span>
         </span>
@@ -80,8 +80,10 @@ const TerminalLine = ({
             }}
           >
             <div className="flex items-center space-x-4">
-              <LoaderIcon className="h-5 w-5 mx-2" />
-              <span className="text-green-400/80">{config.loaderText}</span>
+              <LoaderIcon className="h-4 w-4 sm:h-5 sm:w-5 mx-2" />
+              <span className="text-green-400/80 text-xs sm:text-sm">
+                {config.loaderText}
+              </span>
             </div>
           </motion.div>
         </motion.div>
@@ -117,25 +119,27 @@ const TerminalLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-[640px] border border-green-400/20 rounded-lg p-6 backdrop-blur-sm font-mono leading-relaxed relative">
+    <div className="w-full flex items-center justify-center">
+      <div className="w-full max-w-[640px] border border-green-400/20 rounded-lg p-3 sm:p-6 backdrop-blur-sm font-mono leading-relaxed relative">
         <div className="flex flex-col space-y-2">
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
             <Link
               href="/"
               className="text-green-400/80 hover:text-green-400 transition-colors duration-300"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </div>
           <div className="flex flex-col items-start gap-y-4">
             {completedLines.map((line, index) => (
               <div key={index} className="w-full">
-                <div className="flex">
-                  <span className="text-white whitespace-nowrap shrink-0 mr-2">
+                <div className="flex flex-wrap">
+                  <span className="text-white whitespace-nowrap shrink-0 mr-2 text-sm sm:text-base">
                     root@cyoa-os:~$
                   </span>
-                  <span className="text-green-400/80">{line.text}</span>
+                  <span className="text-green-400/80 text-sm sm:text-base">
+                    {line.text}
+                  </span>
                 </div>
               </div>
             ))}
@@ -156,12 +160,12 @@ const TerminalLogin = () => {
                   variant="outline"
                   disabled={isPending}
                   onClick={() => startTransition(() => signInWithGoogle())}
-                  className="bg-transparent border-green-400/20 text-green-400/80 hover:bg-green-400/20 hover:text-green-400 transition-colors duration-300 font-mono tracking-wider w-full relative group overflow-hidden mt-4"
+                  className="bg-transparent border-green-400/20 text-green-400/80 hover:bg-green-400/20 hover:text-green-400 transition-colors duration-300 font-mono tracking-wider w-full relative group overflow-hidden mt-4 text-xs sm:text-sm"
                 >
                   {isPending ? (
                     <>
                       Loading
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                     </>
                   ) : (
                     <>
