@@ -22,12 +22,22 @@ const RetroAudioPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
 
+  // Set up audio element and event listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoadedMetadata = () => setDuration(audio.duration);
+    // Force the browser to start downloading the audio file
+    audio.load();
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsAudioLoaded(true);
+      console.log("Audio metadata loaded, ready to play on interaction");
+    };
+
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => setIsPlaying(false);
     const handlePause = () => setIsPlaying(false);
@@ -48,29 +58,43 @@ const RetroAudioPlayer = ({
     };
   }, []);
 
-  // Handle first interaction
+  // Handle user interactions to enable audio
   useEffect(() => {
-    const handleInteraction = async () => {
-      if (hasInteracted) return;
-      setHasInteracted(true);
+    const handleUserInteraction = async () => {
+      if (hasInteracted || !isAudioLoaded) return;
+
       const audio = audioRef.current;
-      if (audio && duration > 0 && !isPlaying) {
-        try {
-          await audio.play();
-        } catch (error) {
-          console.error("Autoplay failed:", error);
-        }
+      if (!audio) return;
+
+      setHasInteracted(true);
+
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error("Playback after interaction failed:", error);
       }
     };
 
-    window.addEventListener("click", handleInteraction, { once: true });
-    window.addEventListener("keydown", handleInteraction, { once: true });
+    // Listen for various user interactions
+    const interactionEvents = [
+      "click",
+      "touchstart",
+      "keydown",
+      "scroll",
+      "mousemove",
+    ];
+
+    interactionEvents.forEach((event) => {
+      window.addEventListener(event, handleUserInteraction, { once: true });
+    });
 
     return () => {
-      window.removeEventListener("click", handleInteraction);
-      window.removeEventListener("keydown", handleInteraction);
+      interactionEvents.forEach((event) => {
+        window.removeEventListener(event, handleUserInteraction);
+      });
     };
-  }, [duration, isPlaying]);
+  }, [hasInteracted, isAudioLoaded]);
 
   const togglePlayPause = async () => {
     const audio = audioRef.current;
@@ -79,6 +103,7 @@ const RetroAudioPlayer = ({
     try {
       if (audio.paused) {
         await audio.play();
+        setHasInteracted(true);
       } else {
         audio.pause();
       }
