@@ -112,26 +112,46 @@ const StoryPage = async ({ params }: { params: { slug: string } }) => {
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
         {/* Banner Image */}
         <div className="w-full md:w-1/5 flex justify-center md:justify-start">
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg overflow-hidden border border-green-500/20">
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
-                  <img
-                    src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
-                    alt={story.title || "Story Image"}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
-                    Hover to see image prompt
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg overflow-hidden ">
+            {/* For larger screens - use HoverCard */}
+            <div className="hidden md:block">
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <div className="cursor-pointer transition-opacity hover:opacity-90 relative group">
+                    <img
+                      src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
+                      alt={story.title || "Story Image"}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-green-400 text-xs py-1 px-2 opacity-100">
+                      Hover to see image prompt
+                    </div>
                   </div>
-                </div>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-72 sm:w-80 bg-black/90 border border-green-500/20 p-3 sm:p-4">
-                <p className="text-xs sm:text-sm text-green-400 font-mono leading-relaxed">
+                </HoverCardTrigger>
+                <HoverCardContent className="w-72 sm:w-80 bg-black/90 p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-green-400 font-mono leading-relaxed">
+                    {story.image_prompt}
+                  </p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+
+            {/* For mobile screens - show image and prompt directly */}
+            <div className="md:hidden flex flex-col">
+              <img
+                src={`https://restate-story.s3.ap-southeast-1.amazonaws.com/${storyId}/banner.png`}
+                alt={story.title || "Story Image"}
+                className="w-full h-full object-cover"
+              />
+              <div className="bg-black/60 border border-green-500/20 rounded p-2 mt-2">
+                <p className="text-xs text-green-400 font-mono leading-relaxed">
+                  <span className="text-green-500 font-bold">
+                    Image Prompt:
+                  </span>{" "}
                   {story.image_prompt}
                 </p>
-              </HoverCardContent>
-            </HoverCard>
+              </div>
+            </div>
           </div>
         </div>
 
