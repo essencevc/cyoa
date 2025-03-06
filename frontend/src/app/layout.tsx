@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { NavigationProgressProvider } from "@/components/navigation/navigation-progress-provider";
-
+import { Analytics } from "@vercel/analytics/react";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -51,6 +51,7 @@ export default function RootLayout({
       >
         <NavigationProgressProvider>{children}</NavigationProgressProvider>
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
