@@ -94,7 +94,7 @@ export default function AboutPage() {
                 className="text-[#4ade80] underline hover:text-[#4ade80]/80"
               >
                 From Prompt to Adventures: Creating Games with LLMs and
-                Restate's Durable Functions
+                Restate&apos;s Durable Functions
               </a>
               .
             </p>
