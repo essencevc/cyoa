@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Terminal } from "lucide-react";
 import { NavigationLink } from "@/components/navigation/navigation-link";
 
