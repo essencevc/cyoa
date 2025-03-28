@@ -77,5 +77,8 @@ def test_get_story_items_client_error(mock_boto3, mock_env):
     # Call the function
     result = get_story_items("test_story_id")
     
-    # Verify the result is an empty list
-    assert result == []
+    # Verify the result is a dictionary with empty lists for 'images' and 'audio'
+    assert "images" in result
+    assert "audio" in result
+    assert result["images"] == []
+    assert result["audio"] == []
