@@ -12,3 +12,9 @@ dependencies = [
     "torch>=2.5.1",
     "transformers>=4.47.1",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-mock>=3.11.1",
+]
